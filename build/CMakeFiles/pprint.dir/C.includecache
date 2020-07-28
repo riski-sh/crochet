@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/wsh/Documents/crochet/src/pprint.c
+netdb.h
+-
+pprint.h
+/home/wsh/Documents/crochet/src/pprint.h
+
+/home/wsh/Documents/crochet/src/pprint.h
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+time.h
+-
+

@@ -1,0 +1,1 @@
+/usr/bin/clang -fPIC -Weverything -Werror -Wpedantic -O2 -g -shared -Wl,-soname,libhttpws.so -o libhttpws.so CMakeFiles/httpws.dir/wss.c.o CMakeFiles/httpws.dir/http.c.o CMakeFiles/httpws.dir/base64.c.o 

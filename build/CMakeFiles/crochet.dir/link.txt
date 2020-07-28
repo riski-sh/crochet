@@ -1,0 +1,1 @@
+/usr/bin/clang -Weverything -Werror -Wpedantic -O2 -g CMakeFiles/crochet.dir/src/main.c.o -o crochet  -Wl,-rpath,/home/wsh/Documents/crochet/build:/home/wsh/Documents/crochet/build/src/httpws libpprint.so src/httpws/libhttpws.so /usr/lib/libssl.so /usr/lib/libcrypto.so 
