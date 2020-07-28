@@ -1,7 +1,0 @@
-/home/wsh/Documents/crochet/build/CMakeFiles/rebuild_cache.dir
-/home/wsh/Documents/crochet/build/CMakeFiles/edit_cache.dir
-/home/wsh/Documents/crochet/build/CMakeFiles/crochet.dir
-/home/wsh/Documents/crochet/build/CMakeFiles/pprint.dir
-/home/wsh/Documents/crochet/build/src/httpws/CMakeFiles/edit_cache.dir
-/home/wsh/Documents/crochet/build/src/httpws/CMakeFiles/rebuild_cache.dir
-/home/wsh/Documents/crochet/build/src/httpws/CMakeFiles/httpws.dir

@@ -1,1 +1,0 @@
-/usr/bin/clang -fPIC -Weverything -Werror -Wpedantic -O2 -g -shared -Wl,-soname,libpprint.so -o libpprint.so CMakeFiles/pprint.dir/src/pprint.c.o 
