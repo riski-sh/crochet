@@ -43,7 +43,8 @@ main(int argc, char **argv)
 	// stream of packets.
 	wss_send_text(&google, full_subscribe, strlen((char *)full_subscribe));
 
-  while(wss_read_text(&google) == WSS_ERR_NONE);
+	while (wss_read_text(&google) == WSS_ERR_NONE)
+		;
 
 	return 0;
 }

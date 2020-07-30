@@ -1,4 +1,5 @@
 #include <netinet/in.h>
+
 #include <byteswap.h>
 
 #include "wss.h"
@@ -89,7 +90,7 @@ wss_read_text(struct wss_session *session)
 	case 0x2:
 		pprint_error("i don't know how to handle binary frames yet",
 		    __FILE_NAME__, __func__, __LINE__);
-    abort();
+		abort();
 	case 0x3:
 	case 0x4:
 	case 0x5:
@@ -118,7 +119,7 @@ wss_read_text(struct wss_session *session)
 		pprint_error(
 		    "the standard has changed, i should probably update",
 		    __FILE_NAME__, __func__, __LINE__);
-    abort();
+		abort();
 	default:
 		pprint_error("0x%x is not a valid frame type", __FILE_NAME__,
 		    __func__, __LINE__, h.opcode);
@@ -131,30 +132,31 @@ wss_read_text(struct wss_session *session)
 		return WSS_ERR_CONNECT_FAILURE;
 	}
 
-  if (h2 == 126) {
-    uint16_t to_read = 0;
-    SSL_read(session->ssl, &to_read, sizeof(uint16_t));
-    h2 = __bswap_16(to_read);
-  } else if (h2 == 127) {
-    uint64_t to_read = 0;
-    SSL_read(session->ssl, &to_read, sizeof(uint64_t));
-    h2 = __bswap_64(to_read);
-  }
+	if (h2 == 126) {
+		uint16_t to_read = 0;
+		SSL_read(session->ssl, &to_read, sizeof(uint16_t));
+		h2 = __bswap_16(to_read);
+	} else if (h2 == 127) {
+		uint64_t to_read = 0;
+		SSL_read(session->ssl, &to_read, sizeof(uint64_t));
+		h2 = __bswap_64(to_read);
+	}
 
-  char *to_read = malloc(sizeof(char) * (h2+1));
-  for (uint64_t i = 0; i < h2; ++i) {
-    char b;
-    if (SSL_read(session->ssl, &b, 1) != 1) {
-      pprint_error("add error checked to ssl read when it should be working",
-          __FILE_NAME__, __func__, __LINE__);
-      abort();
-    }
-    to_read[i] = b;
-  }
-  to_read[h2] = '\x0';
+	char *to_read = malloc(sizeof(char) * (h2 + 1));
+	for (uint64_t i = 0; i < h2; ++i) {
+		char b;
+		if (SSL_read(session->ssl, &b, 1) != 1) {
+			pprint_error(
+			    "add error checked to ssl read when it should be working",
+			    __FILE_NAME__, __func__, __LINE__);
+			abort();
+		}
+		to_read[i] = b;
+	}
+	to_read[h2] = '\x0';
 
-  printf("%s\n", to_read);
-  free(to_read);
+	printf("%s\n", to_read);
+	free(to_read);
 	return WSS_ERR_NONE;
 }
 
