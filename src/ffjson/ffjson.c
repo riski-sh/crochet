@@ -48,7 +48,11 @@ _valid_character(char *str, size_t *idx)
 static const void *
 _parse_string(char *str, size_t *idx)
 {
-	// safe to skip the first character since this only gets called
+	if (str[*idx] != '"') {
+		pprint_error("expected \" for string %s", __FILE_NAME__,
+		    __func__, __LINE__, &(str[*idx]));
+		abort();
+	}
 	(*idx) += 1;
 
 	const void *str_begining = &(str[*idx]);
@@ -69,7 +73,6 @@ _parse_string(char *str, size_t *idx)
 	// and return a pointer to the beginning of the string.
 	str[*idx] = '\x0';
 	(*idx) += 1;
-
 	return str_begining;
 }
 
@@ -94,8 +97,12 @@ _parse_member(char *str, size_t *idx)
 static void
 _parse_object(char *str, size_t *idx)
 {
-	// this function only gets called if str[*idx] == '{' so it is safe to
-	// skip
+	if (str[*idx] != '{') {
+		pprint_info("expected { got %s", __FILE_NAME__, __func__,
+		    __LINE__, &(str[*idx]));
+		abort();
+	}
+
 	(*idx) += 1;
 
 	// there is allowed white space after { so get rid of it
@@ -119,11 +126,9 @@ _parse_object(char *str, size_t *idx)
 	_parse_whitespace(str, idx);
 	if (str[*idx] != '}') {
 		pprint_error("invalid object expected } got %s", __FILE_NAME__,
-		    __func__, __LINE__, str);
+		    __func__, __LINE__, &(str[*idx]));
 		abort();
 	}
-	_parse_whitespace(str, idx);
-
 	(*idx) += 1;
 
 	// done processing the object.
@@ -132,8 +137,11 @@ _parse_object(char *str, size_t *idx)
 static void
 _parse_array(char *str, size_t *idx)
 {
-	// function only gets called if str[*idx] == '[' so it is safe
-	// to skip the first index
+	if (str[*idx] != '[') {
+		pprint_info("expected [ got %s", __FILE_NAME__, __func__,
+		    __LINE__, &(str[*idx]));
+		abort();
+	}
 
 	(*idx) += 1;
 	_parse_whitespace(str, idx);
@@ -143,7 +151,7 @@ _parse_array(char *str, size_t *idx)
 
 	// parse the optional members of the array
 	while (_parse_value_seperator(str, idx)) {
-		_parse_member(str, idx);
+		_parse_value(str, idx);
 	}
 
 	_parse_whitespace(str, idx);
@@ -154,8 +162,6 @@ _parse_array(char *str, size_t *idx)
 		    __LINE__, str[*idx]);
 		abort();
 	}
-	_parse_whitespace(str, idx);
-
 	(*idx) += 1;
 }
 
@@ -213,22 +219,21 @@ _parse_value(char *str, size_t *idx)
 	    str[*idx] == '9') {
 		// parse number
 		_parse_number(str, idx);
-	} else if (strncmp(str, "false", 5) == 0) {
+	} else if (strncmp(&(str[*idx]), "false", 5) == 0) {
 		// parse false
-		//
-		pprint_error("false are not implemented yet", __FILE_NAME__,
-		    __func__, __LINE__);
-		abort();
-	} else if (strncmp(str, "true", 4) == 0) {
+		// TODO do something with this value
+		(*idx) += 5;
+		_parse_whitespace(str, idx);
+	} else if (strncmp(&(str[*idx]), "true", 4) == 0) {
 		// parse true
-		pprint_error("true are not implemented yet", __FILE_NAME__,
-		    __func__, __LINE__);
-		abort();
+		(*idx) += 4;
+		// TODO do something with this value
+		_parse_whitespace(str, idx);
 	} else {
 		pprint_error(
 		    "expected object|array|string|true|false|null|number in json"
-		    " %s",
-		    __FILE_NAME__, __func__, __LINE__, str);
+		    " %s %lu",
+		    __FILE_NAME__, __func__, __LINE__, &(str[*idx]), *idx);
 		abort();
 	}
 }
@@ -243,11 +248,11 @@ json_parse(char *str)
 	// the current index of the string we are looking at
 	size_t idx = 0;
 
-	// valid json starts with
-	// ws value ws
+	pprint_info("started parse", __FILE_NAME__, __func__, __LINE__);
+
+  // ws value ws
 	_parse_whitespace(str, &idx);
 	_parse_value(str, &idx);
-	_parse_whitespace(str, &idx);
 
 	pprint_info("parsed successfully", __FILE_NAME__, __func__, __LINE__);
 

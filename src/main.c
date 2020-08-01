@@ -26,42 +26,49 @@ main(int argc, char **argv)
 	SSL_load_error_strings();
 	SSL_library_init();
 
-  /* https://api.pro.coinbase.com/products/BTC-USD/book?level=3 */
-  http_get_request("api.pro.coinbase.com", NULL);
-
-  return 0;
-
-/*
-	struct wss_session google;
-	if (wss_client("ws-feed.pro.coinbase.com", "/", "443", &google) != 0) {
-		pprint_error("unable to make connection to coinbase",
-		    __FILE_NAME__, __func__, __LINE__);
-		return 1;
-	}
-
-	unsigned char *full_subscribe = (unsigned char
-		*)"{\"type\":\"subscribe\",\"product_ids\":[\"BTC-USD\"],"
-		  "\"channels\":[\"full\"]}";
-	pprint_info("%s\n", __FILE_NAME__, __func__, __LINE__, full_subscribe);
-
-	// for testing subscribe to the full web socket btc usd
-	// for coinbase after we send this we can call wss_read to read the
-	// stream of packets.
-	wss_send_text(&google, full_subscribe, strlen((char *)full_subscribe));
-
-	char *result = NULL;
-	bool first = true;
-	while (wss_read_text(&google, &result) == WSS_ERR_NONE) {
-		pprint_info("attempted to parse %s", __FILE_NAME__, __func__,
-		    __LINE__, result);
-		json_parse(result);
-		free(result);
-		first = false;
-	}
-
-	// do i get here?
-	printf("fdsafdsafdsafs\n");
-
+	/* https://api.pro.coinbase.com/products/BTC-USD/book?level=3 */
+	char *book;
+	http_get_request(
+	    "api.pro.coinbase.com", "/products/BTC-USD/book?level=3", &book);
+	json_parse(book);
+	free(book);
 	return 0;
-  */
+
+	/*
+		struct wss_session google;
+		if (wss_client("ws-feed.pro.coinbase.com", "/", "443", &google)
+	   != 0) { pprint_error("unable to make connection to coinbase",
+			    __FILE_NAME__, __func__, __LINE__);
+			return 1;
+		}
+
+		unsigned char *full_subscribe = (unsigned char
+			*)"{\"type\":\"subscribe\",\"product_ids\":[\"BTC-USD\"],"
+			  "\"channels\":[\"full\"]}";
+		pprint_info("%s\n", __FILE_NAME__, __func__, __LINE__,
+	   full_subscribe);
+
+		// for testing subscribe to the full web socket btc usd
+		// for coinbase after we send this we can call wss_read to read
+	   the
+		// stream of packets.
+		wss_send_text(&google, full_subscribe, strlen((char
+	   *)full_subscribe));
+
+		char *result = NULL;
+		bool first = true;
+		while (wss_read_text(&google, &result) == WSS_ERR_NONE) {
+			pprint_info("attempted to parse %s", __FILE_NAME__,
+	   __func__,
+			    __LINE__, result);
+			json_parse(result);
+			free(result);
+			first = false;
+		}
+
+		// do i get here?
+		printf("fdsafdsafdsafs\n");
+
+		return 0;
+	  */
 }

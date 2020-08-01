@@ -11,6 +11,12 @@
 	"Sec-WebSocket-Version: 13\r\n" \
 	"\r\n"
 
+#define HTTP_GET_REQUEST_FMT      \
+	"GET %s HTTP/1.0\r\n"     \
+	"Host: %s\r\n"            \
+	"User-Agent: crochet\r\n" \
+	"\r\n"
+
 struct _http_response {
 	char *header_name;
 	char *header_value;
@@ -222,7 +228,7 @@ http_wss_upgrade(SSL *ssl, char *endpoint, char *path)
 }
 
 int
-http_get_request(char *endpoint, char **response)
+http_get_request(char *endpoint, char *path, char **response)
 {
 	pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__,
 	    __LINE__, endpoint, "443");
@@ -270,7 +276,7 @@ http_get_request(char *endpoint, char **response)
 		abort();
 	}
 
-  SSL* ssl = NULL;
+	SSL *ssl = NULL;
 	ssl = SSL_new(ctx);
 	SSL_set_fd(ssl, sock);
 	SSL_set_tlsext_host_name(ssl, endpoint);
@@ -284,19 +290,38 @@ http_get_request(char *endpoint, char **response)
 	pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__,
 	    __LINE__, endpoint);
 
+	int req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, endpoint);
 
-  char *buf = "GET /products/BTC-USD/book?level=3 HTTP/1.0\r\n"
-              "Host: api.pro.coinbase.com\r\n"
-              "User-Agent: crochet\r\n"
-              "Accept-Encoding: deflate\r\n\r\n";
-  printf("%s\n", buf);
-  SSL_write(ssl, buf, (int)strlen(buf));
+	char *request =
+	    (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+	sprintf(request, HTTP_GET_REQUEST_FMT, path, endpoint);
 
-  char r;
-  while (SSL_read(ssl, &r, 1) == 1) {
-    printf("%c", r);
-  }
-  (void) response;
+	SSL_write(ssl, request, req_size);
 
+	struct _http_response *responses = _http_parse_response(ssl);
+	struct _http_response *iter = responses;
+	while (strcmp(iter->header_name, "Content-Length") != 0) {
+		iter = iter->next;
+	}
+
+	if (!iter) {
+		pprint_error("Content-Length header not found", __FILE_NAME__,
+		    __func__, __LINE__);
+		abort();
+	}
+
+	printf("%s\n", request);
+
+	size_t content_length = (size_t)atoi(iter->header_value);
+	printf("content-length: %lu\n", content_length);
+
+	char *body = (char *)malloc(content_length * sizeof(char));
+	for (size_t i = 0; i < content_length; ++i) {
+		if (SSL_read(ssl, &(body[i]), 1) != 1) {
+			abort();
+		}
+	}
+
+	*response = body;
 	return 0;
 }

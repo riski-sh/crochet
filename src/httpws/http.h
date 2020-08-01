@@ -1,12 +1,12 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <pprint.h>
 #include <stdbool.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <openssl/err.h>
 
 #include "base64.h"
 
@@ -34,9 +34,10 @@ int http_wss_upgrade(SSL *ssl, char *endpoint, char *path);
  * will NOT be kept alive. This function assumes an SSL/TLS connection
  * and will fail if used on non secure tunnel.
  * @param url the url to fetch
+ * @param path the endpoint to perform the get request
  * @param res pointer to storage of result
  * @return Returns 0 on success and 1 if failure.
  */
-int http_get_request(char *url, char **res);
+int http_get_request(char *url, char *path, char **res);
 
 #endif
