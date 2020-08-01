@@ -7,9 +7,9 @@
 #include <httpws/wss.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
-#include <pprint.h>
 #include <stdio.h>
 
+#include "ffjson/ffjson.h"
 #include "pprint.h"
 
 int
@@ -26,6 +26,12 @@ main(int argc, char **argv)
 	SSL_load_error_strings();
 	SSL_library_init();
 
+  /* https://api.pro.coinbase.com/products/BTC-USD/book?level=3 */
+  http_get_request("api.pro.coinbase.com", NULL);
+
+  return 0;
+
+/*
 	struct wss_session google;
 	if (wss_client("ws-feed.pro.coinbase.com", "/", "443", &google) != 0) {
 		pprint_error("unable to make connection to coinbase",
@@ -43,8 +49,19 @@ main(int argc, char **argv)
 	// stream of packets.
 	wss_send_text(&google, full_subscribe, strlen((char *)full_subscribe));
 
-	while (wss_read_text(&google) == WSS_ERR_NONE)
-		;
+	char *result = NULL;
+	bool first = true;
+	while (wss_read_text(&google, &result) == WSS_ERR_NONE) {
+		pprint_info("attempted to parse %s", __FILE_NAME__, __func__,
+		    __LINE__, result);
+		json_parse(result);
+		free(result);
+		first = false;
+	}
+
+	// do i get here?
+	printf("fdsafdsafdsafs\n");
 
 	return 0;
+  */
 }

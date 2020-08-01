@@ -28,7 +28,6 @@ enum WSS_ERR {
 	WSS_ERR_GET_ADDR_INFO = 1,
 	WSS_ERR_SOCKET_CREATION = 2,
 	WSS_ERR_CONNECT_FAILURE = 3,
-	fdsa,
 
 	// number of web socket error codes
 	WSS_ERR_NUM
@@ -70,6 +69,6 @@ enum WSS_ERR wss_client(
 enum WSS_ERR wss_send_text(
     struct wss_session *session, unsigned char *text, size_t len);
 
-enum WSS_ERR wss_read_text(struct wss_session *session);
+enum WSS_ERR wss_read_text(struct wss_session *session, char **value);
 
 #endif

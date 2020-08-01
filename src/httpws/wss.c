@@ -65,7 +65,7 @@ _wss_send_header(struct wss_session *session, struct _wss_packet *p)
 }
 
 enum WSS_ERR
-wss_read_text(struct wss_session *session)
+wss_read_text(struct wss_session *session, char **value)
 {
 	struct _wss_packet h;
 	bzero(&h, sizeof(struct _wss_packet));
@@ -155,8 +155,7 @@ wss_read_text(struct wss_session *session)
 	}
 	to_read[h2] = '\x0';
 
-	printf("%s\n", to_read);
-	free(to_read);
+	*value = to_read;
 	return WSS_ERR_NONE;
 }
 

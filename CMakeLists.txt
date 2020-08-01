@@ -11,8 +11,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_subdirectory(src/httpws)
 add_subdirectory(src/hashmap)
+add_subdirectory(src/ffjson)
 
 add_library (pprint SHARED src/pprint.c)
 add_executable (crochet src/main.c)
 
-target_link_libraries (crochet pprint httpws OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries (crochet pprint httpws ffjson
+  OpenSSL::SSL OpenSSL::Crypto)

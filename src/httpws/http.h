@@ -4,6 +4,9 @@
 #include <openssl/ssl.h>
 #include <pprint.h>
 #include <stdbool.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <openssl/err.h>
 
 #include "base64.h"
 
@@ -25,5 +28,15 @@
  * @return Returns 0 on success and 1 if wss_upgrade was no successful
  */
 int http_wss_upgrade(SSL *ssl, char *endpoint, char *path);
+
+/*
+ * Performs an HTTP get request and kills the connection this conenction
+ * will NOT be kept alive. This function assumes an SSL/TLS connection
+ * and will fail if used on non secure tunnel.
+ * @param url the url to fetch
+ * @param res pointer to storage of result
+ * @return Returns 0 on success and 1 if failure.
+ */
+int http_get_request(char *url, char **res);
 
 #endif

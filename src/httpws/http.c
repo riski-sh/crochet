@@ -220,3 +220,83 @@ http_wss_upgrade(SSL *ssl, char *endpoint, char *path)
 	_http_response_free(responses);
 	return 0;
 }
+
+int
+http_get_request(char *endpoint, char **response)
+{
+	pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__,
+	    __LINE__, endpoint, "443");
+
+	// convert endpoint to an ip address
+	struct addrinfo *res = NULL;
+
+	if (getaddrinfo(endpoint, "443", NULL, &res) != 0) {
+		pprint_error("unable to resolve %s", __FILE_NAME__, __func__,
+		    __LINE__, endpoint);
+		return 1;
+	}
+
+	// create the socket
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == -1) {
+		pprint_error(
+		    "unable to create socket probably because one is already open",
+		    __FILE_NAME__, __func__, __LINE__);
+		return 1;
+	}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-align"
+	struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+#pragma clang diagnostic pop
+
+	char ipAddress[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(ipv4->sin_addr), ipAddress, INET_ADDRSTRLEN);
+
+	pprint_info("resolved %s to %s", __FILE_NAME__, __func__, __LINE__,
+	    endpoint, ipAddress);
+
+	// connect the socket to the remote host
+	if (connect(sock, res->ai_addr, res->ai_addrlen) == -1) {
+		return 1;
+	}
+
+	// prime SSL for establishing TLS connection
+	const SSL_METHOD *method = TLS_client_method();
+	SSL_CTX *ctx = SSL_CTX_new(method);
+
+	if (ctx == NULL) {
+		ERR_print_errors_fp(stdout);
+		abort();
+	}
+
+  SSL* ssl = NULL;
+	ssl = SSL_new(ctx);
+	SSL_set_fd(ssl, sock);
+	SSL_set_tlsext_host_name(ssl, endpoint);
+
+	// perform the TLS handshake
+	if (SSL_connect(ssl) == -1) {
+		ERR_print_errors_fp(stdout);
+		abort();
+	}
+
+	pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__,
+	    __LINE__, endpoint);
+
+
+  char *buf = "GET /products/BTC-USD/book?level=3 HTTP/1.0\r\n"
+              "Host: api.pro.coinbase.com\r\n"
+              "User-Agent: crochet\r\n"
+              "Accept-Encoding: deflate\r\n\r\n";
+  printf("%s\n", buf);
+  SSL_write(ssl, buf, (int)strlen(buf));
+
+  char r;
+  while (SSL_read(ssl, &r, 1) == 1) {
+    printf("%c", r);
+  }
+  (void) response;
+
+	return 0;
+}

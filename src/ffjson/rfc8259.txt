@@ -1,0 +1,59 @@
+===============================================================================
+THIS IS A CONDENSATION OF THE RFC #8259 FOR EXPRESSION OF JSON IN A BNF FORMAT
+==============================================================================
+
+json-text ws value ws
+
+begin-array     = ws [ ws
+begin-object    = ws { ws
+end-array       = ws ] ws
+end-object      = ws } ws
+name-separator  = ws ; ws
+value-seperator = ws , ws
+
+ws = *( ' ' | '\t' | '\n' | '\r' )
+
+value = object
+      | array
+      | number
+      | string
+      | "true"
+      | "false"
+      | "null"
+
+member = string name-separator value
+
+object = begin-object [ member *( value-separator member ) ] end-object
+
+array = begin-array [ value *( value-separator value ) ] end-array
+
+number = [ minus ] int [ frac ] [ exp ]
+
+decimal-point = '.'
+
+digit1-9 = 1...9
+
+e = 'e' | 'E'
+
+exp = e [minus | plus ] 1 *DIGIT
+
+frac = decimal-point 1 *DIGIT
+
+int = zero | ( digit1-9 *DIGIT)
+
+minus = '-'
+
+plus = '+'
+
+zero = '0'
+
+string = quotation-mark *char quotation-mark
+
+char = unescaped
+     | escape ( '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | 'uXXXX' )
+
+escape = '\'
+
+quotation-mark = '"'
+
+unescaped = %x20-21 | %x23-5B | %x5D-10FFFF
