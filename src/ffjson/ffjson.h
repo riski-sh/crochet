@@ -23,13 +23,13 @@ enum JSON_TYPE {
 
 struct json_value {
 	enum JSON_TYPE t;
-	const void *data;
+	void *data;
 };
 
 typedef struct hashmap *__json_object;
-typedef struct json_element *__json_array;
+typedef struct json_value **__json_array;
 typedef double *__json_number;
-typedef const char *__json_string;
+typedef char *__json_string;
 typedef struct json_value *__json_value;
 
 /*

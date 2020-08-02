@@ -68,6 +68,7 @@ hashmap_new(unsigned int num_bins)
 	for (unsigned int i = 0; i < num_bins; ++i) {
 		map->bins[i] = NULL;
 	}
+  map->num_bins = num_bins;
 	return map;
 }
 
@@ -81,6 +82,7 @@ hashmap_put(const void *key, const void *value, struct hashmap *map)
 	}
 
 	size_t hash = (size_t)key;
+  // printf("hash=%lu bins=%u\n", hash, map->num_bins);
 	size_t bin = hash % map->num_bins;
 
 	struct _map_list **ll = &(map->bins[bin]);

@@ -55,7 +55,7 @@ _parse_string(char *str, size_t *idx)
 	}
 	(*idx) += 1;
 
-	const void *str_begining = &(str[*idx]);
+	char *str_begining = &(str[*idx]);
 
 	// loop through all the characters in the string
 	while (_valid_character(str, idx))
@@ -77,9 +77,9 @@ _parse_string(char *str, size_t *idx)
 }
 
 static void
-_parse_member(char *str, size_t *idx, const void **name, __json_value *_val)
+_parse_member(char *str, size_t *idx, char **name, __json_value *_val)
 {
-	const void *member_name = _parse_string(str, idx);
+	char *member_name = _parse_string(str, idx);
 
 	// verify name-separator
 	_parse_whitespace(str, idx);
@@ -91,8 +91,8 @@ _parse_member(char *str, size_t *idx, const void **name, __json_value *_val)
 	_parse_whitespace(str, idx);
 	__json_value val = _parse_value(str, idx);
 
-  *name = member_name;
-  *_val = val;
+	*name = member_name;
+	*_val = val;
 }
 
 static __json_object
@@ -112,15 +112,21 @@ _parse_object(char *str, size_t *idx)
 	// continue to parse members until no more members match
 	// a member has a lookahead of "
 
-  // 16 because @R4stl1n said so
-  __json_object obj = hashmap_new(16);
+	// 16 because R4stl1n said so
+	__json_object obj = hashmap_new(16);
 
 	if (str[*idx] == '"') {
 		// loop through and parse all the members
 		// we already know about the first member
-		_parse_member(str, idx);
+		char *key;
+		__json_value val;
+		_parse_member(str, idx, &key, &val);
+    // printf("val=%p key=%s\n", (void*)val, key);
+		hashmap_put(key, val, obj);
 		while (_parse_value_seperator(str, idx)) {
-			_parse_member(str, idx);
+			_parse_member(str, idx, &key, &val);
+			hashmap_put(key, val, obj);
+      // printf("val=%p key=%s\n", (void*)val, key);
 		}
 	}
 
@@ -136,10 +142,10 @@ _parse_object(char *str, size_t *idx)
 	(*idx) += 1;
 
 	// done processing the object.
-  return obj;
+	return obj;
 }
 
-static __json_array
+static __json_value
 _parse_array(char *str, size_t *idx)
 {
 	if (str[*idx] != '[') {
@@ -151,12 +157,24 @@ _parse_array(char *str, size_t *idx)
 	(*idx) += 1;
 	_parse_whitespace(str, idx);
 
+	__json_value value = malloc(sizeof(struct json_value) * 1);
+	value->t = JSON_TYPE_ARRAY;
+	value->data = malloc(sizeof(struct json_value *) * 1);
+
+	size_t num_elements = 1;
+
 	// parse a value since one value must exist
-	_parse_value(str, idx);
+	((__json_array)(value->data))[num_elements - 1] =
+	    _parse_value(str, idx);
 
 	// parse the optional members of the array
 	while (_parse_value_seperator(str, idx)) {
-		_parse_value(str, idx);
+		// expand the array by 1
+		num_elements += 1;
+		value->data = realloc(
+		    value->data, sizeof(struct json_value *) * num_elements);
+		((__json_array)(value->data))[num_elements - 1] =
+		    _parse_value(str, idx);
 	}
 
 	_parse_whitespace(str, idx);
@@ -168,6 +186,13 @@ _parse_array(char *str, size_t *idx)
 		abort();
 	}
 	(*idx) += 1;
+
+	num_elements += 1;
+	value->data =
+	    realloc(value->data, sizeof(struct json_value *) * num_elements);
+	((__json_array)(value->data))[num_elements - 1] = NULL;
+
+	return value;
 }
 
 static __json_number
@@ -182,11 +207,11 @@ _parse_number(char *str, size_t *idx)
 	size_t characters = (size_t)(pend - (&str[*idx]));
 	(*idx) += characters;
 
-  __json_number n = (__json_number) malloc(sizeof(double) * 1);
-  // im dumb its late
-  *n = number;
+	__json_number n = (__json_number)malloc(sizeof(double) * 1);
+	// im dumb its late
+	*n = number;
 
-  return n;
+	return n;
 }
 
 static __json_value
@@ -210,48 +235,49 @@ _parse_value(char *str, size_t *idx)
 
 	if (str[*idx] == '{') {
 		// parse object
-    __json_value val = malloc(sizeof(struct json_value) * 1);
-    val->t = JSON_TYPE_OBJECT;
-    val->data = _parse_object(str, idx);
+		__json_value val = malloc(sizeof(struct json_value) * 1);
+		val->t = JSON_TYPE_OBJECT;
+		val->data = _parse_object(str, idx);
 
-    return val;
+		return val;
 	} else if (str[*idx] == '[') {
 		// parse array
-    __json_value val = malloc(sizeof(struct json_value) * 1);
-    val->t = JSON_TYPE_OBJECT;
-    val->data = _parse_array(str, idx);
-    return val;
+		__json_value val = malloc(sizeof(struct json_value) * 1);
+		val->t = JSON_TYPE_OBJECT;
+		val->data = _parse_array(str, idx);
+		return val;
 	} else if (str[*idx] == '"') {
 		// parse string
-    __json_value val = malloc(sizeof(struct json_value) * 1);
-    val->t = JSON_TYPE_STRING;
-    val->data = _parse_string(str, idx);
-    return val;
+		__json_value val = malloc(sizeof(struct json_value) * 1);
+		val->t = JSON_TYPE_STRING;
+		val->data = _parse_string(str, idx);
+		return val;
 	} else if (str[*idx] == '-' || str[*idx] == '1' || str[*idx] == '2' ||
 	    str[*idx] == '3' || str[*idx] == '4' || str[*idx] == '5' ||
 	    str[*idx] == '6' || str[*idx] == '7' || str[*idx] == '8' ||
 	    str[*idx] == '9') {
 		// parse number
-    __json_value val = malloc(sizeof(struct json_value) * 1);
-    val->t = JSON_TYPE_NUMBER;
-    val->data = _parse_number(str, idx);
-    return val;
+		__json_value val = malloc(sizeof(struct json_value) * 1);
+		val->t = JSON_TYPE_NUMBER;
+		val->data = _parse_number(str, idx);
+		return val;
 	} else if (strncmp(&(str[*idx]), "false", 5) == 0) {
 		// parse false
 		// TODO do something with this value
-    __json_value val = malloc(sizeof(struct json_value) * 1);
-    val->t = JSON_TYPE_FALSE;
-    val->data = NULL;
+		__json_value val = malloc(sizeof(struct json_value) * 1);
+		val->t = JSON_TYPE_FALSE;
+		val->data = NULL;
 		(*idx) += 5;
-    return val;
-		// TODO this might break things we will find out_parse_whitespace(str, idx);
+		return val;
+		// TODO this might break things we will find
+		// out_parse_whitespace(str, idx);
 	} else if (strncmp(&(str[*idx]), "true", 4) == 0) {
 		// parse true
-    __json_value val = malloc(sizeof(struct json_value) * 1);
-    val->t = JSON_TYPE_TRUE;
-    val->data = NULL;
+		__json_value val = malloc(sizeof(struct json_value) * 1);
+		val->t = JSON_TYPE_TRUE;
+		val->data = NULL;
 		(*idx) += 4;
-    return val;
+		return val;
 		// _parse_whitespace(str, idx);
 	} else {
 		pprint_error(

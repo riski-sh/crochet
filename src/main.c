@@ -30,6 +30,7 @@ main(int argc, char **argv)
 	/* https://api.pro.coinbase.com/products/BTC-USD/book?level=3 */
 	char *book;
 	http_get_request("api.pro.coinbase.com", "/products", &book);
+  // printf("%s\n", book);
 	json_parse(book);
 	free(book);
 
