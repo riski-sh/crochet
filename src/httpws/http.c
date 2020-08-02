@@ -1,4 +1,6 @@
+#include <netdb.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "http.h"
 
@@ -251,17 +253,6 @@ http_get_request(char *endpoint, char *path, char **response)
 		return 1;
 	}
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-align"
-	struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
-#pragma clang diagnostic pop
-
-	char ipAddress[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(ipv4->sin_addr), ipAddress, INET_ADDRSTRLEN);
-
-	pprint_info("resolved %s to %s", __FILE_NAME__, __func__, __LINE__,
-	    endpoint, ipAddress);
-
 	// connect the socket to the remote host
 	if (connect(sock, res->ai_addr, res->ai_addrlen) == -1) {
 		return 1;
@@ -310,10 +301,10 @@ http_get_request(char *endpoint, char *path, char **response)
 		abort();
 	}
 
-	printf("%s\n", request);
-
 	size_t content_length = (size_t)atoi(iter->header_value);
 	printf("content-length: %lu\n", content_length);
+
+	_http_response_free(responses);
 
 	char *body = (char *)malloc(content_length * sizeof(char));
 	for (size_t i = 0; i < content_length; ++i) {
@@ -321,6 +312,15 @@ http_get_request(char *endpoint, char *path, char **response)
 			abort();
 		}
 	}
+
+	free(request);
+	freeaddrinfo(res);
+
+	close(sock);
+
+	SSL_shutdown(ssl);
+	SSL_free(ssl);
+	SSL_CTX_free(ctx);
 
 	*response = body;
 	return 0;

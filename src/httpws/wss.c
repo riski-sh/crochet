@@ -1,7 +1,3 @@
-#include <netinet/in.h>
-
-#include <byteswap.h>
-
 #include "wss.h"
 
 struct _wss_packet {
@@ -27,14 +23,11 @@ struct _wss_packet {
 static uint32_t
 _wss_new_mask()
 {
-	static FILE *fp = NULL;
 
-	if (!fp) {
-		fp = fopen("/dev/urandom", "rb");
-	}
-
+	FILE *fp = fopen("/dev/urandom", "rb");
 	uint32_t mask;
 	fread(&mask, sizeof(uint32_t), 1, fp);
+	fclose(fp);
 	return mask;
 }
 
@@ -222,17 +215,6 @@ wss_client(char *endpoint, char *path, char *port, struct wss_session *session)
 		    __FILE_NAME__, __func__, __LINE__);
 		return WSS_ERR_SOCKET_CREATION;
 	}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-align"
-	struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
-#pragma clang diagnostic pop
-
-	char ipAddress[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(ipv4->sin_addr), ipAddress, INET_ADDRSTRLEN);
-
-	pprint_info("resolved %s to %s", __FILE_NAME__, __func__, __LINE__,
-	    endpoint, ipAddress);
 
 	// connect the socket to the remote host
 	if (connect(session->fd, res->ai_addr, res->ai_addrlen) == -1) {

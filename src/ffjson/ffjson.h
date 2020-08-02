@@ -5,35 +5,61 @@
 #ifndef FFJSON_H
 #define FFJSON_H
 
+#include <hashmap/hashmap.h>
 #include <pprint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 enum JSON_TYPE {
-	JSON_TYPE_OBJECT = 0,
-	JSON_TYPE_ARRAY = 1,
-	JSON_TYPE_STRING = 2,
-	JSON_TYPE_NUMBER = 3,
-	JSON_TYPE_TRUE = 4,
-	JSON_TYPE_FALSE = 5,
-	JSON_TYPE_NULL = 6
+	JSON_TYPE_OBJECT = 0, // expect hash map
+	JSON_TYPE_ARRAY = 1, // expect a null terminated array
+	JSON_TYPE_NUMBER = 2, // expect a double pointer
+	JSON_TYPE_STRING = 3, // expect a const char *
+	JSON_TYPE_TRUE = 4, // expect NULL
+	JSON_TYPE_FALSE = 5, // expect NULL
+	JSON_TYPE_NULL = 6 // expect NULL
 };
 
-struct json_element {
-	enum JSON_TYPE type;
-
-	// padding
-	char _p[4];
-
-	const char *key;
-	struct json_element *value;
+struct json_value {
+	enum JSON_TYPE t;
+	const void *data;
 };
+
+typedef struct hashmap *__json_object;
+typedef struct json_element *__json_array;
+typedef double *__json_number;
+typedef const char *__json_string;
+typedef struct json_value *__json_value;
 
 /*
  * Parses a json object
  * @param str the string representing a json
  */
-struct json_element *json_parse(char *str);
+__json_value json_parse(char *str);
 
+/*
+[
+  {
+     "precision": "zip",
+     "Latitude":  37.7668,
+     "Longitude": -122.3959,
+     "Address":   "",
+     "City":      "SAN FRANCISCO",
+     "State":     "CA",
+     "Zip":       "94107",
+     "Country":   "US"
+  },
+  {
+     "precision": "zip",
+     "Latitude":  37.371991,
+     "Longitude": -122.026020,
+     "Address":   "",
+     "City":      "SUNNYVALE",
+     "State":     "CA",
+     "Zip":       "94085",
+     "Country":   "US"
+  }
+]
+*/
 #endif

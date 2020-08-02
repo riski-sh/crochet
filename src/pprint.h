@@ -16,10 +16,17 @@
 #ifndef PPRINT_H
 #define PPRINT_H
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#if !defined(__clang__) || !defined(__llvm__)
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ __FILE__
+#endif
+#endif
 
 /*
  * Prints out a log message under the level info

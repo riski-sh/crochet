@@ -5,6 +5,7 @@
  */
 
 #include <httpws/wss.h>
+#include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <stdio.h>
@@ -28,10 +29,11 @@ main(int argc, char **argv)
 
 	/* https://api.pro.coinbase.com/products/BTC-USD/book?level=3 */
 	char *book;
-	http_get_request(
-	    "api.pro.coinbase.com", "/products/BTC-USD/book?level=3", &book);
+	http_get_request("api.pro.coinbase.com", "/products", &book);
 	json_parse(book);
 	free(book);
+
+	ERR_free_strings();
 	return 0;
 
 	/*

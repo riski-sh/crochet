@@ -1,8 +1,8 @@
-#include "ffjson.h"
+#include "ffjson.h" // <-- that is a lie
 
 // fwd declaration of the few functions needed to be recursive in the
 // processing
-static void _parse_value(char *str, size_t *idx);
+static __json_value _parse_value(char *str, size_t *idx);
 
 static void
 _parse_whitespace(char *str, size_t *idx)
@@ -45,7 +45,7 @@ _valid_character(char *str, size_t *idx)
 	return false;
 }
 
-static const void *
+static __json_string
 _parse_string(char *str, size_t *idx)
 {
 	if (str[*idx] != '"') {
@@ -76,8 +76,8 @@ _parse_string(char *str, size_t *idx)
 	return str_begining;
 }
 
-static bool
-_parse_member(char *str, size_t *idx)
+static void
+_parse_member(char *str, size_t *idx, const void **name, __json_value *_val)
 {
 	const void *member_name = _parse_string(str, idx);
 
@@ -89,12 +89,13 @@ _parse_member(char *str, size_t *idx)
 	}
 	(*idx) += 1;
 	_parse_whitespace(str, idx);
-	_parse_value(str, idx);
+	__json_value val = _parse_value(str, idx);
 
-	return true;
+  *name = member_name;
+  *_val = val;
 }
 
-static void
+static __json_object
 _parse_object(char *str, size_t *idx)
 {
 	if (str[*idx] != '{') {
@@ -110,6 +111,9 @@ _parse_object(char *str, size_t *idx)
 
 	// continue to parse members until no more members match
 	// a member has a lookahead of "
+
+  // 16 because @R4stl1n said so
+  __json_object obj = hashmap_new(16);
 
 	if (str[*idx] == '"') {
 		// loop through and parse all the members
@@ -132,9 +136,10 @@ _parse_object(char *str, size_t *idx)
 	(*idx) += 1;
 
 	// done processing the object.
+  return obj;
 }
 
-static void
+static __json_array
 _parse_array(char *str, size_t *idx)
 {
 	if (str[*idx] != '[') {
@@ -165,24 +170,26 @@ _parse_array(char *str, size_t *idx)
 	(*idx) += 1;
 }
 
-static void
+static __json_number
 _parse_number(char *str, size_t *idx)
 {
-	// do the heavy lifing with strtod
-	// ** pulls up c documentation i don't know this shit by heart **
+	// do the heavy lifting with strtod
 	char *pend;
 	double number = strtod(&(str[*idx]), &pend);
 
-	// TODO store number
-	(void)number;
-	// arrays are continouse can perform pointer arithmetic to get the
-	// idx offset, -1 to include the comma
-
+	// arrays are continuous, can perform pointer arithmetic to get how many
+	// characters were read
 	size_t characters = (size_t)(pend - (&str[*idx]));
 	(*idx) += characters;
+
+  __json_number n = (__json_number) malloc(sizeof(double) * 1);
+  // im dumb its late
+  *n = number;
+
+  return n;
 }
 
-static void
+static __json_value
 _parse_value(char *str, size_t *idx)
 {
 	/*
@@ -203,32 +210,49 @@ _parse_value(char *str, size_t *idx)
 
 	if (str[*idx] == '{') {
 		// parse object
-		_parse_object(str, idx);
+    __json_value val = malloc(sizeof(struct json_value) * 1);
+    val->t = JSON_TYPE_OBJECT;
+    val->data = _parse_object(str, idx);
+
+    return val;
 	} else if (str[*idx] == '[') {
 		// parse array
-		_parse_array(str, idx);
+    __json_value val = malloc(sizeof(struct json_value) * 1);
+    val->t = JSON_TYPE_OBJECT;
+    val->data = _parse_array(str, idx);
+    return val;
 	} else if (str[*idx] == '"') {
 		// parse string
-		const char *member_str = _parse_string(str, idx);
-
-		// TODO store this pointer
-		(void)member_str;
+    __json_value val = malloc(sizeof(struct json_value) * 1);
+    val->t = JSON_TYPE_STRING;
+    val->data = _parse_string(str, idx);
+    return val;
 	} else if (str[*idx] == '-' || str[*idx] == '1' || str[*idx] == '2' ||
 	    str[*idx] == '3' || str[*idx] == '4' || str[*idx] == '5' ||
 	    str[*idx] == '6' || str[*idx] == '7' || str[*idx] == '8' ||
 	    str[*idx] == '9') {
 		// parse number
-		_parse_number(str, idx);
+    __json_value val = malloc(sizeof(struct json_value) * 1);
+    val->t = JSON_TYPE_NUMBER;
+    val->data = _parse_number(str, idx);
+    return val;
 	} else if (strncmp(&(str[*idx]), "false", 5) == 0) {
 		// parse false
 		// TODO do something with this value
+    __json_value val = malloc(sizeof(struct json_value) * 1);
+    val->t = JSON_TYPE_FALSE;
+    val->data = NULL;
 		(*idx) += 5;
-		_parse_whitespace(str, idx);
+    return val;
+		// TODO this might break things we will find out_parse_whitespace(str, idx);
 	} else if (strncmp(&(str[*idx]), "true", 4) == 0) {
 		// parse true
+    __json_value val = malloc(sizeof(struct json_value) * 1);
+    val->t = JSON_TYPE_TRUE;
+    val->data = NULL;
 		(*idx) += 4;
-		// TODO do something with this value
-		_parse_whitespace(str, idx);
+    return val;
+		// _parse_whitespace(str, idx);
 	} else {
 		pprint_error(
 		    "expected object|array|string|true|false|null|number in json"
@@ -238,7 +262,7 @@ _parse_value(char *str, size_t *idx)
 	}
 }
 
-struct json_element *
+__json_value
 json_parse(char *str)
 {
 	if (!str) {
@@ -250,11 +274,10 @@ json_parse(char *str)
 
 	pprint_info("started parse", __FILE_NAME__, __func__, __LINE__);
 
-  // ws value ws
+	// ws value ws
 	_parse_whitespace(str, &idx);
-	_parse_value(str, &idx);
 
 	pprint_info("parsed successfully", __FILE_NAME__, __func__, __LINE__);
 
-	return NULL;
+	return _parse_value(str, &idx);
 }

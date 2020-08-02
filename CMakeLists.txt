@@ -3,7 +3,19 @@ cmake_minimum_required (VERSION 3.14.5)
 project (crochet)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_C_FLAGS "-Weverything -Werror -Wpedantic -O2 -g")
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set (CMAKE_C_FLAGS "-Weverything -Werror -Wpedantic -O0 -g")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set (CMAKE_C_FLAGS "-Wall -Wextra -Werror -Wpedantic -O0 -g")
+  message (WARNING "gcc build will output a logs differently than clang")
+else()
+  message (FATAL_ERROR "supported compilers are GCC and CLANG only")
+endif()
 
 find_package(OpenSSL REQUIRED)
 
@@ -16,5 +28,5 @@ add_subdirectory(src/ffjson)
 add_library (pprint SHARED src/pprint.c)
 add_executable (crochet src/main.c)
 
-target_link_libraries (crochet pprint httpws ffjson
-  OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries (crochet pprint httpws ffjson OpenSSL::SSL
+  OpenSSL::Crypto)
