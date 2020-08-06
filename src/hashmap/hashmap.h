@@ -5,9 +5,36 @@
 #include <stdlib.h>
 
 /*
- * Private hashmap struct definition
+ *  Hash map struct is public to allow for users to define
+ *  how they would like to iterate over it.
  */
-struct hashmap;
+struct hashmap {
+	/*
+	 * an array of pointers that point to pointers of data
+	 */
+	struct _map_list **bins;
+
+	/*
+	 * store the number of bins to remember what to mod by
+	 * during the hash
+	 */
+	unsigned int num_bins;
+
+	/*
+	 * explicit padding
+	 */
+	char _p1[4];
+};
+
+/*
+ * the map list is kept public for user defined implementation
+ * of how to handle the values
+ */
+struct _map_list {
+	void *key;
+	void *value;
+	struct _map_list *next;
+};
 
 /*
  * Creates a new hashmap
@@ -28,7 +55,7 @@ void hashmap_free(struct hashmap **map);
  * @param value a pointer to the value
  * @param map the hashmap to put this value in
  */
-void hashmap_put(const void *key, const void *value, struct hashmap *map);
+void hashmap_put(void *key, void *value, struct hashmap *map);
 
 /*
  * Gets a value out of the hashmap.
@@ -36,6 +63,6 @@ void hashmap_put(const void *key, const void *value, struct hashmap *map);
  * @param map the map to search for the key for
  * @return the value or null if the key doesn't exist
  */
-const void *hashmap_get(const void *key, struct hashmap *map);
+void *hashmap_get(void *key, struct hashmap *map);
 
 #endif

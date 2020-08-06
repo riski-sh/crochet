@@ -11,6 +11,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct hashmap *__json_object;
+typedef struct json_array *__json_array;
+typedef double *__json_number;
+typedef char *__json_string;
+typedef struct json_value *__json_value;
+
 enum JSON_TYPE {
 	JSON_TYPE_OBJECT = 0, // expect hash map
 	JSON_TYPE_ARRAY = 1, // expect a null terminated array
@@ -23,14 +29,17 @@ enum JSON_TYPE {
 
 struct json_value {
 	enum JSON_TYPE t;
+
+	// voluntary padding
+	char _p[4];
+
 	void *data;
 };
 
-typedef struct hashmap *__json_object;
-typedef struct json_value **__json_array;
-typedef double *__json_number;
-typedef char *__json_string;
-typedef struct json_value *__json_value;
+struct json_array {
+	__json_value val;
+	__json_array nxt;
+};
 
 /*
  * Parses a json object
