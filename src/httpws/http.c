@@ -4,45 +4,45 @@
 
 #include "http.h"
 
-#define HTTP_WSS_UPGRADE_FMT            \
-	"GET %s HTTP/1.1\r\n"           \
-	"Host: %s\r\n"                  \
-	"Upgrade: websocket\r\n"        \
-	"Connection: Upgrade\r\n"       \
-	"Sec-WebSocket-Key: %s\r\n"     \
-	"Sec-WebSocket-Version: 13\r\n" \
-	"\r\n"
+#define HTTP_WSS_UPGRADE_FMT      \
+  "GET %s HTTP/1.1\r\n"           \
+  "Host: %s\r\n"                  \
+  "Upgrade: websocket\r\n"        \
+  "Connection: Upgrade\r\n"       \
+  "Sec-WebSocket-Key: %s\r\n"     \
+  "Sec-WebSocket-Version: 13\r\n" \
+  "\r\n"
 
-#define HTTP_GET_REQUEST_FMT      \
-	"GET %s HTTP/1.0\r\n"     \
-	"Host: %s\r\n"            \
-	"User-Agent: crochet\r\n" \
-	"\r\n"
+#define HTTP_GET_REQUEST_FMT \
+  "GET %s HTTP/1.0\r\n"      \
+  "Host: %s\r\n"             \
+  "User-Agent: crochet\r\n"  \
+  "\r\n"
 
 struct _http_response {
-	char *header_name;
-	char *header_value;
+  char *header_name;
+  char *header_value;
 
-	struct _http_response *next;
+  struct _http_response *next;
 };
 
 enum _http_parse_state {
-	_http_parse_state_init = 0,
-	_http_parse_state_header = 1,
-	_http_parse_state_value = 2,
-	_http_parse_state_end = 3
+  _http_parse_state_init = 0,
+  _http_parse_state_header = 1,
+  _http_parse_state_value = 2,
+  _http_parse_state_end = 3
 };
 
 static void
 _http_response_free(struct _http_response *res)
 {
-	while (res) {
-		free(res->header_name);
-		free(res->header_value);
-		struct _http_response *cur = res;
-		res = res->next;
-		free(cur);
-	}
+  while (res) {
+    free(res->header_name);
+    free(res->header_value);
+    struct _http_response *cur = res;
+    res = res->next;
+    free(cur);
+  }
 }
 
 /*
@@ -53,275 +53,268 @@ _http_response_free(struct _http_response *res)
 static char *
 _http_ssl_getline(SSL *ssl)
 {
-	char *buf = NULL;
-	size_t buf_len = 0;
+  char *buf = NULL;
+  size_t buf_len = 0;
 
-	char cb = '\x0';
-	while (SSL_read(ssl, &cb, 1) == 1) {
-		if (cb == '\r') {
-			SSL_read(ssl, &cb, 1);
-			break;
-		} else {
-			buf_len += 1;
-			buf = realloc(buf, sizeof(char) * buf_len);
-			buf[buf_len - 1] = cb;
-		}
-	}
+  char cb = '\x0';
+  while (SSL_read(ssl, &cb, 1) == 1) {
+    if (cb == '\r') {
+      SSL_read(ssl, &cb, 1);
+      break;
+    } else {
+      buf_len += 1;
+      buf = realloc(buf, sizeof(char) * buf_len);
+      buf[buf_len - 1] = cb;
+    }
+  }
 
-	if (buf_len == 0) {
-		return NULL;
-	}
+  if (buf_len == 0) {
+    return NULL;
+  }
 
-	buf_len += 1;
-	buf = realloc(buf, sizeof(char) * buf_len);
-	buf[buf_len - 1] = '\x0';
+  buf_len += 1;
+  buf = realloc(buf, sizeof(char) * buf_len);
+  buf[buf_len - 1] = '\x0';
 
-	return buf;
+  return buf;
 }
 
 static struct _http_response *
 _http_parse_response(SSL *ssl)
 {
-	char *line = _http_ssl_getline(ssl);
-	struct _http_response *response = malloc(sizeof(struct _http_response));
+  char *line = _http_ssl_getline(ssl);
+  struct _http_response *response = malloc(sizeof(struct _http_response));
 
-	response->header_name = line;
-	response->header_value = NULL;
-	response->next = NULL;
+  response->header_name = line;
+  response->header_value = NULL;
+  response->next = NULL;
 
-	struct _http_response *cur = response;
+  struct _http_response *cur = response;
 
-	while ((line = _http_ssl_getline(ssl)) && line != NULL) {
-		cur->next = malloc(sizeof(struct _http_response));
-		cur = cur->next;
+  while ((line = _http_ssl_getline(ssl)) && line != NULL) {
+    cur->next = malloc(sizeof(struct _http_response));
+    cur = cur->next;
 
-		char *name = NULL;
-		char *value = NULL;
+    char *name = NULL;
+    char *value = NULL;
 
-		size_t line_len = 0;
-		if (line) {
-			line_len = strlen(line);
-		} else {
-			pprint_error("can not take strlen of NULL ptr",
-			    __FILE_NAME__, __func__, __LINE__);
-			abort();
-		}
+    size_t line_len = 0;
+    if (line) {
+      line_len = strlen(line);
+    } else {
+      pprint_error(
+          "can not take strlen of NULL ptr", __FILE_NAME__, __func__, __LINE__);
+      abort();
+    }
 
-		size_t col_idx = 0;
-		for (; col_idx < line_len; ++col_idx) {
-			if (line[col_idx] == ':') {
-				break;
-			}
-		}
-		if (col_idx == line_len) {
-			pprint_error("invalid http response %s", __FILE_NAME__,
-			    __func__, __LINE__, line);
-			abort();
-		}
+    size_t col_idx = 0;
+    for (; col_idx < line_len; ++col_idx) {
+      if (line[col_idx] == ':') {
+        break;
+      }
+    }
+    if (col_idx == line_len) {
+      pprint_error(
+          "invalid http response %s", __FILE_NAME__, __func__, __LINE__, line);
+      abort();
+    }
 
-		name = malloc(sizeof(char) * (col_idx + 1));
-		if (!name) {
-			pprint_error("no more memory", __FILE_NAME__, __func__,
-			    __LINE__);
-			abort();
-		}
+    name = malloc(sizeof(char) * (col_idx + 1));
+    if (!name) {
+      pprint_error("no more memory", __FILE_NAME__, __func__, __LINE__);
+      abort();
+    }
 
-		for (size_t i = 0; i < col_idx; ++i) {
-			name[i] = line[i];
-		}
-		name[col_idx] = '\x0';
+    for (size_t i = 0; i < col_idx; ++i) {
+      name[i] = line[i];
+    }
+    name[col_idx] = '\x0';
 
-		value = malloc(sizeof(char) * line_len);
-		if (!value) {
-			pprint_error("no more memory", __FILE_NAME__, __func__,
-			    __LINE__);
-			abort();
-		}
+    value = malloc(sizeof(char) * line_len);
+    if (!value) {
+      pprint_error("no more memory", __FILE_NAME__, __func__, __LINE__);
+      abort();
+    }
 
-		for (size_t i = (col_idx + 2); i < line_len; ++i) {
-			value[i - (col_idx + 2)] = line[i];
-		}
-		value[line_len - col_idx - 2] = '\x0';
+    for (size_t i = (col_idx + 2); i < line_len; ++i) {
+      value[i - (col_idx + 2)] = line[i];
+    }
+    value[line_len - col_idx - 2] = '\x0';
 
-		free(line);
-		cur->header_name = name;
-		cur->header_value = value;
-		cur->next = NULL;
-	}
+    free(line);
+    cur->header_name = name;
+    cur->header_value = value;
+    cur->next = NULL;
+  }
 
-	cur->next = NULL;
+  cur->next = NULL;
 
-	return response;
+  return response;
 }
 
 int
 http_wss_upgrade(SSL *ssl, char *endpoint, char *path)
 {
 
-	/*
-	 * example http upgrade request
-	 *
-	 * GET /chat HTTP/1.1
-	 * Host: server.example.com
-	 * Upgrade: websocket
-	 * Connection: Upgrade
-	 * Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
-	 * Sec-WebSocket-Protocol: chat, superchat
-	 * Sec-WebSocket-Version: 13
-	 */
+  /*
+   * example http upgrade request
+   *
+   * GET /chat HTTP/1.1
+   * Host: server.example.com
+   * Upgrade: websocket
+   * Connection: Upgrade
+   * Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+   * Sec-WebSocket-Protocol: chat, superchat
+   * Sec-WebSocket-Version: 13
+   */
 
-	// Generate a 16 byte random number to be used as a communication feed.
-	unsigned char raw_key[HTTP_WSS_KEY_LEN];
+  // Generate a 16 byte random number to be used as a communication feed.
+  unsigned char raw_key[HTTP_WSS_KEY_LEN];
 
 #ifdef _WIN32
 #pragma error windows has no / dev / urandom.
 #endif
 
-	FILE *urandom = fopen("/dev/urandom", "rb");
-	for (size_t i = 0; i < HTTP_WSS_KEY_LEN; ++i) {
-		raw_key[i] = (unsigned char)fgetc(urandom);
-	}
-	fclose(urandom);
+  FILE *urandom = fopen("/dev/urandom", "rb");
+  for (size_t i = 0; i < HTTP_WSS_KEY_LEN; ++i) {
+    raw_key[i] = (unsigned char)fgetc(urandom);
+  }
+  fclose(urandom);
 
-	pprint_info("generated crypto safe key "
-		    "0x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
-	    __FILE_NAME__, __func__, __LINE__, raw_key[0], raw_key[1],
-	    raw_key[2], raw_key[3], raw_key[4], raw_key[5], raw_key[6],
-	    raw_key[7], raw_key[8], raw_key[9], raw_key[10], raw_key[11],
-	    raw_key[12], raw_key[13], raw_key[14], raw_key[15]);
+  pprint_info("generated crypto safe key "
+              "0x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+      __FILE_NAME__, __func__, __LINE__, raw_key[0], raw_key[1], raw_key[2],
+      raw_key[3], raw_key[4], raw_key[5], raw_key[6], raw_key[7], raw_key[8],
+      raw_key[9], raw_key[10], raw_key[11], raw_key[12], raw_key[13],
+      raw_key[14], raw_key[15]);
 
-	unsigned char *key_encoded = NULL;
-	key_encoded = base64(raw_key, HTTP_WSS_KEY_LEN);
+  unsigned char *key_encoded = NULL;
+  key_encoded = base64(raw_key, HTTP_WSS_KEY_LEN);
 
-	pprint_info("generated Sec-WebSocket-Key: %s", __FILE_NAME__, __func__,
-	    __LINE__, key_encoded);
+  pprint_info("generated Sec-WebSocket-Key: %s", __FILE_NAME__, __func__,
+      __LINE__, key_encoded);
 
-	int req_size = snprintf(
-	    NULL, 0, HTTP_WSS_UPGRADE_FMT, path, endpoint, key_encoded);
+  int req_size =
+      snprintf(NULL, 0, HTTP_WSS_UPGRADE_FMT, path, endpoint, key_encoded);
 
-	char *request =
-	    (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
-	sprintf(request, HTTP_WSS_UPGRADE_FMT, path, endpoint, key_encoded);
+  char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+  sprintf(request, HTTP_WSS_UPGRADE_FMT, path, endpoint, key_encoded);
 
-	// don't send over the NULL terminator
-	SSL_write(ssl, request, req_size);
+  // don't send over the NULL terminator
+  SSL_write(ssl, request, req_size);
 
-	// get the response headers with values and find the
-	// Sec-WebSocket-Accept header.
-	struct _http_response *responses = _http_parse_response(ssl);
-	struct _http_response *iter = responses;
-	while (strcmp(iter->header_name, "Sec-WebSocket-Accept") != 0) {
-		iter = iter->next;
-	}
+  // get the response headers with values and find the
+  // Sec-WebSocket-Accept header.
+  struct _http_response *responses = _http_parse_response(ssl);
+  struct _http_response *iter = responses;
+  while (strcmp(iter->header_name, "Sec-WebSocket-Accept") != 0) {
+    iter = iter->next;
+  }
 
-	if (iter) {
-		pprint_info(
-		    "confirmation key %s received web socket upgrade complete ",
-		    __FILE_NAME__, __func__, __LINE__, iter->header_value);
-	} else {
-		pprint_error("server did not accept websocket upgrade",
-		    __FILE_NAME__, __func__, __LINE__);
-		abort();
-	}
+  if (iter) {
+    pprint_info("confirmation key %s received web socket upgrade complete ",
+        __FILE_NAME__, __func__, __LINE__, iter->header_value);
+  } else {
+    pprint_error("server did not accept websocket upgrade", __FILE_NAME__,
+        __func__, __LINE__);
+    abort();
+  }
 
-	free(key_encoded);
-	_http_response_free(responses);
-	return 0;
+  free(key_encoded);
+  _http_response_free(responses);
+  return 0;
 }
 
 int
 http_get_request(char *endpoint, char *path, char **response)
 {
-	pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__,
-	    __LINE__, endpoint, "443");
+  pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__, __LINE__,
+      endpoint, "443");
 
-	// convert endpoint to an ip address
-	struct addrinfo *res = NULL;
+  // convert endpoint to an ip address
+  struct addrinfo *res = NULL;
 
-	if (getaddrinfo(endpoint, "443", NULL, &res) != 0) {
-		pprint_error("unable to resolve %s", __FILE_NAME__, __func__,
-		    __LINE__, endpoint);
-		return 1;
-	}
+  if (getaddrinfo(endpoint, "443", NULL, &res) != 0) {
+    pprint_error(
+        "unable to resolve %s", __FILE_NAME__, __func__, __LINE__, endpoint);
+    return 1;
+  }
 
-	// create the socket
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == -1) {
-		pprint_error(
-		    "unable to create socket probably because one is already open",
-		    __FILE_NAME__, __func__, __LINE__);
-		return 1;
-	}
+  // create the socket
+  int sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (sock == -1) {
+    pprint_error("unable to create socket probably because one is already open",
+        __FILE_NAME__, __func__, __LINE__);
+    return 1;
+  }
 
-	// connect the socket to the remote host
-	if (connect(sock, res->ai_addr, res->ai_addrlen) == -1) {
-		return 1;
-	}
+  // connect the socket to the remote host
+  if (connect(sock, res->ai_addr, res->ai_addrlen) == -1) {
+    return 1;
+  }
 
-	// prime SSL for establishing TLS connection
-	const SSL_METHOD *method = TLS_client_method();
-	SSL_CTX *ctx = SSL_CTX_new(method);
+  // prime SSL for establishing TLS connection
+  const SSL_METHOD *method = TLS_client_method();
+  SSL_CTX *ctx = SSL_CTX_new(method);
 
-	if (ctx == NULL) {
-		ERR_print_errors_fp(stdout);
-		abort();
-	}
+  if (ctx == NULL) {
+    ERR_print_errors_fp(stdout);
+    abort();
+  }
 
-	SSL *ssl = NULL;
-	ssl = SSL_new(ctx);
-	SSL_set_fd(ssl, sock);
-	SSL_set_tlsext_host_name(ssl, endpoint);
+  SSL *ssl = NULL;
+  ssl = SSL_new(ctx);
+  SSL_set_fd(ssl, sock);
+  SSL_set_tlsext_host_name(ssl, endpoint);
 
-	// perform the TLS handshake
-	if (SSL_connect(ssl) == -1) {
-		ERR_print_errors_fp(stdout);
-		abort();
-	}
+  // perform the TLS handshake
+  if (SSL_connect(ssl) == -1) {
+    ERR_print_errors_fp(stdout);
+    abort();
+  }
 
-	pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__,
-	    __LINE__, endpoint);
+  pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__, __LINE__,
+      endpoint);
 
-	int req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, endpoint);
+  int req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, endpoint);
 
-	char *request =
-	    (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
-	sprintf(request, HTTP_GET_REQUEST_FMT, path, endpoint);
+  char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+  sprintf(request, HTTP_GET_REQUEST_FMT, path, endpoint);
 
-	SSL_write(ssl, request, req_size);
+  SSL_write(ssl, request, req_size);
 
-	struct _http_response *responses = _http_parse_response(ssl);
-	struct _http_response *iter = responses;
-	while (strcmp(iter->header_name, "Content-Length") != 0) {
-		iter = iter->next;
-	}
+  struct _http_response *responses = _http_parse_response(ssl);
+  struct _http_response *iter = responses;
+  while (strcmp(iter->header_name, "Content-Length") != 0) {
+    iter = iter->next;
+  }
 
-	if (!iter) {
-		pprint_error("Content-Length header not found", __FILE_NAME__,
-		    __func__, __LINE__);
-		abort();
-	}
+  if (!iter) {
+    pprint_error(
+        "Content-Length header not found", __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
 
-	size_t content_length = (size_t)atoi(iter->header_value);
-	printf("content-length: %lu\n", content_length);
+  size_t content_length = (size_t)atoi(iter->header_value);
 
-	_http_response_free(responses);
+  _http_response_free(responses);
 
-	char *body = (char *)malloc(content_length * sizeof(char));
-	for (size_t i = 0; i < content_length; ++i) {
-		if (SSL_read(ssl, &(body[i]), 1) != 1) {
-			abort();
-		}
-	}
+  char *body = (char *)malloc(content_length * sizeof(char));
+  for (size_t i = 0; i < content_length; ++i) {
+    if (SSL_read(ssl, &(body[i]), 1) != 1) {
+      abort();
+    }
+  }
 
-	free(request);
-	freeaddrinfo(res);
+  free(request);
+  freeaddrinfo(res);
 
-	close(sock);
+  close(sock);
 
-	SSL_shutdown(ssl);
-	SSL_free(ssl);
-	SSL_CTX_free(ctx);
+  SSL_shutdown(ssl);
+  SSL_free(ssl);
+  SSL_CTX_free(ctx);
 
-	*response = body;
-	return 0;
+  *response = body;
+  return 0;
 }

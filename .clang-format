@@ -82,10 +82,10 @@ Language: Cpp
 NamespaceIndentation: None
 PointerAlignment: Right
 ContinuationIndentWidth: 4
-IndentWidth: 8
-TabWidth: 8
+IndentWidth: 2
+TabWidth: 2
 ColumnLimit: 80
-UseTab: Always
+UseTab: Never
 SpaceAfterCStyleCast: false
 IncludeBlocks: Regroup
 IncludeCategories:

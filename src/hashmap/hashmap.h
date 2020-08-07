@@ -9,21 +9,21 @@
  *  how they would like to iterate over it.
  */
 struct hashmap {
-	/*
-	 * an array of pointers that point to pointers of data
-	 */
-	struct _map_list **bins;
+  /*
+   * an array of pointers that point to pointers of data
+   */
+  struct _map_list **bins;
 
-	/*
-	 * store the number of bins to remember what to mod by
-	 * during the hash
-	 */
-	unsigned int num_bins;
+  /*
+   * store the number of bins to remember what to mod by
+   * during the hash
+   */
+  unsigned int num_bins;
 
-	/*
-	 * explicit padding
-	 */
-	char _p1[4];
+  /*
+   * explicit padding
+   */
+  char _p1[4];
 };
 
 /*
@@ -31,9 +31,9 @@ struct hashmap {
  * of how to handle the values
  */
 struct _map_list {
-	void *key;
-	void *value;
-	struct _map_list *next;
+  size_t key;
+  void *value;
+  struct _map_list *next;
 };
 
 /*
@@ -47,7 +47,7 @@ struct hashmap *hashmap_new(unsigned int num_bins);
  * Frees the hashmap struct created by hashmap_new
  * @param map a pointer to the pointer to the hashmap
  */
-void hashmap_free(struct hashmap **map);
+void hashmap_free(struct hashmap *map);
 
 /*
  * Puts a value in the hashmap
@@ -55,7 +55,7 @@ void hashmap_free(struct hashmap **map);
  * @param value a pointer to the value
  * @param map the hashmap to put this value in
  */
-void hashmap_put(void *key, void *value, struct hashmap *map);
+void hashmap_put(char *key, void *value, struct hashmap *map);
 
 /*
  * Gets a value out of the hashmap.
@@ -63,6 +63,6 @@ void hashmap_put(void *key, void *value, struct hashmap *map);
  * @param map the map to search for the key for
  * @return the value or null if the key doesn't exist
  */
-void *hashmap_get(void *key, struct hashmap *map);
+void *hashmap_get(char *key, struct hashmap *map);
 
 #endif

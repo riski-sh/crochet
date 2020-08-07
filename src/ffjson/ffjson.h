@@ -16,29 +16,41 @@ typedef struct json_array *__json_array;
 typedef double *__json_number;
 typedef char *__json_string;
 typedef struct json_value *__json_value;
+typedef bool __json_bool;
 
 enum JSON_TYPE {
-	JSON_TYPE_OBJECT = 0, // expect hash map
-	JSON_TYPE_ARRAY = 1, // expect a null terminated array
-	JSON_TYPE_NUMBER = 2, // expect a double pointer
-	JSON_TYPE_STRING = 3, // expect a const char *
-	JSON_TYPE_TRUE = 4, // expect NULL
-	JSON_TYPE_FALSE = 5, // expect NULL
-	JSON_TYPE_NULL = 6 // expect NULL
+  JSON_TYPE_OBJECT = 0, // expect hash map
+  JSON_TYPE_ARRAY = 1, // expect a null terminated array
+  JSON_TYPE_NUMBER = 2, // expect a double pointer
+  JSON_TYPE_STRING = 3, // expect a const char *
+  JSON_TYPE_TRUE = 4, // expect NULL
+  JSON_TYPE_FALSE = 5, // expect NULL
+  JSON_TYPE_NULL = 6, // expect NULL
+
+  JSON_TYPE_NUM = 7 // not a json type just counts the number
+                    // of json types
 };
 
+extern char *JSON_TYPE_STR[JSON_TYPE_NUM];
+
+__json_object json_get_object(__json_value val);
+__json_array json_get_array(__json_value val);
+__json_number json_get_number(__json_value val);
+__json_string json_get_string(__json_value val);
+__json_bool json_get_bool(__json_value val);
+
 struct json_value {
-	enum JSON_TYPE t;
+  enum JSON_TYPE t;
 
-	// voluntary padding
-	char _p[4];
+  // voluntary padding
+  char _p[4];
 
-	void *data;
+  void *data;
 };
 
 struct json_array {
-	__json_value val;
-	__json_array nxt;
+  __json_value val;
+  __json_array nxt;
 };
 
 /*
@@ -48,27 +60,9 @@ struct json_array {
 __json_value json_parse(char *str);
 
 /*
-[
-  {
-     "precision": "zip",
-     "Latitude":  37.7668,
-     "Longitude": -122.3959,
-     "Address":   "",
-     "City":      "SAN FRANCISCO",
-     "State":     "CA",
-     "Zip":       "94107",
-     "Country":   "US"
-  },
-  {
-     "precision": "zip",
-     "Latitude":  37.371991,
-     "Longitude": -122.026020,
-     "Address":   "",
-     "City":      "SUNNYVALE",
-     "State":     "CA",
-     "Zip":       "94085",
-     "Country":   "US"
-  }
-]
-*/
+ * Frees a json object and all its children
+ * @param root the root of the object
+ */
+void json_free(__json_value root);
+
 #endif

@@ -24,33 +24,33 @@
 #include "http.h"
 
 enum WSS_ERR {
-	WSS_ERR_NONE = 0,
-	WSS_ERR_GET_ADDR_INFO = 1,
-	WSS_ERR_SOCKET_CREATION = 2,
-	WSS_ERR_CONNECT_FAILURE = 3,
+  WSS_ERR_NONE = 0,
+  WSS_ERR_GET_ADDR_INFO = 1,
+  WSS_ERR_SOCKET_CREATION = 2,
+  WSS_ERR_CONNECT_FAILURE = 3,
 
-	// number of web socket error codes
-	WSS_ERR_NUM
+  // number of web socket error codes
+  WSS_ERR_NUM
 };
 
 /*
  * Structure that represents a session towards a websocket connection.
  */
 struct wss_session {
-	/*
-	 * raw file descriptor for socket
-	 */
-	int fd;
+  /*
+   * raw file descriptor for socket
+   */
+  int fd;
 
-	/*
-	 * 4 bytes free from padding
-	 */
-	char _p1[4];
+  /*
+   * 4 bytes free from padding
+   */
+  char _p1[4];
 
-	/*
-	 * an SSL instance for SSL/TLS communication
-	 */
-	SSL *ssl;
+  /*
+   * an SSL instance for SSL/TLS communication
+   */
+  SSL *ssl;
 };
 
 /*
