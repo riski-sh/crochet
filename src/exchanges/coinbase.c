@@ -80,6 +80,7 @@ _coinbase_start(void *id)
 
   book_free(bid_book, coinbase_book_value_free);
   book_free(ask_book, coinbase_book_value_free);
+
   json_free(full_book);
   free(buffer);
 }

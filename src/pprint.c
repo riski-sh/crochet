@@ -2,7 +2,7 @@
 
 #include "pprint.h"
 
-#define TIME_STR_LEN 22
+#define TIME_STR_LEN 35
 
 /*
  * Locks a file for writing
@@ -33,8 +33,11 @@ _pprint_time(char (*time)[TIME_STR_LEN])
 {
   struct timespec current_time;
   clock_gettime(CLOCK_REALTIME, &current_time);
-  snprintf(*time, TIME_STR_LEN, "%10ld.%-10ld", current_time.tv_sec,
-      current_time.tv_nsec);
+
+  size_t epoch_usec = (size_t)(current_time.tv_sec * 1000) +
+      (size_t)(current_time.tv_nsec / 1000000);
+
+  sprintf(*time, "%lu", epoch_usec);
 }
 
 void __attribute__((__format__(__printf__, 1, 0)))
