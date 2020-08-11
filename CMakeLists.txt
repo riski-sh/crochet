@@ -13,6 +13,8 @@ if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_C_FLAGS "-Wall -Wextra -Werror -Wpedantic -O0 -g")
   message (WARNING "gcc build will output a logs differently than clang")
+  message (WARNING "the output logs will look terrible, consider building")
+  message (WARNING "using clang")
 else()
   message (FATAL_ERROR "supported compilers are GCC and CLANG only")
 endif()
@@ -25,9 +27,11 @@ add_subdirectory(src/httpws)
 add_subdirectory(src/hashmap)
 add_subdirectory(src/ffjson)
 add_subdirectory(src/exchanges)
+add_subdirectory(src/finmath)
+add_subdirectory(src/orderbooks)
 
 add_library (pprint SHARED src/pprint.c)
 add_executable (crochet src/main.c)
 
-target_link_libraries (crochet pprint httpws ffjson hashmap
-  coinbase OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries (crochet pprint httpws ffjson hashmap coinbase
+  orderbooks finmath OpenSSL::SSL OpenSSL::Crypto)

@@ -81,7 +81,7 @@ hashmap_get(char *key, struct hashmap *map)
 
   struct _map_list *iter = map->bins[bin];
 
-  while (iter->next != NULL) {
+  while (iter) {
     if (iter->key == hash) {
       return iter->value;
     }

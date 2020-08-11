@@ -292,14 +292,9 @@ json_parse(char *str)
   // the current index of the string we are looking at
   size_t idx = 0;
 
-  pprint_info("started parse", __FILE_NAME__, __func__, __LINE__);
-
   // ws value ws
   _parse_whitespace(str, &idx);
-
   __json_value val = _parse_value(str, &idx);
-  pprint_info("parsed successfully", __FILE_NAME__, __func__, __LINE__);
-
   return val;
 }
 
