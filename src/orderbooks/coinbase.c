@@ -51,3 +51,19 @@ coinbase_book_print(coinbase_book *book, range_t order)
     break;
   }
 }
+
+void
+coinbase_book_value_free(void* data)
+{
+  if (!data) {
+    return;
+  }
+
+  struct coinbase_value *iter = data;
+  while (iter) {
+    struct coinbase_value *nxt = iter->nxt;
+    free(iter->orderid);
+    free(iter);
+    iter = nxt;
+  }
+}

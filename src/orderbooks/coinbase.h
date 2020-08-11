@@ -23,4 +23,6 @@ void coinbase_book_put(
 
 void coinbase_book_print(coinbase_book *book, range_t order);
 
+void coinbase_book_value_free(void* data);
+
 #endif

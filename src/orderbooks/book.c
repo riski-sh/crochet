@@ -260,3 +260,16 @@ book_query(struct generic_book **root, uint64_t price)
     return *root;
   }
 }
+
+void
+book_free(struct generic_book* node, book_free_data free_func)
+{
+  if (!node) {
+    return;
+  }
+  book_free(node->left, free_func);
+  book_free(node->right, free_func);
+
+  free_func(node->data);
+  free(node);
+}

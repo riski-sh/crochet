@@ -75,11 +75,13 @@ _coinbase_start(void *id)
   __json_array asks = json_get_array(hashmap_get("asks", book));
   coinbase_book *ask_book = _build_book(asks);
 
-  (void) bid_book;
-  (void) ask_book;
-
   pprint_info("finished full order book for %s", __FILE_NAME__, __func__,
       __LINE__, (char *)id);
+
+  book_free(bid_book, coinbase_book_value_free);
+  book_free(ask_book, coinbase_book_value_free);
+  json_free(full_book);
+  free(buffer);
 }
 
 void
