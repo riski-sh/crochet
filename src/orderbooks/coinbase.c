@@ -23,31 +23,67 @@ coinbase_book_put(
 }
 
 static void
-_print_increasing(coinbase_book *book)
+_get_increasing(
+    coinbase_book *book, int *cur, int num, struct coinbase_book_level *d)
 {
-  (void)book;
+  if (!book || *cur <= 0) {
+    return;
+  }
+  _get_increasing(book->left, cur, num, d);
+
+  if (!book || *cur <= 0) {
+    return;
+  }
+  _get_increasing(book->right, cur, num, d);
+
+  if (!book || *cur <= 0) {
+    return;
+  }
+
+  d[num - (*cur)].total = book->total;
+  d[num - (*cur)].level = book->price;
+
+  *cur -= 1;
 }
 
 static void
-_print_decreasing(coinbase_book *book, int lvl)
+_get_decreasing(
+    coinbase_book *book, int *cur, int num, struct coinbase_book_level *d)
 {
-  if (!book || lvl <= 0) {
+  if (!book || *cur <= 0) {
     return;
   }
-  _print_decreasing(book->right, lvl);
-  printf("%f\t%10lu\n", ((double)book->price) / 100.0, book->total);
-  _print_decreasing(book->left, lvl - 1);
+  _get_decreasing(book->right, cur, num, d);
+
+  if (!book || *cur <= 0) {
+    return;
+  }
+  _get_decreasing(book->left, cur, num, d);
+
+  if (!book || *cur <= 0) {
+    return;
+  }
+
+  d[num - (*cur)].total = book->total;
+  d[num - (*cur)].level = book->price;
+
+  *cur -= 1;
 }
 
 void
-coinbase_book_print(coinbase_book *book, range_t order)
+coinbase_book_get(coinbase_book *book, book_t book_type, int num,
+    struct coinbase_book_level *data)
 {
-  switch (order) {
-  case RANGE_INCREASING:
-    _print_increasing(book);
+  if (!book) {
+    return;
+  }
+
+  switch (book_type) {
+  case BOOK_BID:
+    _get_decreasing(book, &num, num, data);
     break;
-  case RANGE_DECREASING:
-    _print_decreasing(book, 1);
+  case BOOK_ASK:
+    _get_increasing(book, &num, num, data);
     break;
   }
 }

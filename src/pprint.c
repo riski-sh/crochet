@@ -1,5 +1,3 @@
-#include <netdb.h>
-
 #include "pprint.h"
 
 #define TIME_STR_LEN 35

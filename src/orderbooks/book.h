@@ -8,6 +8,8 @@
 
 typedef enum { RANGE_INCREASING = 0, RANGE_DECREASING = 1 } range_t;
 
+typedef enum { BOOK_BID = 0, BOOK_ASK = 1 } book_t;
+
 struct generic_book {
   struct generic_book *left;
   struct generic_book *right;

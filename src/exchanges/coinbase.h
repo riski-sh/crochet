@@ -15,6 +15,9 @@
  */
 #define COINBASE_API "api.pro.coinbase.com"
 
+/*
+ * Starts the coinbase feeds
+ */
 void coinbase_init(void);
 
 #endif
