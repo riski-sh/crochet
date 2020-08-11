@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "book.h"
-#include <time.h>
 
 struct coinbase_value {
   uint64_t size;
@@ -23,6 +23,6 @@ void coinbase_book_put(
 
 void coinbase_book_print(coinbase_book *book, range_t order);
 
-void coinbase_book_value_free(void* data);
+void coinbase_book_value_free(void *data);
 
 #endif

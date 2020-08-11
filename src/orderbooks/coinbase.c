@@ -25,7 +25,7 @@ coinbase_book_put(
 static void
 _print_increasing(coinbase_book *book)
 {
-  (void) book;
+  (void)book;
 }
 
 static void
@@ -35,8 +35,8 @@ _print_decreasing(coinbase_book *book, int lvl)
     return;
   }
   _print_decreasing(book->right, lvl);
-  printf("%f\t%10lu\n", ((double)book->price)/100.0, book->total);
-  _print_decreasing(book->left, lvl-1);
+  printf("%f\t%10lu\n", ((double)book->price) / 100.0, book->total);
+  _print_decreasing(book->left, lvl - 1);
 }
 
 void
@@ -53,7 +53,7 @@ coinbase_book_print(coinbase_book *book, range_t order)
 }
 
 void
-coinbase_book_value_free(void* data)
+coinbase_book_value_free(void *data)
 {
   if (!data) {
     return;

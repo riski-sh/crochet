@@ -29,7 +29,7 @@ struct generic_book {
  */
 struct generic_book *book_query(struct generic_book **root, uint64_t price);
 
-typedef void (*book_free_data)(void* _data);
+typedef void (*book_free_data)(void *_data);
 
 /*
  * Frees an generic book and calls a book_free_data function to free

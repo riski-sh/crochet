@@ -23,31 +23,31 @@ _max_depth(struct generic_book *node)
 static void
 _ll_rotation(struct generic_book **node)
 {
-    struct generic_book *a = *node;
-    struct generic_book *b = (*node)->left;
-    struct generic_book *x = b->right;
+  struct generic_book *a = *node;
+  struct generic_book *b = (*node)->left;
+  struct generic_book *x = b->right;
 
-    b->right = a;
-    b->parent = a->parent;
+  b->right = a;
+  b->parent = a->parent;
 
-    if (a->parent) {
-      if (a->parent->left == a) {
-        a->parent->left = b;
-      } else {
-        a->parent->right = b;
-      }
-    }
-
-    a->parent = b;
-
-    if (x) {
-      a->left = x;
-      x->parent = a;
+  if (a->parent) {
+    if (a->parent->left == a) {
+      a->parent->left = b;
     } else {
-      a->left = NULL;
+      a->parent->right = b;
     }
+  }
 
-    *node = b;
+  a->parent = b;
+
+  if (x) {
+    a->left = x;
+    x->parent = a;
+  } else {
+    a->left = NULL;
+  }
+
+  *node = b;
 }
 
 /*
@@ -56,32 +56,31 @@ _ll_rotation(struct generic_book **node)
 static void
 _rr_rotation(struct generic_book **node)
 {
-    struct generic_book *a = *node;
-    struct generic_book *b = (*node)->right;
-    struct generic_book *x = b->left;
+  struct generic_book *a = *node;
+  struct generic_book *b = (*node)->right;
+  struct generic_book *x = b->left;
 
-    b->left = a;
-    b->parent = a->parent;
+  b->left = a;
+  b->parent = a->parent;
 
-    if (a->parent) {
-      if (a->parent->left == a) {
-        a->parent->left = b;
-      } else {
-        a->parent->right = b;
-      }
-    }
-
-    a->parent = b;
-
-    if (x) {
-      a->right = x;
-      x->parent = a;
+  if (a->parent) {
+    if (a->parent->left == a) {
+      a->parent->left = b;
     } else {
-      a->right = NULL;
+      a->parent->right = b;
     }
-    *node = b;
-}
+  }
 
+  a->parent = b;
+
+  if (x) {
+    a->right = x;
+    x->parent = a;
+  } else {
+    a->right = NULL;
+  }
+  *node = b;
+}
 
 /*
  * Performs an lr rotation
@@ -130,7 +129,6 @@ _rl_rotation(struct generic_book **node)
     b->left = NULL;
   }
 }
-
 
 static void
 _balance(struct generic_book **node)
@@ -262,7 +260,7 @@ book_query(struct generic_book **root, uint64_t price)
 }
 
 void
-book_free(struct generic_book* node, book_free_data free_func)
+book_free(struct generic_book *node, book_free_data free_func)
 {
   if (!node) {
     return;
