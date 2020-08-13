@@ -1,5 +1,4 @@
 #include "coinbase.h"
-#include "orderbooks/book.h"
 
 void
 coinbase_book_put(

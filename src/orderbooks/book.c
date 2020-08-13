@@ -155,10 +155,12 @@ _balance(struct generic_book **node)
 
   if (balance_score == 2) {
     if (*node && (*node)->left && (*node)->left->left) {
+      printf("1\n");
       _ll_rotation(node);
       _balance(node);
       return;
     } else if (*node && (*node)->left && (*node)->left->right) {
+      printf("2\n");
       _lr_rotation(node);
       _ll_rotation(node);
       _balance(node);
@@ -168,10 +170,12 @@ _balance(struct generic_book **node)
     }
   } else if (balance_score == -2) {
     if (*node && (*node)->right && (*node)->right->right) {
+      printf("3\n");
       _rr_rotation(node);
       _balance(node);
       return;
     } else if (*node && (*node)->right && (*node)->right->left) {
+      printf("4\n");
       _rl_rotation(node);
       _rr_rotation(node);
       _balance(node);
