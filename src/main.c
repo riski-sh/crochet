@@ -9,6 +9,7 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <stdio.h>
+#include <orderbooks/book.h>
 
 #include "pprint.h"
 

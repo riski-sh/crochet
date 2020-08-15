@@ -39,4 +39,6 @@ typedef void (*book_free_data)(void *_data);
  */
 void book_free(struct generic_book *node, book_free_data free_func);
 
+void book_print(struct generic_book *node);
+
 #endif

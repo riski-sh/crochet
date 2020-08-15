@@ -3,7 +3,6 @@
 #include "httpws/wss.h"
 #include "pprint.h"
 
-
 static void
 _subscribe(char *id, struct wss_session *coinbase_local)
 {
@@ -110,11 +109,10 @@ _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
     }
 
   } else {
-    pprint_error("unknown received message type", __FILE_NAME__, __func__,
-        __LINE__);
+    pprint_error(
+        "unknown received message type", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
-
 }
 
 /*
@@ -150,6 +148,7 @@ _coinbase_start(void *id)
   // Subscribe to the feed
   _subscribe((char *)id, &coinbase_local);
 
+  // let the back buffer fill
   sleep(5);
 
   char *full_book_request = NULL;
@@ -190,10 +189,9 @@ _coinbase_start(void *id)
 
   size_t start_time = (size_t)time(NULL);
   size_t end_time = (size_t)time(NULL);
-  size_t num_msg = 1;
+  size_t num_msg = 0;
 
   while (wss_read_text(&coinbase_local, &msg_rt) == WSS_ERR_NONE) {
-    char *test = strdup(msg_rt);
     __json_value _msg = json_parse(msg_rt);
     __json_object msg = json_get_object(_msg);
 
@@ -224,7 +222,6 @@ _coinbase_start(void *id)
     switch (msg_type[0]) {
     case 'r': {
       // received
-      printf("%s\n", test);
       _parse_received(msg, &bid_book, &ask_book);
       break;
     }
@@ -254,15 +251,14 @@ _coinbase_start(void *id)
     end_time = (size_t)time(NULL);
 
     if (end_time - start_time >= 1) {
-      double msg_ps = (double) num_msg / (double)(end_time - start_time);
-      pprint_info("%s %f msg/s", __FILE_NAME__, __func__, __LINE__,
-          (char*) id, msg_ps);
+      double msg_ps = (double)num_msg / (double)(end_time - start_time);
+      pprint_info(
+          "%s %f msg/s", __FILE_NAME__, __func__, __LINE__, (char *)id, msg_ps);
 
-      start_time = (size_t) time(NULL);
-      end_time = (size_t) time(NULL);
+      start_time = (size_t)time(NULL);
+      end_time = (size_t)time(NULL);
       num_msg = 1;
     }
-
   }
 }
 

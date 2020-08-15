@@ -1,5 +1,24 @@
 #include "book.h"
 
+void
+book_print(struct generic_book *b)
+{
+  if (!b) {
+    return;
+  }
+
+  if (b->left) {
+    printf("%lu -> %lu\n", b->price, b->left->price);
+  }
+
+  if (b->right) {
+    printf("%lu -> %lu\n", b->price, b->right->price);
+  }
+
+  book_print(b->left);
+  book_print(b->right);
+}
+
 static int
 _max_depth(struct generic_book *node)
 {
@@ -133,59 +152,43 @@ _rl_rotation(struct generic_book **node)
 static void
 _balance(struct generic_book **node)
 {
+  while (*node) {
+    // compute the balance score
+    int lDepth = _max_depth((*node)->left);
+    int rDepth = _max_depth((*node)->right);
 
-  // compute the balance score
-  int lDepth = _max_depth((*node)->left);
-  int rDepth = _max_depth((*node)->right);
-
-  int balance_score = lDepth - rDepth;
-
-  if (balance_score > -2 && balance_score < 2) {
-    // this node is balanced go up the tree and keep
-    // balancing until we reach the root
-
-    if ((*node)->parent) {
-      (*node) = (*node)->parent;
-      _balance(node);
-      return;
-    } else {
-      return;
+    int balance_score = (lDepth - rDepth);
+    if (balance_score == -1 || balance_score == 0 || balance_score == 1) {
+      if ((*node)->parent) {
+        (*node) = (*node)->parent;
+        continue;
+      } else {
+        break;
+      }
     }
-  }
 
-  if (balance_score == 2) {
-    if (*node && (*node)->left && (*node)->left->left) {
-      printf("1\n");
-      _ll_rotation(node);
-      _balance(node);
-      return;
-    } else if (*node && (*node)->left && (*node)->left->right) {
-      printf("2\n");
-      _lr_rotation(node);
-      _ll_rotation(node);
-      _balance(node);
-      return;
+    if (balance_score == 2) {
+      if (_max_depth((*node)->left->left) > _max_depth((*node)->left->right)) {
+        _ll_rotation(node);
+        continue;
+      } else {
+        _lr_rotation(node);
+        _ll_rotation(node);
+        continue;
+      }
+    } else if (balance_score == -2) {
+      if (_max_depth((*node)->right->right) > _max_depth((*node)->right->left)) {
+        _rr_rotation(node);
+        continue;
+      } else {
+        _rl_rotation(node);
+        _rr_rotation(node);
+        continue;
+      }
     } else {
+      book_print(*node);
       abort();
     }
-  } else if (balance_score == -2) {
-    if (*node && (*node)->right && (*node)->right->right) {
-      printf("3\n");
-      _rr_rotation(node);
-      _balance(node);
-      return;
-    } else if (*node && (*node)->right && (*node)->right->left) {
-      printf("4\n");
-      _rl_rotation(node);
-      _rr_rotation(node);
-      _balance(node);
-    } else {
-      abort();
-    }
-  } else {
-    // tree is beyond recoverable
-    printf("tree has not been balanced correctly from the children\n");
-    abort();
   }
 }
 
