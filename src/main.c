@@ -8,8 +8,8 @@
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
-#include <stdio.h>
 #include <orderbooks/book.h>
+#include <stdio.h>
 
 #include "pprint.h"
 

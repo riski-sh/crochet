@@ -177,7 +177,8 @@ _balance(struct generic_book **node)
         continue;
       }
     } else if (balance_score == -2) {
-      if (_max_depth((*node)->right->right) > _max_depth((*node)->right->left)) {
+      if (_max_depth((*node)->right->right) >
+          _max_depth((*node)->right->left)) {
         _rr_rotation(node);
         continue;
       } else {
@@ -263,6 +264,67 @@ book_query(struct generic_book **root, uint64_t price)
     (*root)->total = 0;
     (*root)->price = price;
     return *root;
+  }
+}
+
+void
+book_remove(
+    struct generic_book **root, uint64_t price, book_free_data free_func)
+{
+  // Find the price
+  struct generic_book *level = book_query(root, price);
+
+  if (level->price != price) {
+    pprint_error("requested price level %lu but got %lu", __FILE_NAME__,
+        __func__, __LINE__, price, level->price);
+    abort();
+  }
+
+  if (level->left == NULL && level->right == NULL) {
+    // leaf node just delete the leaf
+    struct generic_book *parent = level->parent;
+    free_func(level->data);
+    free(level);
+    *root = parent;
+    _balance(root);
+  } else if (level->left == NULL && level->right != NULL) {
+    // one child to the right
+    // take the right child and make it the parent
+    struct generic_book *n = level->right;
+    struct generic_book *l = level;
+
+    free_func(l->data);
+    l->right = n->right;
+    l->left = n->left;
+    l->data = n->data;
+    l->price = n->price;
+    l->total = n->total;
+    free(n);
+    *root = l;
+    _balance(root);
+  } else if (level->right == NULL && level->left != NULL) {
+    // one child to the left
+    struct generic_book *n = level->left;
+    struct generic_book *l = level;
+
+    free_func(l->data);
+    l->right = n->right;
+    l->left = n->left;
+    l->data = n->data;
+    l->price = n->price;
+    l->total = n->total;
+    free(n);
+    *root = l;
+    _balance(root);
+  } else if (level->right != NULL && level->left != NULL) {
+    // two children
+    pprint_error("can't do this yet", __FILE_NAME__, __func__, __LINE__);
+    abort();
+  } else {
+    pprint_error("this case is impossible unless level == NULL which should"
+                 "never happen",
+        __FILE_NAME__, __func__, __LINE__);
+    abort();
   }
 }
 

@@ -56,7 +56,7 @@ _build_book(__json_array side)
     e->orderid = order_id;
     e->size = size_satoshi;
 
-    coinbase_book_put(&root, price_cents, e);
+    coinbase_book_received(&root, price_cents, e);
 
     side = side->nxt;
   }
@@ -65,16 +65,34 @@ _build_book(__json_array side)
 }
 
 static void
+_parse_open(__json_object msg, coinbase_book **bid, coinbase_book **ask)
+{
+  // There is no open messages for market orders.
+  // There also must be a received message before an open message is
+  // found. Knowing this it is safe to assume that this is already on the book.
+  // We must extract the UUID for this order, the book side it lives on,
+  // the level and the remaining size.
+
+  __json_string order_id = json_get_string(hashmap_get("order_id", msg));
+  uint64_t price_cents =
+      usdtocent_str(json_get_string(hashmap_get("price", msg)));
+  uint64_t btc_sat_left =
+      btctosat_str(json_get_string(hashmap_get("remaining_size", msg)));
+  __json_string _side = json_get_string(hashmap_get("side", msg));
+
+  if (strcmp(_side, "buy") == 0) {
+    coinbase_book_open(bid, price_cents, btc_sat_left, order_id);
+  } else if (strcmp(_side, "sell") == 0) {
+    coinbase_book_open(ask, price_cents, btc_sat_left, order_id);
+  } else {
+    pprint_error("unknown side", __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
+}
+
+static void
 _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
 {
-  // Coin base documentation states that if something is received it is
-  // not on the book yet. But this is a lie. The order was received
-  // and was on the book at some time. If an open request doesn't follow
-  // then a done request is performed and the level is cleared. Therefore
-  // it is safe to put received messages on the book. Since it will either
-  // be cleared instantly or turned into "open" which, either way
-  // putting this on the book will have not misrepresent the order book.
-
   __json_string _type = json_get_string(hashmap_get("order_type", msg));
 
   if (strcmp(_type, "market") == 0) {
@@ -98,11 +116,15 @@ _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
     uint64_t btc_sat = btctosat_str(_btc);
     v->size = btc_sat;
 
+    // received orders are not open on the order book yet
+    v->open = false;
+
     __json_string _side = json_get_string(hashmap_get("side", msg));
+
     if (strcmp(_side, "buy") == 0) {
-      coinbase_book_put(bid, price_cents, v);
+      coinbase_book_received(bid, price_cents, v);
     } else if (strcmp(_side, "sell") == 0) {
-      coinbase_book_put(ask, price_cents, v);
+      coinbase_book_received(ask, price_cents, v);
     } else {
       pprint_error("unknown side", __FILE_NAME__, __func__, __LINE__);
       abort();
@@ -227,6 +249,7 @@ _coinbase_start(void *id)
     }
     case 'o': {
       // open
+      _parse_open(msg, &bid_book, &ask_book);
       break;
     }
     case 'd': {

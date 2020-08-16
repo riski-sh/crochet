@@ -14,9 +14,12 @@
  * operates on a FIFO basis
  */
 struct coinbase_value {
+  bool open;
+  char _p1[7];
   uint64_t size;
   char *orderid;
   struct coinbase_value *nxt;
+  struct coinbase_value *prv;
 };
 
 struct coinbase_book_level {
@@ -31,14 +34,14 @@ struct coinbase_book_level {
 typedef struct generic_book coinbase_book;
 
 /*
- * Puts an element into an order book. If the book doesn't exist this
- * will create a new book.
+ *
+ * Primes the order for the order book
  *
  * @param book may be NULL if no book or the existing book to put.
  * @param price the price level to put.
  * @param e the order entry at level price
  */
-void coinbase_book_put(
+void coinbase_book_received(
     coinbase_book **book, uint64_t price, struct coinbase_value *e);
 
 /*
@@ -53,6 +56,9 @@ void coinbase_book_put(
  */
 void coinbase_book_get(coinbase_book *book, book_t book_type, int num,
     struct coinbase_book_level *data);
+
+void coinbase_book_open(
+    coinbase_book **book, uint64_t price, uint64_t remaining, char *uuid);
 
 /*
  * Frees the coinbase_value structure.

@@ -1,7 +1,7 @@
 #include "coinbase.h"
 
 void
-coinbase_book_put(
+coinbase_book_received(
     coinbase_book **book, uint64_t price, struct coinbase_value *e)
 {
   struct generic_book *b = book_query(book, price);
@@ -15,10 +15,52 @@ coinbase_book_put(
       v = v->nxt;
     }
     v->nxt = e;
+    e->prv = v;
   } else {
     b->data = e;
   }
-  b->total += e->size;
+
+  // don't add the size to the total level yet since it is not
+  // currently active in the book.
+  // during normal message flow the e->open will always be false
+  // during initial book making the open value will be true
+
+  if (e->open) {
+  } else {
+    b->total += e->size;
+  }
+}
+
+void
+coinbase_book_open(
+    coinbase_book **book, uint64_t price, uint64_t remaining, char *uuid)
+{
+  // find the level this order lives on
+  struct generic_book *b = book_query(book, price);
+
+  if (b->data == NULL) {
+    pprint_error(
+        "expected some data but found none", __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
+
+  struct coinbase_value *v = b->data;
+  while (v) {
+    if (strcmp(v->orderid, uuid) == 0) {
+      break;
+    }
+    v = v->nxt;
+  }
+
+  if (!v) {
+    pprint_error("the order %s doesn't exist on price level %lu", __FILE_NAME__,
+        __func__, __LINE__, uuid, price);
+  }
+
+  // make this order open
+  v->open = true;
+  v->size = remaining;
+  b->total += v->size;
 }
 
 static void
