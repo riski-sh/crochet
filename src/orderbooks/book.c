@@ -1,5 +1,8 @@
 #include "book.h"
 
+static void _book_remove(struct generic_book **root, struct generic_book *level,
+    book_free_data free_func, bool no_free);
+
 void
 book_print(struct generic_book *b)
 {
@@ -8,11 +11,15 @@ book_print(struct generic_book *b)
   }
 
   if (b->left) {
-    printf("%lu -> %lu\n", b->price, b->left->price);
+    printf("\"%lu\" -> \"%lu\"\n", b->price, b->left->price);
+  } else {
+    // printf("\"%lu\" -> \"0\"\n", b->price);
   }
 
   if (b->right) {
-    printf("%lu -> %lu\n", b->price, b->right->price);
+    printf("\"%lu\" -> \"%lu\"\n", b->price, b->right->price);
+  } else {
+    // printf("\"%lu\" -> \"0\"\n", b->price);
   }
 
   book_print(b->left);
@@ -150,8 +157,9 @@ _rl_rotation(struct generic_book **node)
 }
 
 static void
-_balance(struct generic_book **node)
+_balance(struct generic_book **node, bool from_delete)
 {
+  (void)from_delete;
   while (*node) {
     // compute the balance score
     int lDepth = _max_depth((*node)->left);
@@ -167,7 +175,7 @@ _balance(struct generic_book **node)
       }
     }
 
-    if (balance_score == 2) {
+    if (balance_score >= 2) {
       if (_max_depth((*node)->left->left) > _max_depth((*node)->left->right)) {
         _ll_rotation(node);
         continue;
@@ -176,7 +184,7 @@ _balance(struct generic_book **node)
         _ll_rotation(node);
         continue;
       }
-    } else if (balance_score == -2) {
+    } else if (balance_score <= -2) {
       if (_max_depth((*node)->right->right) >
           _max_depth((*node)->right->left)) {
         _rr_rotation(node);
@@ -187,8 +195,18 @@ _balance(struct generic_book **node)
         continue;
       }
     } else {
-      book_print(*node);
-      abort();
+      printf("balance_score = %d\n", balance_score);
+      printf("digraph A {\n");
+      book_print((*node));
+      printf("}\n");
+
+      if (balance_score == -3) {
+        (*node) = (*node)->right;
+      } else if (balance_score == 3) {
+        (*node) = (*node)->left;
+      } else {
+        abort();
+      }
     }
   }
 }
@@ -219,7 +237,7 @@ _book_query(struct generic_book **_root, uint64_t price)
         root->right = new;
 
         struct generic_book *ret = new;
-        _balance(&new);
+        _balance(&new, false);
 
         *_root = new;
 
@@ -240,7 +258,7 @@ _book_query(struct generic_book **_root, uint64_t price)
         root->left = new;
 
         struct generic_book *ret = new;
-        _balance(&new);
+        _balance(&new, false);
         *_root = new;
         return ret;
       }
@@ -249,6 +267,21 @@ _book_query(struct generic_book **_root, uint64_t price)
 
   // should never get here
   return NULL;
+}
+
+static struct generic_book *
+_get_successor(struct generic_book *b)
+{
+  if (b->right == NULL) {
+    return b;
+  }
+
+  struct generic_book *tmp = b->right;
+  while (tmp->left != NULL) {
+    tmp = tmp->left;
+  }
+
+  return tmp;
 }
 
 struct generic_book *
@@ -267,6 +300,150 @@ book_query(struct generic_book **root, uint64_t price)
   }
 }
 
+static void
+_remove_no_children(struct generic_book **root, struct generic_book *level,
+    book_free_data free_func, bool no_free)
+{
+  struct generic_book *parent = level->parent;
+  if (parent) {
+    if (parent->left == level) {
+      parent->left = NULL;
+    } else {
+      parent->right = NULL;
+    }
+  } else {
+    pprint_error("a leaf without a parent should never happen that would "
+                 "imply 1 node in the order book",
+        __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
+
+  if (!no_free) {
+    free_func(level->data);
+  }
+  free(level);
+  *root = parent;
+  _balance(root, true);
+}
+
+static void
+_remove_one_child(struct generic_book **root, struct generic_book *level,
+    book_free_data free_func, bool no_free)
+{
+  if (level->left == NULL && level->right != NULL) {
+    // one child to the right
+    // take the right child and make it the parent
+    struct generic_book *n = level->right;
+    struct generic_book *l = level;
+
+    if (!no_free) {
+      free_func(l->data);
+    }
+
+    n->parent = l->parent;
+    if (l->parent) {
+      if (l->parent->left == l) {
+        l->parent->left = n;
+      } else {
+        l->parent->right = n;
+      }
+    } else {
+      pprint_error("noooo", __FILE_NAME__, __func__, __LINE__);
+    }
+
+    free(l);
+
+    *root = n;
+    _balance(root, true);
+
+  } else if (level->right == NULL && level->left != NULL) {
+    // one child to the left
+
+    struct generic_book *n = level->left;
+    struct generic_book *l = level;
+
+    if (!no_free) {
+      free_func(l->data);
+    }
+
+    n->parent = l->parent;
+    if (l->parent) {
+      if (l->parent->left == l) {
+        l->parent->left = n;
+      } else {
+        l->parent->right = n;
+      }
+    } else {
+      pprint_error("noooo", __FILE_NAME__, __func__, __LINE__);
+    }
+
+    free(l);
+
+    *root = n;
+    _balance(root, true);
+  }
+}
+
+static void
+_remove_two_children(struct generic_book **root, struct generic_book *level,
+    book_free_data free_func)
+{
+
+  struct generic_book *l = level;
+  struct generic_book *successor = _get_successor(level);
+  // copy the data of the successor into the current level
+
+  free_func(l->data);
+  l->data = successor->data;
+  l->price = successor->price;
+  l->total = successor->total;
+
+  if (successor->right == NULL) {
+    if (successor->parent->right == successor) {
+      successor->parent->right = NULL;
+    } else {
+      successor->parent->left = NULL;
+    }
+    free(successor);
+  } else {
+    if (successor->parent->right == successor) {
+      successor->parent->right = successor->right;
+      successor->right->parent = successor->parent;
+    } else {
+      successor->parent->left = successor->right;
+      successor->right->parent = successor->parent;
+    }
+    free(successor);
+  }
+
+  *root = l;
+  _balance(root, true);
+}
+
+static void
+_book_remove(struct generic_book **root, struct generic_book *level,
+    book_free_data free_func, bool no_free)
+{
+  if (level->left == NULL && level->right == NULL) {
+    // leaf node just delete the leaf
+    _remove_no_children(root, level, free_func, no_free);
+    return;
+  } else if ((level->left == NULL && level->right != NULL) ||
+      (level->left != NULL && level->right == NULL)) {
+    _remove_one_child(root, level, free_func, no_free);
+    return;
+  } else if (level->right != NULL && level->left != NULL) {
+    // two children
+    _remove_two_children(root, level, free_func);
+    return;
+  } else {
+    pprint_error("this case is impossible unless level == NULL which should"
+                 "never happen",
+        __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
+}
+
 void
 book_remove(
     struct generic_book **root, uint64_t price, book_free_data free_func)
@@ -280,52 +457,7 @@ book_remove(
     abort();
   }
 
-  if (level->left == NULL && level->right == NULL) {
-    // leaf node just delete the leaf
-    struct generic_book *parent = level->parent;
-    free_func(level->data);
-    free(level);
-    *root = parent;
-    _balance(root);
-  } else if (level->left == NULL && level->right != NULL) {
-    // one child to the right
-    // take the right child and make it the parent
-    struct generic_book *n = level->right;
-    struct generic_book *l = level;
-
-    free_func(l->data);
-    l->right = n->right;
-    l->left = n->left;
-    l->data = n->data;
-    l->price = n->price;
-    l->total = n->total;
-    free(n);
-    *root = l;
-    _balance(root);
-  } else if (level->right == NULL && level->left != NULL) {
-    // one child to the left
-    struct generic_book *n = level->left;
-    struct generic_book *l = level;
-
-    free_func(l->data);
-    l->right = n->right;
-    l->left = n->left;
-    l->data = n->data;
-    l->price = n->price;
-    l->total = n->total;
-    free(n);
-    *root = l;
-    _balance(root);
-  } else if (level->right != NULL && level->left != NULL) {
-    // two children
-    pprint_error("can't do this yet", __FILE_NAME__, __func__, __LINE__);
-    abort();
-  } else {
-    pprint_error("this case is impossible unless level == NULL which should"
-                 "never happen",
-        __FILE_NAME__, __func__, __LINE__);
-    abort();
-  }
+  _book_remove(root, level, free_func, false);
 }
 
 void

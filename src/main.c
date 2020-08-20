@@ -19,10 +19,10 @@ main(int argc, char **argv)
   (void)argc;
   (void)argv;
 
-  pprint_info(
-      "crochet (C) washcloth et al.", __FILE_NAME__, __func__, __LINE__);
+  // pprint_info(
+  //    "crochet (C) washcloth et al.", __FILE_NAME__, __func__, __LINE__);
 
-  pprint_info("initializing OpenSSL", __FILE_NAME__, __func__, __LINE__);
+  // pprint_info("initializing OpenSSL", __FILE_NAME__, __func__, __LINE__);
 
   SSL_load_error_strings();
   SSL_library_init();

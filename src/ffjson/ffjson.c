@@ -1,5 +1,4 @@
-#include "ffjson.h" // <-- that is a lie
-#include "hashmap/hashmap.h"
+#include "ffjson.h"
 
 char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
   "JSON_TYPE_NUMBER", "JSON_TYPE_STRING", "JSON_TYPE_TRUE", "JSON_TYPE_FALSE",
@@ -243,7 +242,7 @@ _parse_value(char *str, size_t *idx)
   } else if (str[*idx] == '-' || str[*idx] == '1' || str[*idx] == '2' ||
       str[*idx] == '3' || str[*idx] == '4' || str[*idx] == '5' ||
       str[*idx] == '6' || str[*idx] == '7' || str[*idx] == '8' ||
-      str[*idx] == '9') {
+      str[*idx] == '9' || str[*idx] == '0') {
     // parse number
     __json_value val = malloc(sizeof(struct json_value) * 1);
     val->t = JSON_TYPE_NUMBER;
@@ -251,14 +250,11 @@ _parse_value(char *str, size_t *idx)
     return val;
   } else if (strncmp(&(str[*idx]), "false", 5) == 0) {
     // parse false
-    // TODO do something with this value
     __json_value val = malloc(sizeof(struct json_value) * 1);
     val->t = JSON_TYPE_FALSE;
     val->data = NULL;
     (*idx) += 5;
     return val;
-    // TODO this might break things we will find
-    // out_parse_whitespace(str, idx);
   } else if (strncmp(&(str[*idx]), "true", 4) == 0) {
     // parse true
     __json_value val = malloc(sizeof(struct json_value) * 1);
@@ -266,7 +262,6 @@ _parse_value(char *str, size_t *idx)
     val->data = NULL;
     (*idx) += 4;
     return val;
-    // _parse_whitespace(str, idx);
   } else if (strncmp(&(str[*idx]), "null", 4) == 0) {
     __json_value val = malloc(sizeof(struct json_value) * 1);
     val->t = JSON_TYPE_NULL;

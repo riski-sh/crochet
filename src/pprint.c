@@ -62,7 +62,7 @@ pprint_warn(const char *str, const char *file, const char *func, int line, ...)
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s  WARN  %-20s@%-20s:%4d  ", time, file, func, line);
+  printf("%s  WARN  %20s  %-20s  %4d  ", time, file, func, line);
   va_list args;
   va_start(args, line);
   vprintf(str, args);

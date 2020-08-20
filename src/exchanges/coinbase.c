@@ -1,6 +1,7 @@
 #include "coinbase.h"
 #include "ffjson/ffjson.h"
 #include "httpws/wss.h"
+#include "orderbooks/coinbase.h"
 #include "pprint.h"
 
 static void
@@ -53,8 +54,10 @@ _build_book(__json_array side)
 
     struct coinbase_value *e = malloc(sizeof(struct coinbase_value));
     e->nxt = NULL;
+    e->prv = NULL;
     e->orderid = order_id;
     e->size = size_satoshi;
+    e->open = true;
 
     coinbase_book_received(&root, price_cents, e);
 
@@ -91,6 +94,37 @@ _parse_open(__json_object msg, coinbase_book **bid, coinbase_book **ask)
 }
 
 static void
+_parse_done(__json_object msg, coinbase_book **bid, coinbase_book **ask)
+{
+  // A done message for a market order could happen but their json will not
+  // have a "remaining_size" attribute. So check if that exists before
+  // continuing.
+
+  __json_value _size = hashmap_get("remaining_size", msg);
+  __json_value _price = hashmap_get("price", msg);
+
+  if (!_size || !_price) {
+    pprint_warn("skipping market done", __FILE_NAME__, __func__, __LINE__);
+    return;
+  }
+
+  // since we got here this isn't a market done message
+  __json_string _side = json_get_string(hashmap_get("side", msg));
+  __json_string uuid = json_get_string(hashmap_get("order_id", msg));
+
+  uint64_t price_cents = usdtocent_str(json_get_string(_price));
+
+  if (strcmp(_side, "buy") == 0) {
+    coinbase_book_remove(bid, price_cents, uuid);
+  } else if (strcmp(_side, "sell") == 0) {
+    coinbase_book_remove(ask, price_cents, uuid);
+  } else {
+    pprint_error("unknown side", __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
+}
+
+static void
 _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
 {
   __json_string _type = json_get_string(hashmap_get("order_type", msg));
@@ -99,10 +133,13 @@ _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
     // TODO process the market order
     // for now it is safe to ignore market orders since they are special
     // and never put on the order book
+    pprint_warn("skipping market order", __FILE_NAME__, __func__, __LINE__);
     return;
   } else if (strcmp(_type, "limit") == 0) {
     struct coinbase_value *v = malloc(sizeof(struct coinbase_value));
     v->nxt = NULL;
+    v->prv = NULL;
+    v->open = false;
 
     // Get the order id
     __json_value _orderid = hashmap_get("order_id", msg);
@@ -115,9 +152,6 @@ _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
     __json_string _btc = json_get_string(hashmap_get("size", msg));
     uint64_t btc_sat = btctosat_str(_btc);
     v->size = btc_sat;
-
-    // received orders are not open on the order book yet
-    v->open = false;
 
     __json_string _side = json_get_string(hashmap_get("side", msg));
 
@@ -133,6 +167,24 @@ _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
   } else {
     pprint_error(
         "unknown received message type", __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
+}
+
+static void
+_parse_match(__json_object msg, coinbase_book **bid, coinbase_book **ask)
+{
+  __json_string _side = json_get_string(hashmap_get("side", msg));
+  uint64_t price = usdtocent_str(json_get_string(hashmap_get("price", msg)));
+  uint64_t size = btctosat_str(json_get_string(hashmap_get("size", msg)));
+  __json_string maker_id = json_get_string(hashmap_get("maker_order_id", msg));
+
+  if (strcmp(_side, "buy") == 0) {
+    coinbase_book_match(bid, price, size, maker_id);
+  } else if (strcmp(_side, "sell") == 0) {
+    coinbase_book_match(ask, price, size, maker_id);
+  } else {
+    pprint_error("unknown side", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 }
@@ -254,10 +306,12 @@ _coinbase_start(void *id)
     }
     case 'd': {
       // done
+      _parse_done(msg, &bid_book, &ask_book);
       break;
     }
     case 'm': {
       // match
+      _parse_match(msg, &bid_book, &ask_book);
       break;
     }
     default: {
@@ -282,6 +336,16 @@ _coinbase_start(void *id)
       end_time = (size_t)time(NULL);
       num_msg = 1;
     }
+
+    /*
+    struct coinbase_book_level bid_top;
+    struct coinbase_book_level ask_top;
+    coinbase_book_get(bid_book, BOOK_BID, 1, &bid_top);
+    coinbase_book_get(bid_book, BOOK_ASK, 1, &ask_top);
+
+    printf("%.2f %.8f\n", (double)(bid_top.level) / 100.0,
+        (double)(bid_top.total) / 100000000.0);
+        */
   }
 }
 

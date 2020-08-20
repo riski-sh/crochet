@@ -60,6 +60,11 @@ void coinbase_book_get(coinbase_book *book, book_t book_type, int num,
 void coinbase_book_open(
     coinbase_book **book, uint64_t price, uint64_t remaining, char *uuid);
 
+void coinbase_book_remove(coinbase_book **book, uint64_t price, char *uuid);
+
+void coinbase_book_match(
+    coinbase_book **book, uint64_t price, uint64_t size, char *maker_id);
+
 /*
  * Frees the coinbase_value structure.
  */
