@@ -32,6 +32,10 @@ add_subdirectory(src/orderbooks)
 
 add_library (pprint SHARED src/pprint.c)
 add_executable (crochet src/main.c)
-
 target_link_libraries (crochet pprint httpws ffjson hashmap coinbase
+  orderbooks finmath OpenSSL::SSL OpenSSL::Crypto)
+
+add_executable (crochet-test src/main.c)
+target_compile_definitions(crochet-test PUBLIC DO_UNIT_TESTS)
+target_link_libraries (crochet-test pprint httpws ffjson hashmap coinbase
   orderbooks finmath OpenSSL::SSL OpenSSL::Crypto)

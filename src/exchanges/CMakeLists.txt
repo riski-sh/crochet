@@ -1,1 +1,1 @@
-add_library( coinbase coinbase.c )
+add_library( coinbase SHARED coinbase.c )

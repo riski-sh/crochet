@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <unittest.h>
 
 typedef enum { RANGE_INCREASING = 0, RANGE_DECREASING = 1 } range_t;
 
@@ -59,5 +60,7 @@ void book_free(struct generic_book *node, book_free_data free_func);
  * @param node the root node in which to generate a dot file for
  */
 void book_print(struct generic_book *node);
+
+DEFINE_TEST_H(book_query);
 
 #endif

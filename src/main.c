@@ -4,6 +4,23 @@
  * (C) washcloth et al.
  */
 
+#if defined(DO_UNIT_TESTS)
+#include <orderbooks/book.h>
+
+#include <stdlib.h>
+int
+main(int argc, char **argv)
+{
+  (void)argc;
+  (void)argv;
+
+  UNIT_TEST_DO(book_query)
+
+  return 0;
+}
+
+#else
+
 #include <exchanges/coinbase.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -31,3 +48,4 @@ main(int argc, char **argv)
 
   return 0;
 }
+#endif

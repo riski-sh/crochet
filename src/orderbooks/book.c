@@ -469,6 +469,34 @@ book_free(struct generic_book *node, book_free_data free_func)
   book_free(node->left, free_func);
   book_free(node->right, free_func);
 
-  free_func(node->data);
+  if (free_func) {
+    free_func(node->data);
+  }
   free(node);
+}
+
+TEST_START(book_query)
+{
+  struct generic_book *b = NULL;
+  struct generic_book *lvl1 = book_query(&b, 1);
+
+  UNIT_TEST_TEST(b, ==, lvl1)
+
+  UNIT_TEST_TEST(lvl1->left, ==, NULL)
+  UNIT_TEST_TEST(lvl1->right, ==, NULL)
+  UNIT_TEST_TEST(lvl1->price, ==, 1)
+  UNIT_TEST_TEST(lvl1->total, ==, 0)
+  UNIT_TEST_TEST(lvl1->data, ==, NULL)
+
+  struct generic_book *lvl2 = book_query(&b, 2);
+  UNIT_TEST_TEST(b, ==, lvl1)
+  UNIT_TEST_TEST(b->left, ==, NULL)
+  UNIT_TEST_TEST(b->right, ==, lvl2)
+
+  struct generic_book *lvl3 = book_query(&b, 3);
+  UNIT_TEST_TEST(b->right, ==, lvl3)
+  UNIT_TEST_TEST(b, ==, lvl2)
+  UNIT_TEST_TEST(b->left, ==, lvl1)
+
+  book_free(b, NULL);
 }
