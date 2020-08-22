@@ -7,6 +7,7 @@
 #include <openssl/ssl.h>
 #include <pprint.h>
 #include <stdbool.h>
+#include <sys/socket.h>
 
 #include "base64.h"
 
