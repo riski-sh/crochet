@@ -62,67 +62,55 @@ _http_response_free(struct _http_response *res)
 /*
  * A private function that reads a line of the http headers response
  * @param ssl the ssl context to read from
- * @return a c string on the heap that is the callers responsibility to free.
+ * @param buf the buffer to put the data in
  */
-static char *
-_http_ssl_getline(SSL *ssl)
+static bool
+_http_ssl_getline(SSL *ssl, char buf[4096], size_t *line_length)
 {
-  char *buf = NULL;
   size_t buf_len = 0;
 
-  char cb = '\x0';
-  while (SSL_read(ssl, &cb, 1) == 1) {
-    if (cb == '\r') {
-      SSL_read(ssl, &cb, 1);
+  for (; buf_len < 4096; ++buf_len) {
+    int ret = 0;
+    do {
+      ret = SSL_read(ssl, &(buf[buf_len]), 1);
+    } while (ret < 0 );
+    if (buf[buf_len] == '\n') {
+      buf[buf_len] = '\x0';
       break;
-    } else {
-      buf_len += 1;
-      buf = realloc(buf, sizeof(char) * buf_len);
-      buf[buf_len - 1] = cb;
     }
   }
 
-  if (buf_len == 0) {
-    free(buf);
-    return NULL;
+  if (buf_len == 4096) {
+    pprint_error("haulting on buffer overflow", __FILE_NAME__, __func__,
+        __LINE__);
+    exit(1);
   }
 
-  buf_len += 1;
-  buf = realloc(buf, sizeof(char) * buf_len);
-  buf[buf_len - 1] = '\x0';
-
-  return buf;
+  *line_length = buf_len;
+  return buf_len > 1;
 }
 
 static struct _http_response *
 _http_parse_response(SSL *ssl)
 {
-  char *line = NULL;
-  line = _http_ssl_getline(ssl);
+  char line[4096] = {0};
+  size_t line_len = 0;
+  _http_ssl_getline(ssl, line, &line_len);
 
   struct _http_response *response = malloc(sizeof(struct _http_response));
 
-  response->header_name = line;
+  response->header_name = strdup(line);
   response->header_value = NULL;
   response->next = NULL;
 
   struct _http_response *cur = response;
 
-  while ((line = _http_ssl_getline(ssl)) && line != NULL) {
+  while ((_http_ssl_getline(ssl, line, &line_len))) {
     cur->next = malloc(sizeof(struct _http_response));
     cur = cur->next;
 
     char *name = NULL;
     char *value = NULL;
-
-    size_t line_len = 0;
-    if (line) {
-      line_len = strlen(line);
-    } else {
-      pprint_error(
-          "can not take strlen of NULL ptr", __FILE_NAME__, __func__, __LINE__);
-      abort();
-    }
 
     size_t col_idx = 0;
     for (; col_idx < line_len; ++col_idx) {
@@ -158,9 +146,8 @@ _http_parse_response(SSL *ssl)
     }
     value[line_len - col_idx - 2] = '\x0';
 
-    free(line);
-    cur->header_name = name;
-    cur->header_value = value;
+    cur->header_name = strdup(name);
+    cur->header_value = strdup(value);
     cur->next = NULL;
   }
 
@@ -178,16 +165,22 @@ _http_read_chuncked(SSL *ssl)
   size_t total_size = 0;
   char *data = NULL;
 
+  char _len[4096] = {0};
+  size_t __len = 0;
+
   while (true) {
-    char *_len = NULL;
-    while (_len == NULL) {
-      _len = _http_ssl_getline(ssl);
+
+    _http_ssl_getline(ssl, _len, &__len);
+
+    if (__len == 1) {
+      continue;
     }
-    size_t len = strtoul(_len, NULL, 16);
-    free(_len);
+
+    size_t len = (size_t)strtol(_len, NULL, 16);
     if (len == 0) {
       break;
     }
+
     data = realloc(data, total_size + len + 1);
     size_t read = 0;
     while (read != len) {
@@ -198,8 +191,7 @@ _http_read_chuncked(SSL *ssl)
     data[total_size] = '\x0';
   }
 
-  char *ignored = _http_ssl_getline(ssl);
-  free(ignored);
+  _http_ssl_getline(ssl, _len, &__len);
 
   return data;
 }

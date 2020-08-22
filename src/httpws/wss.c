@@ -1,3 +1,4 @@
+#include <netinet/in.h>
 #include "wss.h"
 
 struct _wss_packet {
@@ -125,10 +126,12 @@ wss_read_text(struct httpwss_session *session, char **value)
   if (h2 == 126) {
     uint16_t to_read = 0;
     SSL_read(session->ssl, &to_read, sizeof(uint16_t));
-    h2 = __bswap_16(to_read);
+
+    h2 = ntohs(to_read);
   } else if (h2 == 127) {
     uint64_t to_read = 0;
     SSL_read(session->ssl, &to_read, sizeof(uint64_t));
+
     h2 = __bswap_64(to_read);
   }
 

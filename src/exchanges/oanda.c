@@ -89,7 +89,7 @@ exchanges_oanda_init(char *key)
     free(response);
     num_msg += 1;
 
-    end_time = (size_t)time(NULL);
+     end_time = (size_t)time(NULL);
 
     if (end_time - start_time >= 1) {
       double msg_ps = (double)num_msg / (double)(end_time - start_time);
