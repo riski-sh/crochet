@@ -1,4 +1,3 @@
-#include <netinet/in.h>
 #include "wss.h"
 
 struct _wss_packet {

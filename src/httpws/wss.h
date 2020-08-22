@@ -20,6 +20,7 @@
 #include <openssl/ssl.h>
 #include <pprint.h>
 #include <unistd.h>
+#include <byteswap.h>
 
 #include "http.h"
 
