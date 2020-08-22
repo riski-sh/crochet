@@ -132,8 +132,7 @@ wss_read_text(struct httpwss_session *session, char **value)
     uint64_t to_read = 0;
     SSL_read(session->ssl, &to_read, sizeof(uint64_t));
 
-    // TODO handle this dumb case
-    abort();
+    h2 = __bswap_64(to_read);
   }
 
   char *to_read = malloc(sizeof(char) * (h2 + 1));
