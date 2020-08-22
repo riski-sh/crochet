@@ -36,7 +36,7 @@ _wss_new_mask()
  * After this is called masked data may be sent to the server.
  */
 static void
-_wss_send_header(struct wss_session *session, struct _wss_packet *p)
+_wss_send_header(struct httpwss_session *session, struct _wss_packet *p)
 {
   // fin, rsv1, 2, 3, opcode
   unsigned char h1 = 0;
@@ -58,7 +58,7 @@ _wss_send_header(struct wss_session *session, struct _wss_packet *p)
 }
 
 enum WSS_ERR
-wss_read_text(struct wss_session *session, char **value)
+wss_read_text(struct httpwss_session *session, char **value)
 {
   struct _wss_packet h;
   bzero(&h, sizeof(struct _wss_packet));
@@ -149,7 +149,8 @@ wss_read_text(struct wss_session *session, char **value)
 }
 
 enum WSS_ERR
-wss_send_text(struct wss_session *session, unsigned char *text, uint64_t len)
+wss_send_text(
+    struct httpwss_session *session, unsigned char *text, uint64_t len)
 {
   struct _wss_packet to_send;
   bzero(&to_send, sizeof(struct _wss_packet));
@@ -189,61 +190,15 @@ wss_send_text(struct wss_session *session, unsigned char *text, uint64_t len)
 }
 
 enum WSS_ERR
-wss_client(char *endpoint, char *path, char *port, struct wss_session *session)
+wss_client(
+    char *endpoint, char *path, char *port, struct httpwss_session **_session)
 {
-  pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__, __LINE__,
-      endpoint, port);
 
-  // convert endpoint to an ip address
-  struct addrinfo *res = NULL;
+  struct httpwss_session *session = httpwss_session_new(endpoint, port);
 
-  if (getaddrinfo(endpoint, port, NULL, &res) != 0) {
-    pprint_error(
-        "unable to resolve %s", __FILE_NAME__, __func__, __LINE__, endpoint);
-    return WSS_ERR_GET_ADDR_INFO;
-  }
+  http_wss_upgrade(session, path);
 
-  // create the socket
-  session->fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (session->fd == -1) {
-    pprint_error("unable to create socket probably because one is already open",
-        __FILE_NAME__, __func__, __LINE__);
-    return WSS_ERR_SOCKET_CREATION;
-  }
-
-  // connect the socket to the remote host
-  if (connect(session->fd, res->ai_addr, res->ai_addrlen) == -1) {
-    return WSS_ERR_CONNECT_FAILURE;
-  }
-
-  // prime SSL for establishing TLS connection
-  const SSL_METHOD *method = TLS_client_method();
-  SSL_CTX *ctx = SSL_CTX_new(method);
-
-  if (ctx == NULL) {
-    ERR_print_errors_fp(stdout);
-    abort();
-  }
-  session->ssl = SSL_new(ctx);
-  SSL_set_fd(session->ssl, session->fd);
-  SSL_set_tlsext_host_name(session->ssl, endpoint);
-
-  // perform the TLS handshake
-  if (SSL_connect(session->ssl) == -1) {
-    ERR_print_errors_fp(stdout);
-    abort();
-  }
-
-  pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__, __LINE__,
-      endpoint);
-
-  // upgrade this connection to websocket
-  pprint_info("upgrading HTTP session to web socket", __FILE_NAME__, __func__,
-      __LINE__, endpoint);
-
-  http_wss_upgrade(session->ssl, endpoint, path);
-
-  freeaddrinfo(res);
+  *_session = session;
 
   return WSS_ERR_NONE;
 }

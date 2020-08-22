@@ -19,25 +19,59 @@
 #define HTTP_WSS_KEY_LEN 16
 
 /*
+ * Structure that represents a session towards a websocket connection.
+ */
+struct httpwss_session {
+  /*
+   * raw file descriptor for socket
+   */
+  int fd;
+
+  /*
+   * struct padding
+   */
+  char _p1[4];
+
+  /*
+   * the host this session is connected to
+   */
+  char *endpoint;
+
+  /*
+   * an SSL instance for SSL/TLS communication
+   */
+  SSL *ssl;
+
+  char _p2[7];
+  /*
+   * set to true if this session has been upgraded to a websocket
+   */
+  bool iswss;
+};
+
+/*
  * Upgrades an HTTP session to web socket. This is done by sending an HTTP
  * upgrade request. This function will send the request and verify the
  * response.
  *
- * @param ssl an active SSL context
+ * @param session the session to upgrade
  * @param path the path to request to normally / but can be /chat etc..
  * @return Returns 0 on success and 1 if wss_upgrade was no successful
  */
-int http_wss_upgrade(SSL *ssl, char *endpoint, char *path);
+int http_wss_upgrade(struct httpwss_session *session, char *path);
 
 /*
- * Performs an HTTP get request and kills the connection this conenction
- * will NOT be kept alive. This function assumes an SSL/TLS connection
+ * Performs an HTTP get request
+ * This function assumes an SSL/TLS connection
  * and will fail if used on non secure tunnel.
- * @param url the url to fetch
+ *
+ * @param session the session to perform this request on
  * @param path the endpoint to perform the get request
  * @param res pointer to storage of result
  * @return Returns 0 on success and 1 if failure.
  */
-int http_get_request(char *url, char *path, char **res);
+int http_get_request(struct httpwss_session *session, char *path, char **res);
+
+struct httpwss_session *httpwss_session_new(char *endpoint, char *port);
 
 #endif

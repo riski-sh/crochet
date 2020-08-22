@@ -153,7 +153,7 @@ _http_parse_response(SSL *ssl)
 }
 
 int
-http_wss_upgrade(SSL *ssl, char *endpoint, char *path)
+http_wss_upgrade(struct httpwss_session *session, char *path)
 {
 
   /*
@@ -195,17 +195,17 @@ http_wss_upgrade(SSL *ssl, char *endpoint, char *path)
       __LINE__, key_encoded);
 
   int req_size =
-      snprintf(NULL, 0, HTTP_WSS_UPGRADE_FMT, path, endpoint, key_encoded);
+      snprintf(NULL, 0, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
 
   char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
-  sprintf(request, HTTP_WSS_UPGRADE_FMT, path, endpoint, key_encoded);
+  sprintf(request, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
 
   // don't send over the NULL terminator
-  SSL_write(ssl, request, req_size);
+  SSL_write(session->ssl, request, req_size);
 
   // get the response headers with values and find the
   // Sec-WebSocket-Accept header.
-  struct _http_response *responses = _http_parse_response(ssl);
+  struct _http_response *responses = _http_parse_response(session->ssl);
   struct _http_response *iter = responses;
   while (strcmp(iter->header_name, "Sec-WebSocket-Accept") != 0) {
     iter = iter->next;
@@ -222,68 +222,23 @@ http_wss_upgrade(SSL *ssl, char *endpoint, char *path)
 
   free(key_encoded);
   _http_response_free(responses);
+
+  session->iswss = true;
   return 0;
 }
 
 int
-http_get_request(char *endpoint, char *path, char **response)
+http_get_request(struct httpwss_session *session, char *path, char **response)
 {
-  pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__, __LINE__,
-      endpoint, "443");
 
-  // convert endpoint to an ip address
-  struct addrinfo *res = NULL;
-
-  if (getaddrinfo(endpoint, "443", NULL, &res) != 0) {
-    pprint_error(
-        "unable to resolve %s", __FILE_NAME__, __func__, __LINE__, endpoint);
-    return 1;
-  }
-
-  // create the socket
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock == -1) {
-    pprint_error("unable to create socket probably because one is already open",
-        __FILE_NAME__, __func__, __LINE__);
-    return 1;
-  }
-
-  // connect the socket to the remote host
-  if (connect(sock, res->ai_addr, res->ai_addrlen) == -1) {
-    return 1;
-  }
-
-  // prime SSL for establishing TLS connection
-  const SSL_METHOD *method = TLS_client_method();
-  SSL_CTX *ctx = SSL_CTX_new(method);
-
-  if (ctx == NULL) {
-    ERR_print_errors_fp(stdout);
-    abort();
-  }
-
-  SSL *ssl = NULL;
-  ssl = SSL_new(ctx);
-  SSL_set_fd(ssl, sock);
-  SSL_set_tlsext_host_name(ssl, endpoint);
-
-  // perform the TLS handshake
-  if (SSL_connect(ssl) == -1) {
-    ERR_print_errors_fp(stdout);
-    abort();
-  }
-
-  pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__, __LINE__,
-      endpoint);
-
-  int req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, endpoint);
+  int req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, session->endpoint);
 
   char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
-  sprintf(request, HTTP_GET_REQUEST_FMT, path, endpoint);
+  sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
 
-  SSL_write(ssl, request, req_size);
+  SSL_write(session->ssl, request, req_size);
 
-  struct _http_response *responses = _http_parse_response(ssl);
+  struct _http_response *responses = _http_parse_response(session->ssl);
   struct _http_response *iter = responses;
   while (strcmp(iter->header_name, "Content-Length") != 0) {
     iter = iter->next;
@@ -295,26 +250,84 @@ http_get_request(char *endpoint, char *path, char **response)
     abort();
   }
 
-  size_t content_length = (size_t)atoi(iter->header_value);
+  int content_length = atoi(iter->header_value);
 
   _http_response_free(responses);
 
-  char *body = (char *)malloc(content_length * sizeof(char));
-  for (size_t i = 0; i < content_length; ++i) {
-    if (SSL_read(ssl, &(body[i]), 1) != 1) {
-      abort();
-    }
+  char *body = (char *)malloc((size_t)content_length * sizeof(char));
+  int num_read = 0;
+  while (num_read != content_length) {
+    num_read += SSL_read(session->ssl, &(body[num_read]),
+        (content_length-num_read));
   }
-
-  free(request);
-  freeaddrinfo(res);
-
-  close(sock);
-
-  SSL_shutdown(ssl);
-  SSL_free(ssl);
-  SSL_CTX_free(ctx);
 
   *response = body;
   return 0;
 }
+
+struct httpwss_session *
+httpwss_session_new(char *endpoint, char *port)
+{
+
+  struct httpwss_session *session = malloc(sizeof(struct httpwss_session));
+
+  session->endpoint = strdup(endpoint);
+  session->iswss = false;
+
+  if (!session) {
+    pprint_error("no more memory", __FILE_NAME__, __func__, __LINE__);
+    exit(1);
+  }
+
+  pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__, __LINE__,
+      endpoint, port);
+
+  // convert endpoint to an ip address
+  struct addrinfo *res = NULL;
+
+  if (getaddrinfo(endpoint, port, NULL, &res) != 0) {
+    pprint_error(
+        "unable to resolve %s", __FILE_NAME__, __func__, __LINE__, endpoint);
+    // return WSS_ERR_GET_ADDR_INFO;
+  }
+
+  // create the socket
+  session->fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (session->fd == -1) {
+    pprint_error("unable to create socket probably because one is already open",
+        __FILE_NAME__, __func__, __LINE__);
+    // return WSS_ERR_SOCKET_CREATION;
+  }
+
+  // connect the socket to the remote host
+  if (connect(session->fd, res->ai_addr, res->ai_addrlen) == -1) {
+    // return WSS_ERR_CONNECT_FAILURE;
+  }
+
+  // prime SSL for establishing TLS connection
+  const SSL_METHOD *method = TLS_client_method();
+  SSL_CTX *ctx = SSL_CTX_new(method);
+
+  if (ctx == NULL) {
+    ERR_print_errors_fp(stdout);
+    abort();
+  }
+  session->ssl = SSL_new(ctx);
+  SSL_set_fd(session->ssl, session->fd);
+  SSL_set_tlsext_host_name(session->ssl, endpoint);
+
+  // perform the TLS handshake
+  if (SSL_connect(session->ssl) == -1) {
+    ERR_print_errors_fp(stdout);
+    abort();
+  }
+
+  pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__, __LINE__,
+      endpoint);
+
+  freeaddrinfo(res);
+
+  return session;
+
+}
+

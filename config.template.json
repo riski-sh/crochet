@@ -1,0 +1,10 @@
+{
+  "oanda": {
+    "key": "your_api_key",
+    "online": false
+  },
+  "coinbase": {
+    "key": "your_api_key",
+    "online": false
+  }
+}

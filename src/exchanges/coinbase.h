@@ -18,6 +18,6 @@
 /*
  * Starts the coinbase feeds
  */
-void coinbase_init(void);
+void exchanges_coinbase_init(void);
 
 #endif

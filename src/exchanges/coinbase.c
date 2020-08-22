@@ -1,11 +1,7 @@
 #include "coinbase.h"
-#include "ffjson/ffjson.h"
-#include "httpws/wss.h"
-#include "orderbooks/coinbase.h"
-#include "pprint.h"
 
 static void
-_subscribe(char *id, struct wss_session *coinbase_local)
+_subscribe(char *id, struct httpwss_session *coinbase_local)
 {
   char *garbage = NULL;
   int feed_request_len = snprintf(NULL, 0,
@@ -211,7 +207,7 @@ _coinbase_start(void *id)
       __LINE__, (char *)id);
 
   // Connect to the websocket feed
-  struct wss_session coinbase_local;
+  struct httpwss_session *coinbase_local;
   if (wss_client("ws-feed.pro.coinbase.com", "/", "443", &coinbase_local) !=
       WSS_ERR_NONE) {
     pprint_error("unable to connect to coinbase websocket feed", __FILE_NAME__,
@@ -220,7 +216,7 @@ _coinbase_start(void *id)
   }
 
   // Subscribe to the feed
-  _subscribe((char *)id, &coinbase_local);
+  _subscribe((char *)id, coinbase_local);
 
   // let the back buffer fill
   sleep(5);
@@ -236,7 +232,8 @@ _coinbase_start(void *id)
   coinbase_book *ask_book = NULL;
 
   char *buffer = NULL;
-  http_get_request(COINBASE_API, full_book_request, &buffer);
+  struct httpwss_session *coinbase_rest = httpwss_session_new(COINBASE_API, "443");
+  http_get_request(coinbase_rest, full_book_request, &buffer);
 
   free(full_book_request);
   __json_value full_book = json_parse(buffer);
@@ -265,7 +262,7 @@ _coinbase_start(void *id)
   size_t end_time = (size_t)time(NULL);
   size_t num_msg = 0;
 
-  while (wss_read_text(&coinbase_local, &msg_rt) == WSS_ERR_NONE) {
+  while (wss_read_text(coinbase_local, &msg_rt) == WSS_ERR_NONE) {
     __json_value _msg = json_parse(msg_rt);
     __json_object msg = json_get_object(_msg);
 
@@ -350,11 +347,13 @@ _coinbase_start(void *id)
 }
 
 void
-coinbase_init()
+exchanges_coinbase_init(void)
 {
   char *full_products = NULL;
 
-  if (http_get_request(COINBASE_API, "/products", &full_products) != 0) {
+  struct httpwss_session *coinbase_rest = httpwss_session_new(COINBASE_API,
+      "443");
+  if (http_get_request(coinbase_rest, "/products", &full_products) != 0) {
     pprint_error("unable to get %s%s", __FILE_NAME__, __func__, __LINE__,
         COINBASE_API, "/products");
     abort();

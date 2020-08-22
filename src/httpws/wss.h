@@ -34,41 +34,21 @@ enum WSS_ERR {
 };
 
 /*
- * Structure that represents a session towards a websocket connection.
- */
-struct wss_session {
-  /*
-   * raw file descriptor for socket
-   */
-  int fd;
-
-  /*
-   * 4 bytes free from padding
-   */
-  char _p1[4];
-
-  /*
-   * an SSL instance for SSL/TLS communication
-   */
-  SSL *ssl;
-};
-
-/*
  * Established a remote connection and upgrade the request from HTTP to web
  * socket. This only establishes secure from HTTP to web socket. This only
  * establishes secure TLS connections to the remote server.
  *
  * @param endpoint the host to connect to
  * @param port the port to connect, this will almost always be 443
- * @param session a structure owned by the caller that will get populated with
+ * @param _session a structure owned by the caller that will get populated with
  * the appropriate values to read/write to the web socket connection.
  */
 enum WSS_ERR wss_client(
-    char *endpoint, char *path, char *port, struct wss_session *session);
+    char *endpoint, char *path, char *port, struct httpwss_session **_session);
 
 enum WSS_ERR wss_send_text(
-    struct wss_session *session, unsigned char *text, size_t len);
+    struct httpwss_session *session, unsigned char *text, size_t len);
 
-enum WSS_ERR wss_read_text(struct wss_session *session, char **value);
+enum WSS_ERR wss_read_text(struct httpwss_session *session, char **value);
 
 #endif
