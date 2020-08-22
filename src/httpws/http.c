@@ -1,4 +1,5 @@
 #include <netdb.h>
+#include <openssl/ssl.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -19,6 +20,17 @@
   "User-Agent: crochet\r\n"  \
   "\r\n"
 
+#define HTTP_GET_REQUEST_AUTH_FMT      \
+  "GET %s HTTP/1.1\r\n"                \
+  "Host: %s\r\n"                       \
+  "Connection: keep-alive\r\n"         \
+  "User-Agent: crochet\r\n"            \
+  "Content-Type: application/json\r\n" \
+  "Accept-Encoding: deflate\r\n"       \
+  "Accept-Datetime-Format: UNIX\r\n"   \
+  "Authorization: Bearer %s\r\n"       \
+  "\r\n"
+
 struct _http_response {
   char *header_name;
   char *header_value;
@@ -32,6 +44,8 @@ enum _http_parse_state {
   _http_parse_state_value = 2,
   _http_parse_state_end = 3
 };
+
+typedef enum { CONTENT_LENGTH = 0, CHUNCKED = 1, UNKNOWN = 2 } data_t;
 
 static void
 _http_response_free(struct _http_response *res)
@@ -69,6 +83,7 @@ _http_ssl_getline(SSL *ssl)
   }
 
   if (buf_len == 0) {
+    free(buf);
     return NULL;
   }
 
@@ -82,7 +97,9 @@ _http_ssl_getline(SSL *ssl)
 static struct _http_response *
 _http_parse_response(SSL *ssl)
 {
-  char *line = _http_ssl_getline(ssl);
+  char *line = NULL;
+  line = _http_ssl_getline(ssl);
+
   struct _http_response *response = malloc(sizeof(struct _http_response));
 
   response->header_name = line;
@@ -152,6 +169,41 @@ _http_parse_response(SSL *ssl)
   return response;
 }
 
+static char *
+_http_read_chuncked(SSL *ssl)
+{
+  // read the size line and convert the hex number to
+  // decimal
+
+  size_t total_size = 0;
+  char *data = NULL;
+
+  while (true) {
+    char *_len = NULL;
+    while (_len == NULL) {
+      _len = _http_ssl_getline(ssl);
+    }
+    size_t len = strtoul(_len, NULL, 16);
+    free(_len);
+    if (len == 0) {
+      break;
+    }
+    data = realloc(data, total_size + len + 1);
+    size_t read = 0;
+    while (read != len) {
+      read +=
+          (size_t)SSL_read(ssl, &(data[total_size + read]), (int)(len - read));
+    }
+    total_size += len;
+    data[total_size] = '\x0';
+  }
+
+  char *ignored = _http_ssl_getline(ssl);
+  free(ignored);
+
+  return data;
+}
+
 int
 http_wss_upgrade(struct httpwss_session *session, char *path)
 {
@@ -194,8 +246,8 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   pprint_info("generated Sec-WebSocket-Key: %s", __FILE_NAME__, __func__,
       __LINE__, key_encoded);
 
-  int req_size =
-      snprintf(NULL, 0, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
+  int req_size = snprintf(
+      NULL, 0, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
 
   char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
   sprintf(request, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
@@ -231,36 +283,66 @@ int
 http_get_request(struct httpwss_session *session, char *path, char **response)
 {
 
-  int req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, session->endpoint);
+  int req_size;
+  char *request;
 
-  char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
-  sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
+  if (session->hashauth) {
+    req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_AUTH_FMT, path,
+        session->endpoint, session->authkey);
+    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    sprintf(request, HTTP_GET_REQUEST_AUTH_FMT, path, session->endpoint,
+        session->authkey);
+  } else {
+    req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, session->endpoint);
+    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
+  }
 
   SSL_write(session->ssl, request, req_size);
 
+  free(request);
+
   struct _http_response *responses = _http_parse_response(session->ssl);
   struct _http_response *iter = responses;
-  while (strcmp(iter->header_name, "Content-Length") != 0) {
+
+  data_t read_format = UNKNOWN;
+  while (iter) {
+    if (iter->header_name) {
+      if (strcmp(iter->header_name, "Content-Length") == 0) {
+        read_format = CONTENT_LENGTH;
+        break;
+      } else if (strcmp(iter->header_name, "Transfer-Encoding") == 0) {
+        read_format = CHUNCKED;
+        break;
+      }
+    }
     iter = iter->next;
   }
 
-  if (!iter) {
-    pprint_error(
-        "Content-Length header not found", __FILE_NAME__, __func__, __LINE__);
-    abort();
+  if (read_format == UNKNOWN) {
+    pprint_info("i don't know how to read this response", __FILE_NAME__,
+        __func__, __LINE__);
+    exit(1);
   }
 
-  int content_length = atoi(iter->header_value);
+  char *body = NULL;
+
+  if (read_format == CONTENT_LENGTH) {
+    int content_length = atoi(iter->header_value);
+
+    body = (char *)malloc((size_t)(content_length + 1) * sizeof(char));
+    int num_read = 0;
+    while (num_read != content_length) {
+      num_read += SSL_read(
+          session->ssl, &(body[num_read]), (content_length - num_read));
+    }
+    body[content_length] = '\x0';
+
+  } else if (read_format == CHUNCKED) {
+    body = _http_read_chuncked(session->ssl);
+  }
 
   _http_response_free(responses);
-
-  char *body = (char *)malloc((size_t)content_length * sizeof(char));
-  int num_read = 0;
-  while (num_read != content_length) {
-    num_read += SSL_read(session->ssl, &(body[num_read]),
-        (content_length-num_read));
-  }
-
   *response = body;
   return 0;
 }
@@ -322,12 +404,26 @@ httpwss_session_new(char *endpoint, char *port)
     abort();
   }
 
+  SSL_CTX_free(ctx);
+
   pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__, __LINE__,
       endpoint);
 
   freeaddrinfo(res);
 
-  return session;
+  session->authkey = NULL;
+  session->hashauth = false;
 
+  return session;
 }
 
+void
+httpwss_session_free(struct httpwss_session *session)
+{
+  if (session->hashauth) {
+    free(session->authkey);
+  }
+  free(session->endpoint);
+  SSL_free(session->ssl);
+  free(session);
+}

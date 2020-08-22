@@ -159,20 +159,25 @@ _parse_array(char *str, size_t *idx)
   _parse_whitespace(str, idx);
 
   __json_array data = malloc(sizeof(struct json_array) * 1);
+  data->nxt = NULL;
+  data->val = NULL;
 
-  // parse a value since one value must exist
-  data->val = _parse_value(str, idx);
+  // the array could be empty if the array is empty than we should find
+  // a ] character if we do not then we must parse a value
+  if (str[*idx] != ']') {
+    data->val = _parse_value(str, idx);
 
-  __json_array iter = data;
-  // parse the optional members of the array
-  while (_parse_value_seperator(str, idx)) {
-    // expand the array by 1
-    iter->nxt = malloc(sizeof(struct json_array) * 1);
-    iter = iter->nxt;
-    iter->val = _parse_value(str, idx);
-    iter->nxt = NULL;
+    __json_array iter = data;
+    // parse the optional members of the array
+    while (_parse_value_seperator(str, idx)) {
+      // expand the array by 1
+      iter->nxt = malloc(sizeof(struct json_array) * 1);
+      iter = iter->nxt;
+      iter->val = _parse_value(str, idx);
+      iter->nxt = NULL;
+    }
+    _parse_whitespace(str, idx);
   }
-  _parse_whitespace(str, idx);
 
   // verify end array
   if (str[*idx] != ']') {
@@ -268,7 +273,6 @@ _parse_value(char *str, size_t *idx)
     val->data = NULL;
     (*idx) += 4;
     return val;
-
   } else {
     pprint_error("expected object|array|string|true|false|null|number in json"
                  " %s %lu",
@@ -358,11 +362,15 @@ json_free(__json_value root)
   }
   case JSON_TYPE_ARRAY: {
     __json_array arr = root->data;
-    while (arr) {
-      json_free(arr->val);
-      __json_array nxt = arr->nxt;
+    if (arr->val != NULL) {
+      while (arr) {
+        json_free(arr->val);
+        __json_array nxt = arr->nxt;
+        free(arr);
+        arr = nxt;
+      }
+    } else {
       free(arr);
-      arr = nxt;
     }
     free(root);
     break;

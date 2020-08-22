@@ -232,7 +232,8 @@ _coinbase_start(void *id)
   coinbase_book *ask_book = NULL;
 
   char *buffer = NULL;
-  struct httpwss_session *coinbase_rest = httpwss_session_new(COINBASE_API, "443");
+  struct httpwss_session *coinbase_rest =
+      httpwss_session_new(COINBASE_API, "443");
   http_get_request(coinbase_rest, full_book_request, &buffer);
 
   free(full_book_request);
@@ -351,8 +352,8 @@ exchanges_coinbase_init(void)
 {
   char *full_products = NULL;
 
-  struct httpwss_session *coinbase_rest = httpwss_session_new(COINBASE_API,
-      "443");
+  struct httpwss_session *coinbase_rest =
+      httpwss_session_new(COINBASE_API, "443");
   if (http_get_request(coinbase_rest, "/products", &full_products) != 0) {
     pprint_error("unable to get %s%s", __FILE_NAME__, __func__, __LINE__,
         COINBASE_API, "/products");

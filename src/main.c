@@ -31,7 +31,7 @@ main(int argc, char **argv)
 #include "pprint.h"
 
 static __json_value
-_load_config(char *file)
+_load_config(char *file, char **raw)
 {
   FILE *fp = fopen(file, "r");
   fseek(fp, 0, SEEK_END);
@@ -42,6 +42,9 @@ _load_config(char *file)
   fread(cfg, sizeof(char), file_size, fp);
   cfg[file_size] = '\x0';
 
+  *raw = cfg;
+
+  fclose(fp);
   return json_parse(cfg);
 }
 
@@ -54,9 +57,12 @@ main(int argc, char **argv)
 
   pprint_info("loading configuration file", __FILE_NAME__, __func__, __LINE__);
 
+  __json_value _config_root = NULL;
   __json_object config = NULL;
+  char *_config_raw = NULL;
   if (argc == 2) {
-    config = json_get_object(_load_config(argv[1]));
+    _config_root = _load_config(argv[1], &_config_raw);
+    config = json_get_object(_config_root);
   } else {
     pprint_error("please specify a configuration file", __FILE_NAME__, __func__,
         __LINE__);
@@ -88,6 +94,9 @@ main(int argc, char **argv)
       exchanges_coinbase_init();
     }
   }
+
+  free(_config_raw);
+  json_free(_config_root);
 
   return 0;
 }

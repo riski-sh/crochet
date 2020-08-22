@@ -43,10 +43,23 @@ struct httpwss_session {
   SSL *ssl;
 
   char _p2[7];
+
   /*
    * set to true if this session has been upgraded to a websocket
    */
   bool iswss;
+
+  /*
+   * send an authorization header
+   */
+  bool hashauth;
+
+  char _p3[7];
+
+  /*
+   * the authorization key if needed
+   */
+  char *authkey;
 };
 
 /*
@@ -73,5 +86,7 @@ int http_wss_upgrade(struct httpwss_session *session, char *path);
 int http_get_request(struct httpwss_session *session, char *path, char **res);
 
 struct httpwss_session *httpwss_session_new(char *endpoint, char *port);
+
+void httpwss_session_free(struct httpwss_session *session);
 
 #endif

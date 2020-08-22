@@ -2,7 +2,10 @@
 #define EXCHANGES_OANDA_H
 
 #include <ffjson/ffjson.h>
+#include <httpws/http.h>
 #include <pprint.h>
+
+#define OANDA_API_ROOT "api-fxpractice.oanda.com"
 
 /*
  * Starts an oanda exchange feed
