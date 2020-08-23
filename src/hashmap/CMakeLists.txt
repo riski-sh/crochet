@@ -1,1 +1,1 @@
-add_library(hashmap SHARED hashmap.c)
+add_library(hashmap hashmap.c)

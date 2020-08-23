@@ -1,1 +1,1 @@
-add_library( finmath SHARED base_conversion.c )
+add_library( finmath base_conversion.c )

@@ -1,1 +1,3 @@
-add_library( orderbooks SHARED coinbase.c book.c)
+add_library( orderbooks coinbase.c book.c)
+target_link_libraries( orderbooks pprint )
+

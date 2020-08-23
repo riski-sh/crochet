@@ -1,1 +1,1 @@
-add_library(ffjson SHARED ffjson.c)
+add_library(ffjson ffjson.c)

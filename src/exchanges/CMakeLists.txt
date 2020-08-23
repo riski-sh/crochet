@@ -1,1 +1,2 @@
-add_library( exchanges SHARED coinbase.c oanda.c )
+add_library( exchanges coinbase.c oanda.c )
+target_link_libraries( exchanges httpws )

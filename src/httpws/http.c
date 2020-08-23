@@ -67,7 +67,7 @@ _http_response_free(struct _http_response *res)
 static bool
 _http_ssl_getline(SSL *ssl, char buf[4096], size_t *line_length)
 {
-  size_t buf_len = 0;
+  int buf_len = 0;
 
   for (; buf_len < 4096; ++buf_len) {
     int ret = 0;
@@ -86,7 +86,7 @@ _http_ssl_getline(SSL *ssl, char buf[4096], size_t *line_length)
     exit(1);
   }
 
-  *line_length = buf_len;
+  *line_length = (size_t)buf_len;
   return buf_len > 1;
 }
 
