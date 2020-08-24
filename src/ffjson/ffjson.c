@@ -32,16 +32,18 @@ _parse_value_seperator(char *str, size_t *idx)
 static bool
 _valid_character(char *str, size_t *idx)
 {
-  if (str[*idx] == '\\' &&
-      (str[(*idx) + 1] == '"' || str[(*idx) + 1] == '\\' ||
-          str[(*idx) + 1] == '/' || str[(*idx) + 1] == 'b' ||
-          str[(*idx) + 1] == 'f' || str[(*idx) + 1] == 'n' ||
-          str[(*idx) + 1] == 'r' || str[(*idx) + 1] == 't')) {
+  char c = str[*idx];
+  char b = str[(*idx) + 1];
+  if (c == '\\' &&
+      (b == '"' || b == '\\' ||
+          b == '/' || b == 'b' ||
+          b == 'f' || b == 'n' ||
+          b == 'r' || b == 't')) {
     (*idx) += 2;
     return true;
   }
 
-  if (str[*idx] != '"') {
+  if (c != '"') {
     (*idx) += 1;
     return true;
   }

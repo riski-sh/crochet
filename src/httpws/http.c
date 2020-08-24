@@ -142,7 +142,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
           if (chunk_len_idx >= 8) {
             exit(1);
           }
-          chunk_len_idx += SSL_read(ssl, &(chunk_len[chunk_len_idx]), 1);
+          chunk_len_idx += SSL_read(ssl, &(chunk_len[chunk_len_idx]), 2);
           if (chunk_len[chunk_len_idx-1] == '\r') {
             SSL_read(ssl, endings, 1);
             chunk_len[chunk_len_idx-1] = '\x0';
