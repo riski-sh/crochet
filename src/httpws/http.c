@@ -66,6 +66,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
   char record[16384] = {'\x0'};
   while (fragment_size == 0) {
     fragment_size = SSL_read(ssl, record, 16383);
+    printf("%s\n", record);
     printf("fragment_size = %d\n", fragment_size);
     if (fragment_size == 0) {
       *_r = NULL;
