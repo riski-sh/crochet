@@ -66,8 +66,11 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
   char record[16384] = {'\x0'};
   while (fragment_size == 0) {
     fragment_size = SSL_read(ssl, record, 16383);
+    printf("fragment_size = %d\n", fragment_size);
     if (fragment_size == 0) {
-      continue;
+      *_r = NULL;
+      *_n = 0;
+      return;
     }
     res = calloc((size_t)(total_read + fragment_size + 1), sizeof(char));
     memcpy(&(res[total_read]), record, (size_t)fragment_size);
@@ -329,13 +332,25 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
     sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
   }
 
-  SSL_write(session->ssl, request, req_size);
-  free(request);
-
   char *_local_response = NULL;
   uint32_t _local_len = 0;
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
 
+  if (req_size != SSL_write(session->ssl, request, req_size)) {
+      printf("didn't write everything\n");
+      abort();
+  }
+
+  while (_local_response == NULL) {
+    _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
+    if (_local_response == NULL) {
+      if (req_size != SSL_write(session->ssl, request, req_size)) {
+        printf("didn't write everything\n");
+        abort();
+      }
+      sleep(1);
+    }
+  }
+  free(request);
   *response = _local_response;
 
   return 0;
