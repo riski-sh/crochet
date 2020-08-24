@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unittest.h>
-#include <pprint.h>
 
 typedef enum { RANGE_INCREASING = 0, RANGE_DECREASING = 1 } range_t;
 

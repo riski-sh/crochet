@@ -1,6 +1,7 @@
 #include <netdb.h>
 #include <openssl/ssl.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "http.h"
@@ -47,153 +48,184 @@ enum _http_parse_state {
 
 typedef enum { CONTENT_LENGTH = 0, CHUNCKED = 1, UNKNOWN = 2 } data_t;
 
+static struct _http_response *_http_parse_response(char **res);
+
+/*
+ * Read everything into one buffer
+ */
+static void
+_http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
+{
+  // SSL fragment can contain maximum of 16kb
+
+  int total_read = 0;
+  char *res = NULL;
+
+  int fragment_size = 0;
+
+  char record[16384] = {'\x0'};
+  while (fragment_size == 0) {
+    fragment_size = SSL_read(ssl, record, 16383);
+    if (fragment_size == 0) {
+      continue;
+    }
+    res = calloc((size_t)(total_read + fragment_size + 1), sizeof(char));
+    memcpy(&(res[total_read]), record, (size_t)fragment_size);
+    total_read += fragment_size;
+  }
+
+  struct _http_response *headers = _http_parse_response(&res);
+  data_t read_format = UNKNOWN;
+  while (headers) {
+    if (headers->header_name) {
+      if (strcmp(headers->header_name, "Content-Length") == 0) {
+        read_format = CONTENT_LENGTH;
+        break;
+      } else if (strcmp(headers->header_name, "Transfer-Encoding") == 0) {
+        read_format = CHUNCKED;
+        break;
+      }
+    }
+    headers = headers->next;
+  }
+
+  if (read_format == CONTENT_LENGTH) {
+    // data remaining
+    int data_remaining = (int)strlen(res);
+    int content_length = atoi(headers->header_value);
+
+    if (data_remaining != content_length) {
+      abort();
+    }
+
+    // entire data length is contained inside this record
+    if (data_remaining == content_length) {
+      *_r = strndup(res, (size_t)content_length);
+      *_n = (uint32_t)content_length;
+    }
+  } else if (read_format == CHUNCKED) {
+    int data_remaining = (int)strlen(res);
+    if (data_remaining > 0) {
+      char *chunk_save = NULL;
+      char *first_chunk_size_str = strtok_r(res, "\n", &chunk_save);
+      char *nxt_data = strtok_r(chunk_save, "\r", &chunk_save);
+
+      size_t total_chunk_size =
+          strtoul(first_chunk_size_str, NULL, 16);
+
+      char *chunk = calloc(total_chunk_size + 1, sizeof(char));
+      if (!chunk) {
+        printf("error can't create memory?\n");
+        abort();
+      }
+      size_t global_total_read = total_chunk_size;
+
+      size_t partial_chunk_len = strlen(nxt_data);
+      memcpy(chunk, nxt_data, partial_chunk_len);
+
+      size_t chunk_read = 0;
+      char endings[2];
+
+      if (partial_chunk_len != total_chunk_size) {
+        chunk_read = partial_chunk_len;
+        while (chunk_read != total_chunk_size) {
+          chunk_read += (size_t) SSL_read(ssl, &(chunk[chunk_read]), (int)(total_chunk_size-chunk_read));
+        }
+        SSL_read(ssl, endings, 2);
+      }
+
+      while (1) {
+        char chunk_len[9] = {0};
+        int chunk_len_idx = 0;
+        do {
+          // loop until \r
+          if (chunk_len_idx >= 8) {
+            exit(1);
+          }
+          chunk_len_idx += SSL_read(ssl, &(chunk_len[chunk_len_idx]), 1);
+          if (chunk_len[chunk_len_idx-1] == '\r') {
+            SSL_read(ssl, endings, 1);
+            chunk_len[chunk_len_idx-1] = '\x0';
+            break;
+          } else if (chunk_len[chunk_len_idx-1] == '\n') {
+            chunk_len[chunk_len_idx-2] = '\x0';
+            break;
+          }
+        } while (1);
+        total_chunk_size = strtoul(chunk_len, NULL, 16);
+
+        if (total_chunk_size == 0) {
+          SSL_read(ssl, endings, 2);
+          break;
+        }
+        chunk_read = 0;
+        chunk = realloc(chunk, global_total_read + total_chunk_size + 1);
+        if (!chunk) {
+          abort();
+        }
+
+        while (chunk_read != total_chunk_size) {
+          int ret = SSL_read(ssl, &(chunk[global_total_read]), (int)(total_chunk_size - chunk_read));
+          global_total_read += (size_t)ret;
+          chunk_read += (size_t)ret;
+          chunk[global_total_read] = '\x0';
+        }
+        SSL_read(ssl, endings, 2);
+      }
+      chunk[global_total_read] = '\x0';
+      *_r = chunk;
+      *_n = (uint32_t) global_total_read;
+      return;
+    }
+  } else {
+    abort();
+  }
+}
+
 static void
 _http_response_free(struct _http_response *res)
 {
   while (res) {
-    free(res->header_name);
-    free(res->header_value);
     struct _http_response *cur = res;
     res = res->next;
     free(cur);
   }
 }
 
-/*
- * A private function that reads a line of the http headers response
- * @param ssl the ssl context to read from
- * @param buf the buffer to put the data in
- */
-static bool
-_http_ssl_getline(SSL *ssl, char buf[4096], size_t *line_length)
-{
-  int buf_len = 0;
-
-  for (; buf_len < 4096; ++buf_len) {
-    int ret = 0;
-    do {
-      ret = SSL_read(ssl, &(buf[buf_len]), 1);
-    } while (ret < 0 );
-    if (buf[buf_len] == '\n') {
-      buf[buf_len] = '\x0';
-      break;
-    }
-  }
-
-  if (buf_len == 4096) {
-    pprint_error("haulting on buffer overflow", __FILE_NAME__, __func__,
-        __LINE__);
-    exit(1);
-  }
-
-  *line_length = (size_t)buf_len;
-  return buf_len > 1;
-}
-
 static struct _http_response *
-_http_parse_response(SSL *ssl)
+_http_parse_response(char **res)
 {
-  char line[4096] = {0};
-  size_t line_len = 0;
-  _http_ssl_getline(ssl, line, &line_len);
 
   struct _http_response *response = malloc(sizeof(struct _http_response));
 
-  response->header_name = strdup(line);
-  response->header_value = NULL;
-  response->next = NULL;
+  // the first token
+  char *root_save = NULL;
+  char *tok = strtok_r(*res, "\n", &root_save);
+  tok = strtok_r(root_save, "\n", &root_save);
 
   struct _http_response *cur = response;
+  cur->header_name = NULL;
+  cur->header_value = NULL;
 
-  while ((_http_ssl_getline(ssl, line, &line_len))) {
+  while (tok[0] != '\r') {
     cur->next = malloc(sizeof(struct _http_response));
     cur = cur->next;
 
-    char *name = NULL;
-    char *value = NULL;
+    char *header_save = NULL;
+    char *name = strtok_r(tok, ":", &header_save);
+    char *value = strtok_r(header_save, ":", &header_save);
 
-    size_t col_idx = 0;
-    for (; col_idx < line_len; ++col_idx) {
-      if (line[col_idx] == ':') {
-        break;
-      }
-    }
-    if (col_idx == line_len) {
-      pprint_error(
-          "invalid http response %s", __FILE_NAME__, __func__, __LINE__, line);
-      abort();
-    }
-
-    name = malloc(sizeof(char) * (col_idx + 1));
-    if (!name) {
-      pprint_error("no more memory", __FILE_NAME__, __func__, __LINE__);
-      abort();
-    }
-
-    for (size_t i = 0; i < col_idx; ++i) {
-      name[i] = line[i];
-    }
-    name[col_idx] = '\x0';
-
-    value = malloc(sizeof(char) * line_len);
-    if (!value) {
-      pprint_error("no more memory", __FILE_NAME__, __func__, __LINE__);
-      abort();
-    }
-
-    for (size_t i = (col_idx + 2); i < line_len; ++i) {
-      value[i - (col_idx + 2)] = line[i];
-    }
-    value[line_len - col_idx - 2] = '\x0';
-
-    cur->header_name = strdup(name);
-    cur->header_value = strdup(value);
+    cur->header_name = name;
+    cur->header_value = value;
     cur->next = NULL;
+
+    tok = strtok_r(root_save, "\n", &root_save);
   }
 
   cur->next = NULL;
 
+  *res = root_save;
   return response;
-}
-
-static char *
-_http_read_chuncked(SSL *ssl)
-{
-  // read the size line and convert the hex number to
-  // decimal
-
-  size_t total_size = 0;
-  char *data = NULL;
-
-  char _len[4096] = {0};
-  size_t __len = 0;
-
-  while (true) {
-
-    _http_ssl_getline(ssl, _len, &__len);
-
-    if (__len == 1) {
-      continue;
-    }
-
-    size_t len = (size_t)strtol(_len, NULL, 16);
-    if (len == 0) {
-      break;
-    }
-
-    data = realloc(data, total_size + len + 1);
-    size_t read = 0;
-    while (read != len) {
-      read +=
-          (size_t)SSL_read(ssl, &(data[total_size + read]), (int)(len - read));
-    }
-    total_size += len;
-    data[total_size] = '\x0';
-  }
-
-  _http_ssl_getline(ssl, _len, &__len);
-
-  return data;
 }
 
 int
@@ -247,9 +279,17 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   // don't send over the NULL terminator
   SSL_write(session->ssl, request, req_size);
 
+  free(request);
+
   // get the response headers with values and find the
   // Sec-WebSocket-Accept header.
-  struct _http_response *responses = _http_parse_response(session->ssl);
+
+  char *response = NULL;
+  uint32_t test = 0;
+
+  _http_ssl_read_all(session->ssl, &response, &test);
+
+  struct _http_response *responses = _http_parse_response(&response);
   struct _http_response *iter = responses;
   while (strcmp(iter->header_name, "Sec-WebSocket-Accept") != 0) {
     iter = iter->next;
@@ -274,7 +314,6 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
 int
 http_get_request(struct httpwss_session *session, char *path, char **response)
 {
-
   int req_size;
   char *request;
 
@@ -291,51 +330,14 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
   }
 
   SSL_write(session->ssl, request, req_size);
-
   free(request);
 
-  struct _http_response *responses = _http_parse_response(session->ssl);
-  struct _http_response *iter = responses;
+  char *_local_response = NULL;
+  uint32_t _local_len = 0;
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
 
-  data_t read_format = UNKNOWN;
-  while (iter) {
-    if (iter->header_name) {
-      if (strcmp(iter->header_name, "Content-Length") == 0) {
-        read_format = CONTENT_LENGTH;
-        break;
-      } else if (strcmp(iter->header_name, "Transfer-Encoding") == 0) {
-        read_format = CHUNCKED;
-        break;
-      }
-    }
-    iter = iter->next;
-  }
+  *response = _local_response;
 
-  if (read_format == UNKNOWN) {
-    pprint_info("i don't know how to read this response", __FILE_NAME__,
-        __func__, __LINE__);
-    exit(1);
-  }
-
-  char *body = NULL;
-
-  if (read_format == CONTENT_LENGTH) {
-    int content_length = atoi(iter->header_value);
-
-    body = (char *)malloc((size_t)(content_length + 1) * sizeof(char));
-    int num_read = 0;
-    while (num_read != content_length) {
-      num_read += SSL_read(
-          session->ssl, &(body[num_read]), (content_length - num_read));
-    }
-    body[content_length] = '\x0';
-
-  } else if (read_format == CHUNCKED) {
-    body = _http_read_chuncked(session->ssl);
-  }
-
-  _http_response_free(responses);
-  *response = body;
   return 0;
 }
 

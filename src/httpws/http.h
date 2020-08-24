@@ -1,13 +1,15 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#include <sys/select.h>
+#include <sys/socket.h>
+
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <pprint.h>
 #include <stdbool.h>
-#include <sys/socket.h>
 
 #include "base64.h"
 

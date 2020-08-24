@@ -30,7 +30,7 @@ _oanda_gen_currency_list(char *response)
     char *name = json_get_string(hashmap_get("name", instrument));
 
     total_len += 8;
-    currency_list = realloc(currency_list, total_len+1);
+    currency_list = realloc(currency_list, total_len + 1);
     if (currency_list) {
       strcat(currency_list, name);
       strcat(currency_list, ",");
@@ -39,14 +39,13 @@ _oanda_gen_currency_list(char *response)
 
     instruments = instruments->nxt;
   }
-  currency_list[total_len-1] = '\x0';
+  currency_list[total_len - 1] = '\x0';
 
   json_free(_root);
   return currency_list;
 }
 
-void __attribute__((__noreturn__))
-exchanges_oanda_init(char *key)
+void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
 {
   pprint_info("using api key %s", __FILE_NAME__, __func__, __LINE__, key);
 
@@ -75,10 +74,11 @@ exchanges_oanda_init(char *key)
   char *instrument_update_end = _oanda_gen_currency_list(response);
   char *instrument_update_beg = "/v3/accounts/%s/pricing?instruments=";
   char *instrument_update_full = NULL;
-  instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) + strlen(instrument_update_end) + 2, sizeof(char));
-  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id, instrument_update_end);
-
-  printf("%s\n", instrument_update_full);
+  instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) +
+          strlen(instrument_update_end) + 2,
+      sizeof(char));
+  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
+      instrument_update_end);
 
   size_t start_time = (size_t)time(NULL);
   size_t end_time = (size_t)time(NULL);
@@ -89,7 +89,7 @@ exchanges_oanda_init(char *key)
     free(response);
     num_msg += 1;
 
-     end_time = (size_t)time(NULL);
+    end_time = (size_t)time(NULL);
 
     if (end_time - start_time >= 1) {
       double msg_ps = (double)num_msg / (double)(end_time - start_time);
@@ -100,12 +100,11 @@ exchanges_oanda_init(char *key)
       end_time = (size_t)time(NULL);
       num_msg = 1;
     }
-
   }
 
- /* free(instrument_update_full);
-  free(instrument_update_end);
-  free(id);
-  free(response);
-  httpwss_session_free(master_session);*/
+  /* free(instrument_update_full);
+   free(instrument_update_end);
+   free(id);
+   free(response);
+   httpwss_session_free(master_session);*/
 }
