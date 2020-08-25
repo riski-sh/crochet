@@ -24,11 +24,7 @@
 #define HTTP_GET_REQUEST_AUTH_FMT      \
   "GET %s HTTP/1.1\r\n"                \
   "Host: %s\r\n"                       \
-  "Connection: Keep-Alive\r\n"         \
-  "Cookie: __cfduid=d05f54e8da6d0bf7a6c576387db178a281598374781\r\n"\
   "User-Agent: crochet\r\n"            \
-  "Content-Type: application/json\r\n" \
-  "Accept-Encoding: deflate\r\n"       \
   "Accept-Datetime-Format: UNIX\r\n"   \
   "Authorization: Bearer %s\r\n"       \
   "\r\n"
@@ -340,16 +336,7 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
       abort();
   }
 
-  while (_local_response == NULL) {
-    _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
-    if (_local_response == NULL) {
-      if (req_size != SSL_write(session->ssl, request, req_size)) {
-        printf("didn't write everything\n");
-        abort();
-      }
-      sleep(1);
-    }
-  }
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
   free(request);
   *response = _local_response;
 

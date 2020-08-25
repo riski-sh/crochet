@@ -1,3 +1,4 @@
+#include "httpws/http.h"
 #include "oanda.h"
 
 static char *
@@ -86,6 +87,16 @@ void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
 
   while (true) {
     http_get_request(master_session, instrument_update_full, &response);
+
+    if (response == NULL) {
+      printf("Attempting reconnect...\n");
+      httpwss_session_free(master_session);
+      master_session = httpwss_session_new(OANDA_API_ROOT, "443");
+      master_session->hashauth = true;
+      master_session->authkey = strdup(id);
+      continue;
+    }
+
     free(response);
     num_msg += 1;
 
