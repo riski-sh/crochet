@@ -57,7 +57,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
 
   int total_read = 0;
   char *res = NULL;
-
+  char *root_res_ptr = NULL;
   int fragment_size = 0;
 
   char record[16384] = {'\x0'};
@@ -69,6 +69,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       return;
     }
     res = calloc((size_t)(total_read + fragment_size + 1), sizeof(char));
+    root_res_ptr = res;
     memcpy(&(res[total_read]), record, (size_t)fragment_size);
     total_read += fragment_size;
   }
@@ -101,6 +102,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
     if (data_remaining == content_length) {
       *_r = strndup(res, (size_t)content_length);
       *_n = (uint32_t)content_length;
+      free(root_res_ptr);
     }
   } else if (read_format == CHUNCKED) {
     int data_remaining = (int)strlen(res);
@@ -132,6 +134,8 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
         }
         SSL_read(ssl, endings, 2);
       }
+
+      free(root_res_ptr);
 
       while (1) {
         char chunk_len[9] = {0};
@@ -336,8 +340,9 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
       abort();
   }
 
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
   free(request);
+
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
   *response = _local_response;
 
   return 0;
