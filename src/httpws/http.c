@@ -24,7 +24,8 @@
 #define HTTP_GET_REQUEST_AUTH_FMT      \
   "GET %s HTTP/1.1\r\n"                \
   "Host: %s\r\n"                       \
-  "Connection: keep-alive\r\n"         \
+  "Connection: Keep-Alive\r\n"         \
+  "Cookie: __cfduid=d05f54e8da6d0bf7a6c576387db178a281598374781\r\n"\
   "User-Agent: crochet\r\n"            \
   "Content-Type: application/json\r\n" \
   "Accept-Encoding: deflate\r\n"       \
@@ -66,8 +67,6 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
   char record[16384] = {'\x0'};
   while (fragment_size == 0) {
     fragment_size = SSL_read(ssl, record, 16383);
-    printf("%s\n", record);
-    printf("fragment_size = %d\n", fragment_size);
     if (fragment_size == 0) {
       *_r = NULL;
       *_n = 0;
