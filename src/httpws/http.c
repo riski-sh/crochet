@@ -342,8 +342,8 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
   uint32_t _local_len = 0;
 
   if (req_size != SSL_write(session->ssl, request, req_size)) {
-    pprint_error("%s@%s:%d couldn't write to socket (aborting)",
-        __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s@%s:%d couldn't write to socket (aborting)", __FILE_NAME__,
+        __func__, __LINE__);
     abort();
   }
 
@@ -362,8 +362,8 @@ httpwss_session_new(char *endpoint, char *port)
   struct httpwss_session *session = malloc(sizeof(struct httpwss_session));
 
   if (!session) {
-    pprint_error("%s@%s:%d no more memory (aborting)", __FILE_NAME__,
-        __func__, __LINE__);
+    pprint_error("%s@%s:%d no more memory (aborting)", __FILE_NAME__, __func__,
+        __LINE__);
     abort();
   }
 
@@ -376,21 +376,23 @@ httpwss_session_new(char *endpoint, char *port)
   struct addrinfo *res = NULL;
 
   if (getaddrinfo(endpoint, port, NULL, &res) != 0) {
-    pprint_error("%s@%s:%d unable to resolve %s (aborting)", __FILE_NAME__, __func__, __LINE__, endpoint);
+    pprint_error("%s@%s:%d unable to resolve %s (aborting)", __FILE_NAME__,
+        __func__, __LINE__, endpoint);
     abort();
   }
 
   // create the socket
   session->fd = socket(AF_INET, SOCK_STREAM, 0);
   if (session->fd == -1) {
-    pprint_error("%s@%s:%d socket fd failed (aborting)", __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s@%s:%d socket fd failed (aborting)", __FILE_NAME__,
+        __func__, __LINE__);
     abort();
   }
 
   // connect the socket to the remote host
   if (connect(session->fd, res->ai_addr, res->ai_addrlen) == -1) {
-    pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)", __FILE_NAME__, __func__, __LINE__,
-        endpoint, port);
+    pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)",
+        __FILE_NAME__, __func__, __LINE__, endpoint, port);
     abort();
   }
 

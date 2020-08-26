@@ -53,7 +53,8 @@ static __json_string
 _parse_string(char *str, size_t *idx)
 {
   if (str[*idx] != '"') {
-    pprint_error("%s@%s:%d expected \" for string %s (aborting)", __FILE_NAME__, __func__, __LINE__, &(str[*idx]));
+    pprint_error("%s@%s:%d expected \" for string %s (aborting)", __FILE_NAME__,
+        __func__, __LINE__, &(str[*idx]));
     abort();
   }
   (*idx) += 1;
@@ -66,8 +67,8 @@ _parse_string(char *str, size_t *idx)
 
   // make sure we ended on a "
   if (str[*idx] != '"') {
-    pprint_error("%s@%s:%d invalid json string expected \" got %s (aborting)", __FILE_NAME__,
-        __func__, __LINE__, &(str[*idx]));
+    pprint_error("%s@%s:%d invalid json string expected \" got %s (aborting)",
+        __FILE_NAME__, __func__, __LINE__, &(str[*idx]));
     abort();
   }
 
@@ -87,8 +88,8 @@ _parse_member(char *str, size_t *idx, char **name, __json_value *_val)
   // verify name-separator
   _parse_whitespace(str, idx);
   if (str[*idx] != ':') {
-    pprint_error("%s@%s:%d expected a : after name %s (aborting)", __FILE_NAME__, __func__,
-        __LINE__, member_name);
+    pprint_error("%s@%s:%d expected a : after name %s (aborting)",
+        __FILE_NAME__, __func__, __LINE__, member_name);
     abort();
   }
   (*idx) += 1;
@@ -103,8 +104,8 @@ static __json_object
 _parse_object(char *str, size_t *idx)
 {
   if (str[*idx] != '{') {
-    pprint_info(
-        "%s@%s:%d expected { got %c (aborting)", __FILE_NAME__, __func__, __LINE__, str[*idx]);
+    pprint_info("%s@%s:%d expected { got %c (aborting)", __FILE_NAME__,
+        __func__, __LINE__, str[*idx]);
     abort();
   }
 
@@ -136,8 +137,8 @@ _parse_object(char *str, size_t *idx)
 
   _parse_whitespace(str, idx);
   if (str[*idx] != '}') {
-    pprint_error("%s@%s:%d invalid object expected } got %s (aborting)", __FILE_NAME__, __func__,
-        __LINE__, str[*idx]);
+    pprint_error("%s@%s:%d invalid object expected } got %s (aborting)",
+        __FILE_NAME__, __func__, __LINE__, str[*idx]);
     abort();
   }
   (*idx) += 1;
@@ -150,8 +151,8 @@ static __json_array
 _parse_array(char *str, size_t *idx)
 {
   if (str[*idx] != '[') {
-    pprint_info(
-        "%s@%s:%d expected [ got %s (aborting)", __FILE_NAME__, __func__, __LINE__, str[*idx]);
+    pprint_info("%s@%s:%d expected [ got %s (aborting)", __FILE_NAME__,
+        __func__, __LINE__, str[*idx]);
     abort();
   }
 
@@ -181,8 +182,8 @@ _parse_array(char *str, size_t *idx)
 
   // verify end array
   if (str[*idx] != ']') {
-    pprint_error(
-        "%s@%s:%d expected ] got %c", __FILE_NAME__, __func__, __LINE__, str[*idx]);
+    pprint_error("%s@%s:%d expected ] got %c", __FILE_NAME__, __func__,
+        __LINE__, str[*idx]);
     abort();
   }
   (*idx) += 1;
@@ -274,8 +275,9 @@ _parse_value(char *str, size_t *idx)
     (*idx) += 4;
     return val;
   } else {
-    pprint_error("%s@%s:%d expected object|array|string|true|false|null|number in json"
-                 " %s %lu (aborting)",
+    pprint_error(
+        "%s@%s:%d expected object|array|string|true|false|null|number in json"
+        " %s %lu (aborting)",
         __FILE_NAME__, __func__, __LINE__, &(str[*idx]), *idx);
     abort();
   }
@@ -337,7 +339,8 @@ json_get_bool(__json_value val)
   } else if (val->t == JSON_TYPE_FALSE) {
     return false;
   } else {
-    pprint_error("%s@%s:%d expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
+    pprint_error(
+        "%s@%s:%d expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
         __FILE_NAME__, __func__, __LINE__, JSON_TYPE_STR[val->t]);
     abort();
   }
