@@ -92,8 +92,9 @@ exchanges_oanda_init(char *key)
     http_get_request(master_session, instrument_update_full, &response);
 
     if (response == NULL) {
-      printf("Attempting reconnect...\n");
+      pprint_info("oanda connection closed reconnecting...");
       httpwss_session_free(master_session);
+      pprint_info("oanda connection reconnected");
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
       master_session->authkey = key;
@@ -102,16 +103,24 @@ exchanges_oanda_init(char *key)
 
     free(response);
 
+#if defined(__FreeBSD__)
+    clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+#else
     clock_gettime(CLOCK_BOOTTIME, &end_time);
-
+#endif
     num_msg += 1;
 
     if ((end_time.tv_sec - start_time.tv_sec) == 5) {
       double msg_ps = (double)num_msg / (double)(end_time.tv_sec - start_time.tv_sec);
       pprint_info("oanda feed message rate at %.2f msg/s", msg_ps);
 
+#if defined(__FreeBSD__)
+      clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+      clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
+#else
       clock_gettime(CLOCK_BOOTTIME, &end_time);
       clock_gettime(CLOCK_BOOTTIME, &start_time);
+#endif
       num_msg = 0;
     }
   }

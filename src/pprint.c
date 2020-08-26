@@ -30,7 +30,13 @@ static void
 _pprint_time(char (*time)[TIME_STR_LEN])
 {
   struct timespec current_time;
+
+#if defined(__FreeBSD__)
+  clock_gettime(CLOCK_UPTIME_PRECISE, &current_time);
+#else
   clock_gettime(CLOCK_BOOTTIME, &current_time);
+#endif
+
   sprintf(*time, "[\x1b[92m%lu.%09lu\x1b[0m]", current_time.tv_sec,
       current_time.tv_nsec);
 }
