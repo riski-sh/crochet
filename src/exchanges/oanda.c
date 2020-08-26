@@ -131,7 +131,7 @@ exchanges_oanda_init(char *key)
     }
   }
 
-  pprint_info("shutting down", __FILE_NAME__, __func__, __LINE__);
+  pprint_info("cleaning up exchange oanda...");
   free(instrument_update_full);
   free(instrument_update_end);
   free(id);

@@ -29,6 +29,7 @@ main(int argc, char **argv)
 #include <orderbooks/book.h>
 #include <signal.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "pprint.h"
 
@@ -63,7 +64,7 @@ sig_handler(int sig)
 {
   if (sig == SIGINT) {
     printf("\r");
-    pprint_warn("SIGINT shutting down gracefully");
+    pprint_warn("<CTRL>+C SIGINT");
     bool disable = false;
     globals_continue(&disable);
   } else {
@@ -77,7 +78,7 @@ int
 main(int argc, char **argv)
 {
   pprint_info("booting crochet");
-  pprint_info("catching signals");
+
   signal(SIGINT, sig_handler);
 
   __json_value _config_root = NULL;
@@ -115,9 +116,11 @@ main(int argc, char **argv)
     }
   }
 
+  pprint_info("cleaning up main...");
   free(_config_raw);
   json_free(_config_root);
 
+  pprint_info("goodbye");
   return 0;
 }
 #endif
