@@ -82,7 +82,12 @@ exchanges_oanda_init(char *key)
   free(response);
 
   struct timespec start_time;
+
+#if defined(__FreeBSD__)
+  clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
+#else
   clock_gettime(CLOCK_BOOTTIME, &start_time);
+#endif
 
   struct timespec end_time;
 
