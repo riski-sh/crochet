@@ -43,12 +43,12 @@ hashmap_new(unsigned int num_bins)
 {
   struct hashmap *map = malloc(sizeof(struct hashmap) * 1);
   if (!map) {
-    pprint_error("not enough memory", __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
   map->bins = malloc(sizeof(struct _map_list) * num_bins);
   if (!map->bins) {
-    pprint_error("not enough memory", __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
   for (unsigned int i = 0; i < num_bins; ++i) {
@@ -62,8 +62,7 @@ void
 hashmap_put(char *key, void *value, struct hashmap *map)
 {
   if (!key || !value || !map) {
-    pprint_error(
-        "key, value, or map points to null", __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s@%s:%d key, value, or map points to null (aborting)", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
   size_t hash = sdbm(key);

@@ -342,7 +342,8 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
   uint32_t _local_len = 0;
 
   if (req_size != SSL_write(session->ssl, request, req_size)) {
-    printf("didn't write everything\n");
+    pprint_error("%s@%s:%d couldn't write to socket (aborting)",
+        __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 
@@ -360,37 +361,37 @@ httpwss_session_new(char *endpoint, char *port)
 
   struct httpwss_session *session = malloc(sizeof(struct httpwss_session));
 
+  if (!session) {
+    pprint_error("%s@%s:%d no more memory (aborting)", __FILE_NAME__,
+        __func__, __LINE__);
+    abort();
+  }
+
   session->endpoint = strdup(endpoint);
   session->iswss = false;
 
-  if (!session) {
-    pprint_error("no more memory", __FILE_NAME__, __func__, __LINE__);
-    exit(1);
-  }
-
-  pprint_info("starting connection to %s:%s", __FILE_NAME__, __func__, __LINE__,
-      endpoint, port);
+  pprint_info("starting connection to %s on port %s", endpoint, port);
 
   // convert endpoint to an ip address
   struct addrinfo *res = NULL;
 
   if (getaddrinfo(endpoint, port, NULL, &res) != 0) {
-    pprint_error(
-        "unable to resolve %s", __FILE_NAME__, __func__, __LINE__, endpoint);
-    // return WSS_ERR_GET_ADDR_INFO;
+    pprint_error("%s@%s:%d unable to resolve %s (aborting)", __FILE_NAME__, __func__, __LINE__, endpoint);
+    abort();
   }
 
   // create the socket
   session->fd = socket(AF_INET, SOCK_STREAM, 0);
   if (session->fd == -1) {
-    pprint_error("unable to create socket probably because one is already open",
-        __FILE_NAME__, __func__, __LINE__);
-    // return WSS_ERR_SOCKET_CREATION;
+    pprint_error("%s@%s:%d socket fd failed (aborting)", __FILE_NAME__, __func__, __LINE__);
+    abort();
   }
 
   // connect the socket to the remote host
   if (connect(session->fd, res->ai_addr, res->ai_addrlen) == -1) {
-    // return WSS_ERR_CONNECT_FAILURE;
+    pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)", __FILE_NAME__, __func__, __LINE__,
+        endpoint, port);
+    abort();
   }
 
   // prime SSL for establishing TLS connection
@@ -413,8 +414,7 @@ httpwss_session_new(char *endpoint, char *port)
 
   SSL_CTX_free(ctx);
 
-  pprint_info("tls handshake accepted by %s", __FILE_NAME__, __func__, __LINE__,
-      endpoint);
+  pprint_info("established tls connection to %s on port %s", endpoint, port);
 
   freeaddrinfo(res);
 

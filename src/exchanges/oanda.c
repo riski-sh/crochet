@@ -49,8 +49,6 @@ _oanda_gen_currency_list(char *response)
 void
 exchanges_oanda_init(char *key)
 {
-  pprint_info("using api key %s", __FILE_NAME__, __func__, __LINE__, key);
-
   struct httpwss_session *master_session =
       httpwss_session_new(OANDA_API_ROOT, "443");
   master_session->hashauth = true;
@@ -83,8 +81,11 @@ exchanges_oanda_init(char *key)
 
   free(response);
 
-  size_t start_time = (size_t)time(NULL);
-  size_t end_time = (size_t)time(NULL);
+  struct timespec start_time;
+  clock_gettime(CLOCK_BOOTTIME, &start_time);
+
+  struct timespec end_time;
+
   size_t num_msg = 0;
 
   while (globals_continue(NULL)) {
@@ -100,18 +101,18 @@ exchanges_oanda_init(char *key)
     }
 
     free(response);
+
+    clock_gettime(CLOCK_BOOTTIME, &end_time);
+
     num_msg += 1;
 
-    end_time = (size_t)time(NULL);
+    if ((end_time.tv_sec - start_time.tv_sec) == 5) {
+      double msg_ps = (double)num_msg / (double)(end_time.tv_sec - start_time.tv_sec);
+      pprint_info("oanda feed message rate at %.2f msg/s", msg_ps);
 
-    if (end_time - start_time >= 1) {
-      double msg_ps = (double)num_msg / (double)(end_time - start_time);
-      pprint_info(
-          "%s %f msg/s", __FILE_NAME__, __func__, __LINE__, (char *)id, msg_ps);
-
-      start_time = (size_t)time(NULL);
-      end_time = (size_t)time(NULL);
-      num_msg = 1;
+      clock_gettime(CLOCK_BOOTTIME, &end_time);
+      clock_gettime(CLOCK_BOOTTIME, &start_time);
+      num_msg = 0;
     }
   }
 

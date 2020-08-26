@@ -36,6 +36,14 @@ static __json_value
 _load_config(char *file, char **raw)
 {
   FILE *fp = fopen(file, "r");
+
+  if (!fp) {
+    pprint_error("unable to open config file at %s (aborting)", file);
+    abort();
+  }
+
+  pprint_info("loading config file at %s", file);
+
   fseek(fp, 0, SEEK_END);
   size_t file_size = (size_t)ftell(fp);
   fseek(fp, 0, SEEK_SET);
@@ -53,24 +61,24 @@ _load_config(char *file, char **raw)
 static void
 sig_handler(int sig)
 {
-  (void)sig;
-  pprint_info("shutting down gracefully", __FILE_NAME__, __func__, __LINE__);
-  bool disable = false;
-  globals_continue(&disable);
+  if (sig == SIGINT) {
+    printf("\r");
+    pprint_warn("SIGINT shutting down gracefully");
+    bool disable = false;
+    globals_continue(&disable);
+  } else {
+    printf("\r");
+    pprint_error("signal %d (aborting)", sig);
+    abort();
+  }
 }
 
 int
 main(int argc, char **argv)
 {
-
-  pprint_info(
-      "crochet (C) washcloth et al.", __FILE_NAME__, __func__, __LINE__);
-
-  pprint_info("setting up signal catcher for graceful shutdown", __FILE_NAME__,
-      __func__, __LINE__);
+  pprint_info("booting crochet");
+  pprint_info("catching signals");
   signal(SIGINT, sig_handler);
-
-  pprint_info("loading configuration file", __FILE_NAME__, __func__, __LINE__);
 
   __json_value _config_root = NULL;
   __json_object config = NULL;
@@ -79,12 +87,11 @@ main(int argc, char **argv)
     _config_root = _load_config(argv[1], &_config_raw);
     config = json_get_object(_config_root);
   } else {
-    pprint_error("please specify a configuration file", __FILE_NAME__, __func__,
-        __LINE__);
+    pprint_error("no configuration file specified");
     return 1;
   }
 
-  pprint_info("initializing OpenSSL", __FILE_NAME__, __func__, __LINE__);
+  pprint_info("setting up openssl");
 
   SSL_load_error_strings();
   SSL_library_init();
@@ -94,8 +101,7 @@ main(int argc, char **argv)
     __json_bool online = json_get_bool(hashmap_get("online", _oanda));
     if (online) {
       __json_string key = json_get_string(hashmap_get("key", _oanda));
-      pprint_info(
-          "starting oanda exchange feed", __FILE_NAME__, __func__, __LINE__);
+      pprint_info("starting oanda feed with api key [REDACTED]", key);
       exchanges_oanda_init(key);
     }
   }
@@ -104,8 +110,7 @@ main(int argc, char **argv)
   if (_coinbase != NULL) {
     __json_bool online = json_get_bool(hashmap_get("online", _coinbase));
     if (online) {
-      pprint_info(
-          "starting coinbase exchange feed", __FILE_NAME__, __func__, __LINE__);
+      pprint_info("starting coinbase feed");
       exchanges_coinbase_init();
     }
   }

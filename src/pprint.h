@@ -32,21 +32,16 @@
  * Prints out a log message under the level info
  * @param str A constant string to print
  */
-void pprint_info(
-    const char *str, const char *file, const char *func, int line, ...);
+void pprint_info(const char *str, ...);
 
 /*
  * Prints out a log message under the level warning
  * @param str A constant string to print
  */
-void pprint_warn(
-    const char *str, const char *file, const char *func, int line, ...);
-
+void pprint_warn(const char *str, ...);
 /*
  * Prints out a log message under the level error
  * @param str A constant string to print
  */
-void pprint_error(
-    const char *str, const char *file, const char *func, int line, ...);
-
+void pprint_error(const char *str, ...);
 #endif
