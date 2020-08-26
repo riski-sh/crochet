@@ -103,6 +103,7 @@ exchanges_oanda_init(char *key)
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
       master_session->authkey = key;
+      pprint_info("oanda connection reconnected");
       continue;
     }
 
@@ -115,7 +116,7 @@ exchanges_oanda_init(char *key)
 #endif
     num_msg += 1;
 
-    if ((end_time.tv_sec - start_time.tv_sec) == 5) {
+    if ((end_time.tv_sec - start_time.tv_sec) >= 5) {
       double msg_ps = (double)num_msg / (double)(end_time.tv_sec - start_time.tv_sec);
       pprint_info("oanda feed message rate at %.2f msg/s", msg_ps);
 
