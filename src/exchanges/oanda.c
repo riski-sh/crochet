@@ -106,9 +106,14 @@ exchanges_oanda_init(char *key)
       pprint_info("oanda connection reconnected");
       continue;
     }
+    __json_value _response_root = json_parse(response);
+    __json_object _response = json_get_object(_response_root);
 
+    __json_string _response_time = json_get_string(hashmap_get("time", _response));
+    printf("response_time: %s\n", _response_time);
+
+    json_free(_response_root);
     free(response);
-
 #if defined(__FreeBSD__)
     clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
 #else
