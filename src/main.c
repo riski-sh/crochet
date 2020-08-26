@@ -22,10 +22,12 @@ main(int argc, char **argv)
 #else
 
 #include <exchanges/exchanges.h>
+#include <globals.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <orderbooks/book.h>
+#include <signal.h>
 #include <stdio.h>
 
 #include "pprint.h"
@@ -48,12 +50,25 @@ _load_config(char *file, char **raw)
   return json_parse(cfg);
 }
 
+static void
+sig_handler(int sig)
+{
+  (void)sig;
+  pprint_info("shutting down gracefully", __FILE_NAME__, __func__, __LINE__);
+  bool disable = false;
+  globals_continue(&disable);
+}
+
 int
 main(int argc, char **argv)
 {
 
   pprint_info(
       "crochet (C) washcloth et al.", __FILE_NAME__, __func__, __LINE__);
+
+  pprint_info("setting up signal catcher for graceful shutdown", __FILE_NAME__,
+      __func__, __LINE__);
+  signal(SIGINT, sig_handler);
 
   pprint_info("loading configuration file", __FILE_NAME__, __func__, __LINE__);
 

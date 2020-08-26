@@ -2,6 +2,7 @@
 #define EXCHANGES_OANDA_H
 
 #include <ffjson/ffjson.h>
+#include <globals.h>
 #include <httpws/http.h>
 #include <pprint.h>
 

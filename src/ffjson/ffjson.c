@@ -35,9 +35,7 @@ _valid_character(char *str, size_t *idx)
   char c = str[*idx];
   char b = str[(*idx) + 1];
   if (c == '\\' &&
-      (b == '"' || b == '\\' ||
-          b == '/' || b == 'b' ||
-          b == 'f' || b == 'n' ||
+      (b == '"' || b == '\\' || b == '/' || b == 'b' || b == 'f' || b == 'n' ||
           b == 'r' || b == 't')) {
     (*idx) += 2;
     return true;

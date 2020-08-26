@@ -21,12 +21,12 @@
   "User-Agent: crochet\r\n"  \
   "\r\n"
 
-#define HTTP_GET_REQUEST_AUTH_FMT      \
-  "GET %s HTTP/1.1\r\n"                \
-  "Host: %s\r\n"                       \
-  "User-Agent: crochet\r\n"            \
-  "Accept-Datetime-Format: UNIX\r\n"   \
-  "Authorization: Bearer %s\r\n"       \
+#define HTTP_GET_REQUEST_AUTH_FMT    \
+  "GET %s HTTP/1.1\r\n"              \
+  "Host: %s\r\n"                     \
+  "User-Agent: crochet\r\n"          \
+  "Accept-Datetime-Format: UNIX\r\n" \
+  "Authorization: Bearer %s\r\n"     \
   "\r\n"
 
 struct _http_response {
@@ -46,6 +46,7 @@ enum _http_parse_state {
 typedef enum { CONTENT_LENGTH = 0, CHUNCKED = 1, UNKNOWN = 2 } data_t;
 
 static struct _http_response *_http_parse_response(char **res);
+static void _http_response_free(struct _http_response *res);
 
 /*
  * Read everything into one buffer
@@ -60,7 +61,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
   char *root_res_ptr = NULL;
   int fragment_size = 0;
 
-  char record[16384] = {'\x0'};
+  char record[16384] = { '\x0' };
   while (fragment_size == 0) {
     fragment_size = SSL_read(ssl, record, 16383);
     if (fragment_size == 0) {
@@ -76,23 +77,25 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
 
   struct _http_response *headers = _http_parse_response(&res);
   data_t read_format = UNKNOWN;
-  while (headers) {
-    if (headers->header_name) {
-      if (strcmp(headers->header_name, "Content-Length") == 0) {
+
+  struct _http_response *headers_iter = headers;
+  while (headers_iter) {
+    if (headers_iter->header_name) {
+      if (strcmp(headers_iter->header_name, "Content-Length") == 0) {
         read_format = CONTENT_LENGTH;
         break;
-      } else if (strcmp(headers->header_name, "Transfer-Encoding") == 0) {
+      } else if (strcmp(headers_iter->header_name, "Transfer-Encoding") == 0) {
         read_format = CHUNCKED;
         break;
       }
     }
-    headers = headers->next;
+    headers_iter = headers_iter->next;
   }
 
   if (read_format == CONTENT_LENGTH) {
     // data remaining
     int data_remaining = (int)strlen(res);
-    int content_length = atoi(headers->header_value);
+    int content_length = atoi(headers_iter->header_value);
 
     if (data_remaining != content_length) {
       abort();
@@ -102,6 +105,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
     if (data_remaining == content_length) {
       *_r = strndup(res, (size_t)content_length);
       *_n = (uint32_t)content_length;
+      _http_response_free(headers);
       free(root_res_ptr);
     }
   } else if (read_format == CHUNCKED) {
@@ -111,8 +115,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       char *first_chunk_size_str = strtok_r(res, "\n", &chunk_save);
       char *nxt_data = strtok_r(chunk_save, "\r", &chunk_save);
 
-      size_t total_chunk_size =
-          strtoul(first_chunk_size_str, NULL, 16);
+      size_t total_chunk_size = strtoul(first_chunk_size_str, NULL, 16);
 
       char *chunk = calloc(total_chunk_size + 1, sizeof(char));
       if (!chunk) {
@@ -130,7 +133,8 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       if (partial_chunk_len != total_chunk_size) {
         chunk_read = partial_chunk_len;
         while (chunk_read != total_chunk_size) {
-          chunk_read += (size_t) SSL_read(ssl, &(chunk[chunk_read]), (int)(total_chunk_size-chunk_read));
+          chunk_read += (size_t)SSL_read(
+              ssl, &(chunk[chunk_read]), (int)(total_chunk_size - chunk_read));
         }
         SSL_read(ssl, endings, 2);
       }
@@ -138,7 +142,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       free(root_res_ptr);
 
       while (1) {
-        char chunk_len[9] = {0};
+        char chunk_len[9] = { 0 };
         int chunk_len_idx = 0;
         do {
           // loop until \r
@@ -146,12 +150,12 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
             exit(1);
           }
           chunk_len_idx += SSL_read(ssl, &(chunk_len[chunk_len_idx]), 2);
-          if (chunk_len[chunk_len_idx-1] == '\r') {
+          if (chunk_len[chunk_len_idx - 1] == '\r') {
             SSL_read(ssl, endings, 1);
-            chunk_len[chunk_len_idx-1] = '\x0';
+            chunk_len[chunk_len_idx - 1] = '\x0';
             break;
-          } else if (chunk_len[chunk_len_idx-1] == '\n') {
-            chunk_len[chunk_len_idx-2] = '\x0';
+          } else if (chunk_len[chunk_len_idx - 1] == '\n') {
+            chunk_len[chunk_len_idx - 2] = '\x0';
             break;
           }
         } while (1);
@@ -161,14 +165,13 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
           SSL_read(ssl, endings, 2);
           break;
         }
+
         chunk_read = 0;
         chunk = realloc(chunk, global_total_read + total_chunk_size + 1);
-        if (!chunk) {
-          abort();
-        }
 
         while (chunk_read != total_chunk_size) {
-          int ret = SSL_read(ssl, &(chunk[global_total_read]), (int)(total_chunk_size - chunk_read));
+          int ret = SSL_read(ssl, &(chunk[global_total_read]),
+              (int)(total_chunk_size - chunk_read));
           global_total_read += (size_t)ret;
           chunk_read += (size_t)ret;
           chunk[global_total_read] = '\x0';
@@ -177,7 +180,8 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       }
       chunk[global_total_read] = '\x0';
       *_r = chunk;
-      *_n = (uint32_t) global_total_read;
+      *_n = (uint32_t)global_total_read;
+      _http_response_free(headers);
       return;
     }
   } else {
@@ -188,10 +192,11 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
 static void
 _http_response_free(struct _http_response *res)
 {
-  while (res) {
-    struct _http_response *cur = res;
-    res = res->next;
-    free(cur);
+  struct _http_response *iter = res;
+  while (iter) {
+    struct _http_response *tmp = iter->next;
+    free(iter);
+    iter = tmp;
   }
 }
 
@@ -209,23 +214,24 @@ _http_parse_response(char **res)
   struct _http_response *cur = response;
   cur->header_name = NULL;
   cur->header_value = NULL;
+  cur->next = NULL;
 
   while (tok[0] != '\r') {
-    cur->next = malloc(sizeof(struct _http_response));
-    cur = cur->next;
-
     char *header_save = NULL;
     char *name = strtok_r(tok, ":", &header_save);
     char *value = strtok_r(header_save, ":", &header_save);
 
     cur->header_name = name;
     cur->header_value = value;
-    cur->next = NULL;
 
     tok = strtok_r(root_save, "\n", &root_save);
-  }
 
-  cur->next = NULL;
+    cur->next = malloc(sizeof(struct _http_response));
+    cur = cur->next;
+    cur->header_name = NULL;
+    cur->header_value = NULL;
+    cur->next = NULL;
+  }
 
   *res = root_save;
   return response;
@@ -336,8 +342,8 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
   uint32_t _local_len = 0;
 
   if (req_size != SSL_write(session->ssl, request, req_size)) {
-      printf("didn't write everything\n");
-      abort();
+    printf("didn't write everything\n");
+    abort();
   }
 
   free(request);
@@ -421,9 +427,6 @@ httpwss_session_new(char *endpoint, char *port)
 void
 httpwss_session_free(struct httpwss_session *session)
 {
-  if (session->hashauth) {
-    free(session->authkey);
-  }
   free(session->endpoint);
   SSL_free(session->ssl);
   free(session);

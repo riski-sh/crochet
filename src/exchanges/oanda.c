@@ -46,14 +46,15 @@ _oanda_gen_currency_list(char *response)
   return currency_list;
 }
 
-void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
+void
+exchanges_oanda_init(char *key)
 {
   pprint_info("using api key %s", __FILE_NAME__, __func__, __LINE__, key);
 
   struct httpwss_session *master_session =
       httpwss_session_new(OANDA_API_ROOT, "443");
   master_session->hashauth = true;
-  master_session->authkey = strdup(key);
+  master_session->authkey = key;
 
   char *response = NULL;
   http_get_request(master_session, "/v3/accounts", &response);
@@ -69,7 +70,6 @@ void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
   sprintf(get_instrument_str, "/v3/accounts/%s/instruments", id);
 
   http_get_request(master_session, get_instrument_str, &response);
-
   free(get_instrument_str);
 
   char *instrument_update_end = _oanda_gen_currency_list(response);
@@ -81,11 +81,13 @@ void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
   sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
       instrument_update_end);
 
+  free(response);
+
   size_t start_time = (size_t)time(NULL);
   size_t end_time = (size_t)time(NULL);
   size_t num_msg = 0;
 
-  while (true) {
+  while (globals_continue(NULL)) {
     http_get_request(master_session, instrument_update_full, &response);
 
     if (response == NULL) {
@@ -93,7 +95,7 @@ void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
       httpwss_session_free(master_session);
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
-      master_session->authkey = strdup(id);
+      master_session->authkey = key;
       continue;
     }
 
@@ -113,9 +115,9 @@ void __attribute__((__noreturn__)) exchanges_oanda_init(char *key)
     }
   }
 
-  /* free(instrument_update_full);
-   free(instrument_update_end);
-   free(id);
-   free(response);
-   httpwss_session_free(master_session);*/
+  pprint_info("shutting down", __FILE_NAME__, __func__, __LINE__);
+  free(instrument_update_full);
+  free(instrument_update_end);
+  free(id);
+  httpwss_session_free(master_session);
 }
