@@ -87,6 +87,9 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       } else if (strcmp(headers_iter->header_name, "Transfer-Encoding") == 0) {
         read_format = CHUNCKED;
         break;
+      } else if (strcmp(headers_iter->header_name, "Upgrade") == 0) {
+        free(root_res_ptr);
+        return;
       }
     }
     headers_iter = headers_iter->next;
@@ -98,7 +101,19 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
     int content_length = atoi(headers_iter->header_value);
 
     if (data_remaining != content_length) {
-      abort();
+      char *chunk = calloc((size_t) content_length + 1, sizeof(char));
+      memcpy(chunk, res, (size_t) data_remaining);
+
+      int read = data_remaining;
+
+      while (read != content_length) {
+        read += SSL_read(ssl, &(chunk[read]), (content_length - read));
+      }
+
+      *_r = chunk;
+      *_n = (uint32_t) content_length;
+
+      free(root_res_ptr);
     }
 
     // entire data length is contained inside this record
@@ -298,23 +313,7 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
 
   _http_ssl_read_all(session->ssl, &response, &test);
 
-  struct _http_response *responses = _http_parse_response(&response);
-  struct _http_response *iter = responses;
-  while (strcmp(iter->header_name, "Sec-WebSocket-Accept") != 0) {
-    iter = iter->next;
-  }
-
-  if (iter) {
-    pprint_info("confirmation key %s received web socket upgrade complete ",
-        __FILE_NAME__, __func__, __LINE__, iter->header_value);
-  } else {
-    pprint_error("server did not accept websocket upgrade", __FILE_NAME__,
-        __func__, __LINE__);
-    abort();
-  }
-
   free(key_encoded);
-  _http_response_free(responses);
 
   session->iswss = true;
   return 0;

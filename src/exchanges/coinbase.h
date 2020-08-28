@@ -8,6 +8,7 @@
 #include <orderbooks/coinbase.h>
 #include <pprint.h>
 #include <pthread.h>
+#include <globals.h>
 
 /*
  * The base url that will serve as the root for
