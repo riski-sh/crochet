@@ -101,8 +101,8 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
     int content_length = atoi(headers_iter->header_value);
 
     if (data_remaining != content_length) {
-      char *chunk = calloc((size_t) content_length + 1, sizeof(char));
-      memcpy(chunk, res, (size_t) data_remaining);
+      char *chunk = calloc((size_t)content_length + 1, sizeof(char));
+      memcpy(chunk, res, (size_t)data_remaining);
 
       int read = data_remaining;
 
@@ -111,7 +111,7 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       }
 
       *_r = chunk;
-      *_n = (uint32_t) content_length;
+      *_n = (uint32_t)content_length;
 
       free(root_res_ptr);
     }
@@ -282,10 +282,10 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   fclose(urandom);
 
   pprint_info("generated crypto safe key "
-              "0x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x", raw_key[0], raw_key[1], raw_key[2],
-      raw_key[3], raw_key[4], raw_key[5], raw_key[6], raw_key[7], raw_key[8],
-      raw_key[9], raw_key[10], raw_key[11], raw_key[12], raw_key[13],
-      raw_key[14], raw_key[15]);
+              "0x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+      raw_key[0], raw_key[1], raw_key[2], raw_key[3], raw_key[4], raw_key[5],
+      raw_key[6], raw_key[7], raw_key[8], raw_key[9], raw_key[10], raw_key[11],
+      raw_key[12], raw_key[13], raw_key[14], raw_key[15]);
 
   unsigned char *key_encoded = NULL;
   key_encoded = base64(raw_key, HTTP_WSS_KEY_LEN);
@@ -373,7 +373,8 @@ http_get_request_generate(struct httpwss_session *session, char *path)
 }
 
 int
-http_get_request_cached(struct httpwss_session *session, char *request, int req_size, char **response)
+http_get_request_cached(struct httpwss_session *session, char *request,
+    int req_size, char **response)
 {
   if (req_size != SSL_write(session->ssl, request, req_size)) {
     pprint_error("%s@%s:%d couldn't write to socket (aborting)", __FILE_NAME__,

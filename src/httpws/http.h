@@ -88,13 +88,12 @@ int http_wss_upgrade(struct httpwss_session *session, char *path);
  */
 int http_get_request(struct httpwss_session *session, char *path, char **res);
 
-char* http_get_request_generate(struct httpwss_session *session, char *path);
+char *http_get_request_generate(struct httpwss_session *session, char *path);
 
-int http_get_request_cached(struct httpwss_session *session, char *request, int req_size, char **response);
+int http_get_request_cached(struct httpwss_session *session, char *request,
+    int req_size, char **response);
 
 struct httpwss_session *httpwss_session_new(char *endpoint, char *port);
-
-
 
 void httpwss_session_free(struct httpwss_session *session);
 

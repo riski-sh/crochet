@@ -81,28 +81,29 @@ exchanges_oanda_init(char *key)
 
   free(response);
 
-  char *poll_request_cached = http_get_request_generate(master_session, instrument_update_full);
-  int poll_request_cached_size = (int) strlen(poll_request_cached);
+  char *poll_request_cached =
+      http_get_request_generate(master_session, instrument_update_full);
+  int poll_request_cached_size = (int)strlen(poll_request_cached);
 
   struct timespec start_time;
 
-#if defined(__FreeBSD__)
-  clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
-#else
-  clock_gettime(CLOCK_BOOTTIME, &start_time);
-#endif
-
   struct timespec end_time;
 
-  size_t num_msg = 0;
-
   while (globals_continue(NULL)) {
-    http_get_request_cached(master_session, poll_request_cached, poll_request_cached_size, &response);
+
+#if defined(__FreeBSD__)
+    clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
+#else
+    clock_gettime(CLOCK_BOOTTIME, &start_time);
+#endif
+
+
+    http_get_request_cached(master_session, poll_request_cached,
+        poll_request_cached_size, &response);
 
     if (response == NULL) {
       pprint_info("oanda connection closed reconnecting...");
       httpwss_session_free(master_session);
-      pprint_info("oanda connection reconnected");
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
       master_session->authkey = key;
@@ -114,27 +115,17 @@ exchanges_oanda_init(char *key)
     json_free(_response_root);
 
     free(response);
+
 #if defined(__FreeBSD__)
     clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
 #else
-    clock_gettime(CLOCK_BOOTTIME, &end_time);
-#endif
-    num_msg += 1;
-
-    if ((end_time.tv_sec - start_time.tv_sec) >= 1) {
-      double msg_ps =
-          (double)num_msg / (double)(end_time.tv_sec - start_time.tv_sec);
-      pprint_info("oanda feed message rate at %.2f msg/s", msg_ps);
-
-#if defined(__FreeBSD__)
-      clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
-      clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
-#else
       clock_gettime(CLOCK_BOOTTIME, &end_time);
-      clock_gettime(CLOCK_BOOTTIME, &start_time);
 #endif
-      num_msg = 0;
-    }
+
+      long ms_start = ((start_time.tv_sec*1000000000)+start_time.tv_nsec)/1000000;
+      long ms_end = ((end_time.tv_sec*1000000000)+end_time.tv_nsec)/1000000;
+
+      pprint_info("? %ld <= %f", ms_end - ms_start, 33.33);
   }
 
   pprint_info("cleaning up exchange oanda...");

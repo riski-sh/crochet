@@ -3,12 +3,12 @@
 
 #include <ffjson/ffjson.h>
 #include <finmath/base_conversion.h>
+#include <globals.h>
 #include <httpws/http.h>
 #include <httpws/wss.h>
 #include <orderbooks/coinbase.h>
 #include <pprint.h>
 #include <pthread.h>
-#include <globals.h>
 
 /*
  * The base url that will serve as the root for

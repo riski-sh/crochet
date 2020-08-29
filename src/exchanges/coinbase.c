@@ -84,7 +84,8 @@ _parse_open(__json_object msg, coinbase_book **bid, coinbase_book **ask)
   } else if (strcmp(_side, "sell") == 0) {
     coinbase_book_open(ask, price_cents, btc_sat_left, order_id);
   } else {
-    pprint_error("%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
+    pprint_error(
+        "%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 }
@@ -115,7 +116,8 @@ _parse_done(__json_object msg, coinbase_book **bid, coinbase_book **ask)
   } else if (strcmp(_side, "sell") == 0) {
     coinbase_book_remove(ask, price_cents, uuid);
   } else {
-    pprint_error("%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
+    pprint_error(
+        "%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 }
@@ -156,13 +158,14 @@ _parse_received(__json_object msg, coinbase_book **bid, coinbase_book **ask)
     } else if (strcmp(_side, "sell") == 0) {
       coinbase_book_received(ask, price_cents, v);
     } else {
-      pprint_error("%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
+      pprint_error("%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__,
+          __LINE__);
       abort();
     }
 
   } else {
-    pprint_error(
-        "%s@%s:%d unknown received message type (aborting)", __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s@%s:%d unknown received message type (aborting)",
+        __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 }
@@ -180,7 +183,8 @@ _parse_match(__json_object msg, coinbase_book **bid, coinbase_book **ask)
   } else if (strcmp(_side, "sell") == 0) {
     coinbase_book_match(ask, price, size, maker_id);
   } else {
-    pprint_error("%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
+    pprint_error(
+        "%s@%s:%d unknown side (aborting)", __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 }
@@ -200,18 +204,17 @@ _parse_match(__json_object msg, coinbase_book **bid, coinbase_book **ask)
 static void
 _coinbase_start(void *id)
 {
-  pprint_info(
-      "starting exchange %s", (char *)id);
+  pprint_info("starting exchange %s", (char *)id);
 
-  pprint_info("storing full order book for %s",
-      (char *)id);
+  pprint_info("storing full order book for %s", (char *)id);
 
   // Connect to the websocket feed
   struct httpwss_session *coinbase_local;
   if (wss_client("ws-feed.pro.coinbase.com", "/", "443", &coinbase_local) !=
       WSS_ERR_NONE) {
-    pprint_error("%s@%s: %d unable to connect to coinbase websocket feed (aborting)", __FILE_NAME__,
-        __func__, __LINE__);
+    pprint_error(
+        "%s@%s: %d unable to connect to coinbase websocket feed (aborting)",
+        __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 
@@ -260,7 +263,8 @@ _coinbase_start(void *id)
   size_t end_time = (size_t)time(NULL);
   size_t num_msg = 0;
 
-  while (globals_continue(NULL) && wss_read_text(coinbase_local, &msg_rt) == WSS_ERR_NONE) {
+  while (globals_continue(NULL) &&
+      wss_read_text(coinbase_local, &msg_rt) == WSS_ERR_NONE) {
     __json_value _msg = json_parse(msg_rt);
     __json_object msg = json_get_object(_msg);
 
@@ -275,9 +279,11 @@ _coinbase_start(void *id)
     }
 
     if (sequence - snapshot_root != 1) {
-      pprint_warn("missed %lu messages in %s", (sequence - snapshot_root), (char *)id);
+      pprint_warn(
+          "missed %lu messages in %s", (sequence - snapshot_root), (char *)id);
     } else if (sequence > (snapshot_root + 1)) {
-      pprint_warn("jumped through time by %lu message", (sequence - snapshot_root));
+      pprint_warn(
+          "jumped through time by %lu message", (sequence - snapshot_root));
     }
 
     snapshot_root = sequence;
@@ -306,7 +312,8 @@ _coinbase_start(void *id)
       break;
     }
     default: {
-      pprint_error("%s@%s:%d im not supposed to get message type message_type=%s (aborting)",
+      pprint_error(
+          "%s@%s:%d im not supposed to get message type message_type=%s (aborting)",
           __FILE_NAME__, __func__, __LINE__, msg_type);
       abort();
     }
@@ -320,8 +327,7 @@ _coinbase_start(void *id)
 
     if (end_time - start_time >= 1) {
       double msg_ps = (double)num_msg / (double)(end_time - start_time);
-      pprint_info(
-          "%s %f msg/s", (char *)id, msg_ps);
+      pprint_info("%s %f msg/s", (char *)id, msg_ps);
 
       start_time = (size_t)time(NULL);
       end_time = (size_t)time(NULL);
@@ -348,8 +354,8 @@ exchanges_coinbase_init(void)
   struct httpwss_session *coinbase_rest =
       httpwss_session_new(COINBASE_API, "443");
   if (http_get_request(coinbase_rest, "/products", &full_products) != 0) {
-    pprint_error("%s@%s:%d unable to get %s%s (aborting)", __FILE_NAME__, __func__, __LINE__,
-        COINBASE_API, "/products");
+    pprint_error("%s@%s:%d unable to get %s%s (aborting)", __FILE_NAME__,
+        __func__, __LINE__, COINBASE_API, "/products");
     abort();
   }
 
