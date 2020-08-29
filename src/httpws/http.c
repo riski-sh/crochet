@@ -282,8 +282,7 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   fclose(urandom);
 
   pprint_info("generated crypto safe key "
-              "0x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
-      __FILE_NAME__, __func__, __LINE__, raw_key[0], raw_key[1], raw_key[2],
+              "0x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x", raw_key[0], raw_key[1], raw_key[2],
       raw_key[3], raw_key[4], raw_key[5], raw_key[6], raw_key[7], raw_key[8],
       raw_key[9], raw_key[10], raw_key[11], raw_key[12], raw_key[13],
       raw_key[14], raw_key[15]);
@@ -291,8 +290,7 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   unsigned char *key_encoded = NULL;
   key_encoded = base64(raw_key, HTTP_WSS_KEY_LEN);
 
-  pprint_info("generated Sec-WebSocket-Key: %s", __FILE_NAME__, __func__,
-      __LINE__, key_encoded);
+  pprint_info("generated Sec-WebSocket-Key: %s", key_encoded);
 
   int req_size = snprintf(
       NULL, 0, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);

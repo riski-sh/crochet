@@ -76,8 +76,7 @@ exchanges_oanda_init(char *key)
   instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) +
           strlen(instrument_update_end) + 2,
       sizeof(char));
-  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
-      instrument_update_end);
+  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=EUR_USD", id);
 
   free(response);
 
@@ -118,7 +117,7 @@ exchanges_oanda_init(char *key)
 #endif
     num_msg += 1;
 
-    if ((end_time.tv_sec - start_time.tv_sec) >= 5) {
+    if ((end_time.tv_sec - start_time.tv_sec) >= 1) {
       double msg_ps =
           (double)num_msg / (double)(end_time.tv_sec - start_time.tv_sec);
       pprint_info("oanda feed message rate at %.2f msg/s", msg_ps);
