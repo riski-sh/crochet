@@ -125,7 +125,11 @@ exchanges_oanda_init(char *key)
       long ms_start = ((start_time.tv_sec*1000000000)+start_time.tv_nsec)/1000000;
       long ms_end = ((end_time.tv_sec*1000000000)+end_time.tv_nsec)/1000000;
 
-      pprint_info("? %ld <= %f", ms_end - ms_start, 33.33);
+      long elapsed = ms_end - ms_start;
+      if (elapsed > 34) {
+        pprint_warn("execution took %lu ms but need %lu to keep up",
+            elapsed, 34);
+      }
   }
 
   pprint_info("cleaning up exchange oanda...");
