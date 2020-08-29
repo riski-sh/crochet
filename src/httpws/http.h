@@ -91,7 +91,7 @@ int http_get_request(struct httpwss_session *session, char *path, char **res);
 char *http_get_request_generate(struct httpwss_session *session, char *path);
 
 int http_get_request_cached(struct httpwss_session *session, char *request,
-    int req_size, char **response);
+    int req_size, char **response, char *record);
 
 struct httpwss_session *httpwss_session_new(char *endpoint, char *port);
 

@@ -3,6 +3,7 @@
 
 #include <pprint.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 /*
  *  Hash map struct is public to allow for users to define

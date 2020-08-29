@@ -49,6 +49,10 @@ _oanda_gen_currency_list(char *response)
 void
 exchanges_oanda_init(char *key)
 {
+
+  // create a reusable record for openssl read
+  char record[16384];
+
   struct httpwss_session *master_session =
       httpwss_session_new(OANDA_API_ROOT, "443");
   master_session->hashauth = true;
@@ -99,7 +103,7 @@ exchanges_oanda_init(char *key)
 
 
     http_get_request_cached(master_session, poll_request_cached,
-        poll_request_cached_size, &response);
+        poll_request_cached_size, &response, record);
 
     if (response == NULL) {
       pprint_info("oanda connection closed reconnecting...");
@@ -127,7 +131,7 @@ exchanges_oanda_init(char *key)
 
       long elapsed = ms_end - ms_start;
       if (elapsed > 34) {
-        pprint_warn("execution took %lu ms but need %lu to keep up",
+        pprint_warn("execution took %lu ms but need less than %lu to keep up",
             elapsed, 34);
       }
   }

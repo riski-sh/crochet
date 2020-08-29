@@ -52,16 +52,22 @@ static void _http_response_free(struct _http_response *res);
  * Read everything into one buffer
  */
 static void
-_http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
+_http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n, char *_record)
 {
   // SSL fragment can contain maximum of 16kb
+
+  char *record = NULL;
+  if (_record == NULL) {
+    record = calloc(16384, sizeof(char));
+  } else {
+    record = _record;
+  }
 
   int total_read = 0;
   char *res = NULL;
   char *root_res_ptr = NULL;
   int fragment_size = 0;
 
-  char record[16384] = { '\x0' };
   while (fragment_size == 0) {
     fragment_size = SSL_read(ssl, record, 16383);
     if (fragment_size == 0) {
@@ -69,10 +75,15 @@ _http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n)
       *_n = 0;
       return;
     }
+    record[fragment_size] = '\x0';
     res = calloc((size_t)(total_read + fragment_size + 1), sizeof(char));
     root_res_ptr = res;
     memcpy(&(res[total_read]), record, (size_t)fragment_size);
     total_read += fragment_size;
+
+    if (_record == NULL) {
+      free(record);
+    }
   }
 
   struct _http_response *headers = _http_parse_response(&res);
@@ -309,7 +320,7 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   char *response = NULL;
   uint32_t test = 0;
 
-  _http_ssl_read_all(session->ssl, &response, &test);
+  _http_ssl_read_all(session->ssl, &response, &test, NULL);
 
   free(key_encoded);
 
@@ -346,7 +357,7 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
 
   free(request);
 
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len, NULL);
   *response = _local_response;
 
   return 0;
@@ -374,7 +385,7 @@ http_get_request_generate(struct httpwss_session *session, char *path)
 
 int
 http_get_request_cached(struct httpwss_session *session, char *request,
-    int req_size, char **response)
+    int req_size, char **response, char *record)
 {
   if (req_size != SSL_write(session->ssl, request, req_size)) {
     pprint_error("%s@%s:%d couldn't write to socket (aborting)", __FILE_NAME__,
@@ -385,7 +396,7 @@ http_get_request_cached(struct httpwss_session *session, char *request,
   char *_local_response = NULL;
   uint32_t _local_len = 0;
 
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len, record);
   *response = _local_response;
 
   return 0;

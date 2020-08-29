@@ -11,8 +11,10 @@ static __json_value _parse_value(char *str, size_t *idx);
 static void
 _parse_whitespace(char *str, size_t *idx)
 {
-  while (str[*idx] == (char)0x20 || str[*idx] == (char)0x09 ||
-      str[*idx] == (char)0x0A || str[*idx] == (char)0x0D) {
+  while (str[*idx] == ' '  ||
+         str[*idx] == '\n' ||
+         str[*idx] == '\t' ||
+         str[*idx] == '\r') {
     (*idx) += 1;
   }
 }
@@ -29,19 +31,18 @@ _parse_value_seperator(char *str, size_t *idx)
   return false;
 }
 
-static bool
+static inline bool
 _valid_character(char *str, size_t *idx)
 {
   char c = str[*idx];
-  char b = str[(*idx) + 1];
-  if (c == '\\' &&
-      (b == '"' || b == '\\' || b == '/' || b == 'b' || b == 'f' || b == 'n' ||
-          b == 'r' || b == 't')) {
-    (*idx) += 2;
+
+  if (c != '"') {
+    (*idx) += 1;
     return true;
   }
 
-  if (c != '"') {
+  char b = str[(*idx) - 1];
+  if (b == '\\') {
     (*idx) += 1;
     return true;
   }
@@ -52,11 +53,8 @@ _valid_character(char *str, size_t *idx)
 static __json_string
 _parse_string(char *str, size_t *idx)
 {
-  if (str[*idx] != '"') {
-    pprint_error("%s@%s:%d expected \" for string %s (aborting)", __FILE_NAME__,
-        __func__, __LINE__, &(str[*idx]));
-    abort();
-  }
+  // only gets called if str[*idx]
+  // is a quote no need to compare
   (*idx) += 1;
 
   char *str_begining = &(str[*idx]);
@@ -65,12 +63,9 @@ _parse_string(char *str, size_t *idx)
   while (_valid_character(str, idx))
     ;
 
-  // make sure we ended on a "
-  if (str[*idx] != '"') {
-    pprint_error("%s@%s:%d invalid json string expected \" got %s (aborting)",
-        __FILE_NAME__, __func__, __LINE__, &(str[*idx]));
-    abort();
-  }
+  // we only get here if we have reached the end of the string
+  // therefore str[*idx] must equal " and str[*idx - 1] is not
+  // equal to \
 
   // Since this is a valid string some trickery will be here to avoid
   // creating a new string. Simply turn the ending " into a null character
