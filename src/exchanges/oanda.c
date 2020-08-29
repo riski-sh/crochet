@@ -89,11 +89,10 @@ exchanges_oanda_init(char *key)
       http_get_request_generate(master_session, instrument_update_full);
   int poll_request_cached_size = (int)strlen(poll_request_cached);
 
+  int num_messages = 0;
+
   struct timespec start_time;
-
   struct timespec end_time;
-
-  while (globals_continue(NULL)) {
 
 #if defined(__FreeBSD__)
     clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
@@ -101,6 +100,8 @@ exchanges_oanda_init(char *key)
     clock_gettime(CLOCK_BOOTTIME, &start_time);
 #endif
 
+
+  while (globals_continue(NULL)) {
 
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
@@ -120,20 +121,30 @@ exchanges_oanda_init(char *key)
 
     free(response);
 
+    num_messages += 1;
+
 #if defined(__FreeBSD__)
-    clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+      clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
 #else
       clock_gettime(CLOCK_BOOTTIME, &end_time);
 #endif
 
-      long ms_start = ((start_time.tv_sec*1000000000)+start_time.tv_nsec)/1000000;
-      long ms_end = ((end_time.tv_sec*1000000000)+end_time.tv_nsec)/1000000;
-
-      long elapsed = ms_end - ms_start;
-      if (elapsed > 34) {
-        pprint_warn("execution took %lu ms but need less than %lu to keep up",
-            elapsed, 34);
+    if (end_time.tv_sec - start_time.tv_sec >= 4) {
+      if (num_messages <= 120) {
+        pprint_warn("received %lu/120 messages", num_messages);
+      } else {
+        pprint_info("received %lu/120 messages", num_messages);
       }
+
+      num_messages = 0;
+#if defined(__FreeBSD__)
+      clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
+      clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+#else
+      clock_gettime(CLOCK_BOOTTIME, &start_time);
+      clock_gettime(CLOCK_BOOTTIME, &end_time);
+#endif
+    }
   }
 
   pprint_info("cleaning up exchange oanda...");
