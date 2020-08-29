@@ -76,9 +76,13 @@ exchanges_oanda_init(char *key)
   instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) +
           strlen(instrument_update_end) + 2,
       sizeof(char));
-  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=EUR_USD", id);
+  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
+      instrument_update_full);
 
   free(response);
+
+  char *poll_request_cached = http_get_request_generate(master_session, instrument_update_full);
+  int poll_request_cached_size = (int) strlen(poll_request_cached);
 
   struct timespec start_time;
 
@@ -93,7 +97,7 @@ exchanges_oanda_init(char *key)
   size_t num_msg = 0;
 
   while (globals_continue(NULL)) {
-    http_get_request(master_session, instrument_update_full, &response);
+    http_get_request_cached(master_session, poll_request_cached, poll_request_cached_size, &response);
 
     if (response == NULL) {
       pprint_info("oanda connection closed reconnecting...");

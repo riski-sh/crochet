@@ -352,6 +352,44 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
   return 0;
 }
 
+char *
+http_get_request_generate(struct httpwss_session *session, char *path)
+{
+  char *request;
+  int req_size;
+  if (session->hashauth) {
+    req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_AUTH_FMT, path,
+        session->endpoint, session->authkey);
+    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    sprintf(request, HTTP_GET_REQUEST_AUTH_FMT, path, session->endpoint,
+        session->authkey);
+  } else {
+    req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, session->endpoint);
+    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
+  }
+
+  return request;
+}
+
+int
+http_get_request_cached(struct httpwss_session *session, char *request, int req_size, char **response)
+{
+  if (req_size != SSL_write(session->ssl, request, req_size)) {
+    pprint_error("%s@%s:%d couldn't write to socket (aborting)", __FILE_NAME__,
+        __func__, __LINE__);
+    abort();
+  }
+
+  char *_local_response = NULL;
+  uint32_t _local_len = 0;
+
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
+  *response = _local_response;
+
+  return 0;
+}
+
 struct httpwss_session *
 httpwss_session_new(char *endpoint, char *port)
 {
