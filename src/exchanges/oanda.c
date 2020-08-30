@@ -117,9 +117,9 @@ exchanges_oanda_init(char *key)
   struct timespec end_time;
 
 #if defined(__FreeBSD__)
-  clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
+  clock_gettime(CLOCK_REALTIME_PRECISE, &start_time);
 #else
-  clock_gettime(CLOCK_BOOTTIME, &start_time);
+  clock_gettime(CLOCK_REALTIME, &start_time);
 #endif
 
   // Sync to next minute before starting updates
@@ -193,9 +193,9 @@ exchanges_oanda_init(char *key)
     num_messages += 1;
 
 #if defined(__FreeBSD__)
-    clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+    clock_gettime(CLOCK_REALTIME_PRECISE, &end_time);
 #else
-    clock_gettime(CLOCK_BOOTTIME, &end_time);
+    clock_gettime(CLOCK_REALTIME, &end_time);
 #endif
 
     if (end_time.tv_sec - start_time.tv_sec >= 1) {
