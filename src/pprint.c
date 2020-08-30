@@ -37,7 +37,7 @@ _pprint_time(char (*time)[TIME_STR_LEN])
   clock_gettime(CLOCK_REALTIME, &current_time);
 #endif
 
-  sprintf(*time, "[\x1b[92m%lu.%03lu\x1b[0m]", current_time.tv_sec,
+  sprintf(*time, "[\x1b[92m%lu.%09lu\x1b[0m]", current_time.tv_sec,
       current_time.tv_nsec / 1000000);
 }
 
