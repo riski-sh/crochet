@@ -122,6 +122,22 @@ exchanges_oanda_init(char *key)
   clock_gettime(CLOCK_BOOTTIME, &start_time);
 #endif
 
+  // Sync to next minute before starting updates
+  struct timespec cur;
+
+#if defined(__FreeBSD__)
+  clock_gettime(CLOCK_UPTIME_PRECISE, &cur);
+#else
+  clock_gettime(CLOCK_REALTIME, &cur);
+#endif
+
+  cur.tv_sec = cur.tv_sec % 60;
+  cur.tv_nsec = 999999999 - cur.tv_nsec;
+
+  pprint_info("syncing to next minute before starting update loop");
+  while (nanosleep(&cur, &cur))
+    ;
+  pprint_info("sync successful");
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
