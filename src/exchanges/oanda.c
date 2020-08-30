@@ -198,7 +198,7 @@ exchanges_oanda_init(char *key)
     clock_gettime(CLOCK_REALTIME, &end_time);
 #endif
 
-    if (end_time.tv_sec - start_time.tv_sec >= 1) {
+    if (end_time.tv_sec - start_time.tv_sec >= 60) {
 
       pprint_info("oanda: %lu/%lu updates per request",
           num_messages * number_monitored, num_valid_updates);
