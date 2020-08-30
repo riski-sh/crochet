@@ -137,7 +137,6 @@ exchanges_oanda_init(char *key)
   pprint_info("syncing to next minute before starting update loop");
   while (nanosleep(&cur, &cur))
     ;
-
   pprint_info("sync successful");
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
@@ -199,7 +198,7 @@ exchanges_oanda_init(char *key)
     clock_gettime(CLOCK_BOOTTIME, &end_time);
 #endif
 
-    if (end_time.tv_sec - start_time.tv_sec >= 5) {
+    if (end_time.tv_sec - start_time.tv_sec >= 1) {
 
       pprint_info("oanda: %lu/%lu updates per request",
           num_messages * number_monitored, num_valid_updates);
