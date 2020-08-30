@@ -206,11 +206,11 @@ exchanges_oanda_init(char *key)
       num_messages = 0;
       num_valid_updates = 0;
 #if defined(__FreeBSD__)
-      clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
-      clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+      clock_gettime(CLOCK_REALTIME_PRECISE, &start_time);
+      clock_gettime(CLOCK_REALTIME_PRECISE, &end_time);
 #else
-      clock_gettime(CLOCK_BOOTTIME, &start_time);
-      clock_gettime(CLOCK_BOOTTIME, &end_time);
+      clock_gettime(CLOCK_REALTIME, &start_time);
+      clock_gettime(CLOCK_REALTIME, &end_time);
 #endif
     }
   }
