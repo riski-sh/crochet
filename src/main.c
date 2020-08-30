@@ -80,24 +80,8 @@ main(int argc, char **argv)
 {
   pprint_info("booting crochet");
   pprint_info("creating exchanges");
+
   exchange_init();
-  pprint_info("syncing to next second");
-
-  struct timespec cur;
-
-#if defined(__FreeBSD__)
-  clock_gettime(CLOCK_UPTIME_PRECISE, &cur);
-#else
-  clock_gettime(CLOCK_BOOTTIME, &cur);
-#endif
-
-  cur.tv_sec = 0;
-  cur.tv_nsec = 999999999 - cur.tv_nsec;
-
-  while (nanosleep(&cur, &cur))
-    ;
-
-  pprint_info("synced");
 
   signal(SIGINT, sig_handler);
 
