@@ -126,7 +126,7 @@ exchanges_oanda_init(char *key)
   struct timespec cur;
 
 #if defined(__FreeBSD__)
-  clock_gettime(CLOCK_REALTIME_PRECISE, &cur);
+  clock_gettime(CLOCK_REALTIME_FAST, &cur);
 #else
   clock_gettime(CLOCK_REALTIME, &cur);
 #endif
@@ -137,6 +137,7 @@ exchanges_oanda_init(char *key)
   pprint_info("syncing to next minute before starting update loop");
   while (nanosleep(&cur, &cur))
     ;
+
   pprint_info("sync successful");
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
