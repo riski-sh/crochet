@@ -126,7 +126,7 @@ exchanges_oanda_init(char *key)
   struct timespec cur;
 
 #if defined(__FreeBSD__)
-  clock_gettime(CLOCK_UPTIME_PRECISE, &cur);
+  clock_gettime(CLOCK_REALTIME_PRECISE, &cur);
 #else
   clock_gettime(CLOCK_REALTIME, &cur);
 #endif
