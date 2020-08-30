@@ -143,12 +143,10 @@ exchanges_oanda_init(char *key)
         poll_request_cached_size, &response, record);
 
     if (response == NULL) {
-      pprint_info("oanda connection closed reconnecting...");
       httpwss_session_free(master_session);
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
       master_session->authkey = key;
-      pprint_info("oanda connection reconnected");
       continue;
     }
 

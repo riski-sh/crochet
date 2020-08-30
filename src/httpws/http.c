@@ -413,8 +413,6 @@ httpwss_session_new(char *endpoint, char *port)
   session->endpoint = strdup(endpoint);
   session->iswss = false;
 
-  pprint_info("starting connection to %s on port %s", endpoint, port);
-
   // convert endpoint to an ip address
   struct addrinfo *res = NULL;
 
@@ -458,8 +456,6 @@ httpwss_session_new(char *endpoint, char *port)
   }
 
   SSL_CTX_free(ctx);
-
-  pprint_info("established tls connection to %s on port %s", endpoint, port);
 
   freeaddrinfo(res);
 
