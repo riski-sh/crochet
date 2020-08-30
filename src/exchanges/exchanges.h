@@ -1,7 +1,14 @@
 #ifndef EXCHANGES_H
 #define EXCHANGES_H
 
-#include "coinbase.h"
-#include "oanda.h"
+#include <hashmap/hashmap.h>
+#include <pprint.h>
+#include <security/security.h>
+
+void exchange_init(void);
+
+void exchange_put(char *name, struct security *sec);
+
+struct security *exchange_get(char *name);
 
 #endif

@@ -84,17 +84,47 @@ int http_wss_upgrade(struct httpwss_session *session, char *path);
  * @param session the session to perform this request on
  * @param path the endpoint to perform the get request
  * @param res pointer to storage of result
- * @return Returns 0 on success and 1 if failure.
  */
-int http_get_request(struct httpwss_session *session, char *path, char **res);
+void http_get_request(struct httpwss_session *session, char *path, char **res);
 
+/*
+ * Generates a the request header for performing an http get request.
+ * This can be useful if you have to keep on repeating the same request.
+ * The output of http_get_request_generate is ment to be passed along
+ * with http_get_request_cached which will not regenerate the get request
+ * and avoid expensive calls to snprintf.
+ *
+ * @param session the session that this request will be used on
+ * @param path the path of the resource needed to be fetched.
+ */
 char *http_get_request_generate(struct httpwss_session *session, char *path);
 
-int http_get_request_cached(struct httpwss_session *session, char *request,
+/*
+ * Uses a pre defined request to perform the http_get_request.
+ *
+ * @param session the session to perform this on get request on
+ * @param request the request to send
+ * @param req_size the length of the request
+ * @param response a place to store the response string
+ * @param record a cached record value to be used -- note it is recommended to
+ * use a record size of 16384.
+ *
+ */
+void http_get_request_cached(struct httpwss_session *session, char *request,
     int req_size, char **response, char *record);
 
+/*
+ * Creates a new httpwss session to be used.
+ *
+ * @param endpoint the endpoing to connecting to
+ * @param port the port to connect to
+ */
 struct httpwss_session *httpwss_session_new(char *endpoint, char *port);
 
+/*
+ * Cleans up the httpwss session that was created using the httpwss_session_new
+ * function
+ */
 void httpwss_session_free(struct httpwss_session *session);
 
 #endif

@@ -11,10 +11,8 @@ static __json_value _parse_value(char *str, size_t *idx);
 static void
 _parse_whitespace(char *str, size_t *idx)
 {
-  while (str[*idx] == ' '  ||
-         str[*idx] == '\n' ||
-         str[*idx] == '\t' ||
-         str[*idx] == '\r') {
+  while (str[*idx] == ' ' || str[*idx] == '\n' || str[*idx] == '\t' ||
+      str[*idx] == '\r') {
     (*idx) += 1;
   }
 }
@@ -31,7 +29,7 @@ _parse_value_seperator(char *str, size_t *idx)
   return false;
 }
 
-static inline bool
+static bool
 _valid_character(char *str, size_t *idx)
 {
   char c = str[*idx];

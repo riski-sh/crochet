@@ -3,8 +3,6 @@ cmake_minimum_required (VERSION 3.14.5)
 project (crochet)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -31,6 +29,7 @@ add_subdirectory(src/ffjson)
 add_subdirectory(src/exchanges)
 add_subdirectory(src/finmath)
 add_subdirectory(src/orderbooks)
+add_subdirectory(src/security)
 
 add_library (pprint src/pprint.c)
 add_library (globals src/globals.c)
@@ -41,7 +40,7 @@ target_link_libraries (crochet globals pprint httpws ffjson hashmap exchanges
 
 add_executable (crochet-test src/main.c)
 target_compile_definitions(crochet-test PUBLIC DO_UNIT_TESTS)
-target_link_libraries (crochet-test globals pprint httpws ffjson hashmap exchanges
+target_link_libraries (crochet-test globals pprint security httpws ffjson hashmap exchanges
   orderbooks finmath OpenSSL::SSL OpenSSL::Crypto)
 
 set_target_properties(crochet PROPERTIES RULE_MESSAGES OFF)

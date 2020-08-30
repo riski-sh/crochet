@@ -1,5 +1,12 @@
-#include "httpws/http.h"
 #include "oanda.h"
+
+static size_t
+_oanda_timetots(char *str)
+{
+  double val = strtod(str, NULL);
+  val *= 1000000000;
+  return (size_t)val;
+}
 
 static char *
 _oanda_first_id(char *response)
@@ -15,7 +22,7 @@ _oanda_first_id(char *response)
 }
 
 static char *
-_oanda_gen_currency_list(char *response)
+_oanda_gen_currency_list(char *response, int *num_instruments)
 {
   __json_value _root = json_parse(response);
   __json_object _instruments = json_get_object(_root);
@@ -29,6 +36,17 @@ _oanda_gen_currency_list(char *response)
   while (instruments) {
     __json_object instrument = json_get_object(instruments->val);
     char *name = json_get_string(hashmap_get("name", instrument));
+    int pip_location =
+        (int)*(json_get_number(hashmap_get("pipLocation", instrument)));
+    int display_precision =
+        (int)*(json_get_number(hashmap_get("displayPrecision", instrument)));
+
+    struct security *sec = security_new(name, pip_location, display_precision);
+    exchange_put(name, sec);
+
+    pprint_info("monitoring security %s", name);
+
+    (*num_instruments) += 1;
 
     total_len += 8;
     currency_list = realloc(currency_list, total_len + 1);
@@ -74,14 +92,17 @@ exchanges_oanda_init(char *key)
   http_get_request(master_session, get_instrument_str, &response);
   free(get_instrument_str);
 
-  char *instrument_update_end = _oanda_gen_currency_list(response);
+  int number_monitored = 0;
+  char *instrument_update_end =
+      _oanda_gen_currency_list(response, &number_monitored);
   char *instrument_update_beg = "/v3/accounts/%s/pricing?instruments=";
   char *instrument_update_full = NULL;
+
   instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) +
           strlen(instrument_update_end) + 2,
       sizeof(char));
   sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
-      instrument_update_full);
+      instrument_update_end);
 
   free(response);
 
@@ -90,19 +111,18 @@ exchanges_oanda_init(char *key)
   int poll_request_cached_size = (int)strlen(poll_request_cached);
 
   int num_messages = 0;
+  int num_valid_updates = 0;
 
   struct timespec start_time;
   struct timespec end_time;
 
 #if defined(__FreeBSD__)
-    clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
+  clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
 #else
-    clock_gettime(CLOCK_BOOTTIME, &start_time);
+  clock_gettime(CLOCK_BOOTTIME, &start_time);
 #endif
 
-
   while (globals_continue(NULL)) {
-
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
 
@@ -117,6 +137,39 @@ exchanges_oanda_init(char *key)
     }
 
     __json_value _response_root = json_parse(response);
+    __json_object _response_data = json_get_object(_response_root);
+    __json_array _prices =
+        json_get_array(hashmap_get("prices", _response_data));
+
+    while (_prices) {
+      __json_object _price_object = json_get_object(_prices->val);
+      __json_string _price_instrument =
+          json_get_string(hashmap_get("instrument", _price_object));
+      __json_string price_update_time =
+          json_get_string(hashmap_get("time", _price_object));
+
+      size_t latest_timestamp = _oanda_timetots(price_update_time);
+
+      __json_array _bids = json_get_array(hashmap_get("bids", _price_object));
+      __json_array _asks = json_get_array(hashmap_get("asks", _price_object));
+
+      __json_object _best_bid_bucket = json_get_object(_bids->val);
+      __json_object _best_ask_bucket = json_get_object(_asks->val);
+
+      __json_string best_bid =
+          json_get_string(hashmap_get("price", _best_bid_bucket));
+      __json_string best_ask =
+          json_get_string(hashmap_get("price", _best_ask_bucket));
+
+      struct security *working_sec = exchange_get(_price_instrument);
+
+      if (security_update(working_sec, latest_timestamp, best_bid, best_ask)) {
+        num_valid_updates += 1;
+      }
+
+      _prices = _prices->nxt;
+    }
+
     json_free(_response_root);
 
     free(response);
@@ -124,19 +177,18 @@ exchanges_oanda_init(char *key)
     num_messages += 1;
 
 #if defined(__FreeBSD__)
-      clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
+    clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);
 #else
-      clock_gettime(CLOCK_BOOTTIME, &end_time);
+    clock_gettime(CLOCK_BOOTTIME, &end_time);
 #endif
 
-    if (end_time.tv_sec - start_time.tv_sec >= 4) {
-      if (num_messages <= 120) {
-        pprint_warn("received %lu/120 messages", num_messages);
-      } else {
-        pprint_info("received %lu/120 messages", num_messages);
-      }
+    if (end_time.tv_sec - start_time.tv_sec >= 5) {
+
+      pprint_info("oanda: %lu/%lu updates per request",
+          num_messages * number_monitored, num_valid_updates);
 
       num_messages = 0;
+      num_valid_updates = 0;
 #if defined(__FreeBSD__)
       clock_gettime(CLOCK_UPTIME_PRECISE, &start_time);
       clock_gettime(CLOCK_UPTIME_PRECISE, &end_time);

@@ -5,12 +5,14 @@ _subscribe(char *id, struct httpwss_session *coinbase_local)
 {
   char *garbage = NULL;
   int feed_request_len = snprintf(NULL, 0,
-      "{\"type\": \"subscribe\",\"product_ids\": [\"%s\"],\"channels\": [\"full\"]}",
+      "{\"type\": \"subscribe\",\"product_ids\": [\"%s\"],\"channels\": "
+      "[\"full\"]}",
       (char *)id);
   char *full_request = NULL;
   full_request = malloc((size_t)feed_request_len + 1);
   sprintf(full_request,
-      "{\"type\": \"subscribe\",\"product_ids\": [\"%s\"],\"channels\": [\"full\"]}",
+      "{\"type\": \"subscribe\",\"product_ids\": [\"%s\"],\"channels\": "
+      "[\"full\"]}",
       (char *)id);
   wss_send_text(
       coinbase_local, (unsigned char *)full_request, (size_t)feed_request_len);
@@ -353,11 +355,8 @@ exchanges_coinbase_init(void)
 
   struct httpwss_session *coinbase_rest =
       httpwss_session_new(COINBASE_API, "443");
-  if (http_get_request(coinbase_rest, "/products", &full_products) != 0) {
-    pprint_error("%s@%s:%d unable to get %s%s (aborting)", __FILE_NAME__,
-        __func__, __LINE__, COINBASE_API, "/products");
-    abort();
-  }
+
+  http_get_request(coinbase_rest, "/products", &full_products);
 
   __json_value prod_list_json = json_parse(full_products);
   __json_array prods_json = json_get_array(prod_list_json);

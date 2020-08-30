@@ -328,7 +328,7 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   return 0;
 }
 
-int
+void
 http_get_request(struct httpwss_session *session, char *path, char **response)
 {
   int req_size;
@@ -359,8 +359,6 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
 
   _http_ssl_read_all(session->ssl, &_local_response, &_local_len, NULL);
   *response = _local_response;
-
-  return 0;
 }
 
 char *
@@ -383,7 +381,7 @@ http_get_request_generate(struct httpwss_session *session, char *path)
   return request;
 }
 
-int
+void
 http_get_request_cached(struct httpwss_session *session, char *request,
     int req_size, char **response, char *record)
 {
@@ -398,8 +396,6 @@ http_get_request_cached(struct httpwss_session *session, char *request,
 
   _http_ssl_read_all(session->ssl, &_local_response, &_local_len, record);
   *response = _local_response;
-
-  return 0;
 }
 
 struct httpwss_session *
