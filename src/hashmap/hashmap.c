@@ -1,6 +1,6 @@
 #include "hashmap.h"
 
-static size_t
+__always_inline static size_t
 sdbm(char *str)
 {
   unsigned long hash = 0;
@@ -15,27 +15,12 @@ sdbm(char *str)
 static void
 _map_list_add(struct _map_list **list, size_t ori_key, void *value)
 {
-  // edge case for first value since the first value is NULL
-  if (!(*list)) {
-    *list = malloc(sizeof(struct _map_list) * 1);
-    (*list)->key = ori_key;
-    (*list)->value = value;
-    (*list)->next = NULL;
-    return;
-  }
 
-  // loop until the last element
-  struct _map_list *iter = *list;
-  while (iter->next != NULL) {
-    iter = iter->next;
-  }
-
-  // iterator is now the last element
-  iter->next = malloc(sizeof(struct _map_list) * 1);
-  iter = iter->next;
-  iter->key = ori_key;
-  iter->value = value;
-  iter->next = NULL;
+  struct _map_list *val = calloc(1, sizeof(struct _map_list));
+  val->next = *list;
+  *list = val;
+  val->key = ori_key;
+  val->value = value;
 }
 
 struct hashmap *

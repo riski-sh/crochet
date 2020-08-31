@@ -1,3 +1,4 @@
+#include <sys/cdefs.h>
 #include "ffjson.h"
 
 char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
@@ -8,7 +9,7 @@ char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
 // processing
 static __json_value _parse_value(char *str, size_t *idx);
 
-static void
+__always_inline static void
 _parse_whitespace(char *str, size_t *idx)
 {
   while (str[*idx] == ' ' || str[*idx] == '\n' || str[*idx] == '\t' ||
@@ -29,7 +30,8 @@ _parse_value_seperator(char *str, size_t *idx)
   return false;
 }
 
-static bool
+/*
+__always_inline static bool
 _valid_character(char *str, size_t *idx)
 {
   char c = str[*idx];
@@ -47,6 +49,7 @@ _valid_character(char *str, size_t *idx)
 
   return false;
 }
+*/
 
 static __json_string
 _parse_string(char *str, size_t *idx)
@@ -58,8 +61,11 @@ _parse_string(char *str, size_t *idx)
   char *str_begining = &(str[*idx]);
 
   // loop through all the characters in the string
-  while (_valid_character(str, idx))
-    ;
+  // while (_valid_character(str, idx))
+  //  ;
+  while (str[*idx] != (char)'"' && str[(*idx)-1] != (char)'\\') {
+    (*idx) += 1;
+  }
 
   // we only get here if we have reached the end of the string
   // therefore str[*idx] must equal " and str[*idx - 1] is not

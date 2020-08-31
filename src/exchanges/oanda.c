@@ -44,8 +44,6 @@ _oanda_gen_currency_list(char *response, int *num_instruments)
     struct security *sec = security_new(name, pip_location, display_precision);
     exchange_put(name, sec);
 
-    pprint_info("monitoring security %s", name);
-
     (*num_instruments) += 1;
 
     total_len += 8;
@@ -95,6 +93,9 @@ exchanges_oanda_init(char *key)
   int number_monitored = 0;
   char *instrument_update_end =
       _oanda_gen_currency_list(response, &number_monitored);
+
+  pprint_info("oanda: loaded %d symbols", number_monitored);
+
   char *instrument_update_beg = "/v3/accounts/%s/pricing?instruments=";
   char *instrument_update_full = NULL;
 
@@ -122,6 +123,7 @@ exchanges_oanda_init(char *key)
   clock_gettime(CLOCK_REALTIME, &start_time);
 #endif
 
+  /*
   // Sync to next minute before starting updates
   struct timespec cur;
 
@@ -138,6 +140,7 @@ exchanges_oanda_init(char *key)
   while (nanosleep(&cur, &cur))
     ;
   pprint_info("sync successful");
+  */
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
@@ -196,10 +199,16 @@ exchanges_oanda_init(char *key)
     clock_gettime(CLOCK_REALTIME, &end_time);
 #endif
 
-    if (end_time.tv_sec - start_time.tv_sec >= 60) {
+    if (end_time.tv_sec - start_time.tv_sec >= 1) {
 
-      pprint_info("oanda: %lu/%lu updates per request",
-          num_messages * number_monitored, num_valid_updates);
+      double delta = (1.0-((num_messages*number_monitored) / (30.0*60.0*1.0)))*100.0;
+
+      if (delta >= 0) {
+        pprint_error("oanda: poll loss %.2f﹪", delta);
+      } else {
+        pprint_info("oanda: poll loss %.2f﹪", delta);
+      }
+
 
       num_messages = 0;
       num_valid_updates = 0;
