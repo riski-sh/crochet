@@ -33,10 +33,11 @@ security_update(
   uint32_t best_ask_fixed =
       (uint32_t)(best_ask_d * pow10[sec->display_precision]);
 
-  (void)best_bid_fixed;
-  (void)best_ask_fixed;
-
+  sec->best_bid = best_bid_fixed;
+  sec->best_ask = best_ask_fixed;
   sec->last_update = timestamp;
+
+  chart_update(sec->chart, best_bid_fixed, best_ask_fixed, timestamp);
 
   return true;
 }

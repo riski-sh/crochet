@@ -33,3 +33,32 @@ chart_new(void)
 
   return cht;
 }
+
+void
+chart_update(struct chart* cht, uint32_t bid, uint32_t ask, size_t timestamp)
+{
+
+  (void) cht;
+  (void) bid;
+  (void) ask;
+
+  /*
+   * The number of nanoseconds in a week
+   */
+  const size_t NANOSECONDS_IN_WEEK = 604800000000000;
+
+  /*
+   * The number of nanoseconds in a minute
+   */
+  const size_t NANOSECONDS_IN_MINUTE = 60000000000;
+
+  printf("%lu\n", timestamp);
+
+  size_t weeks_passed = timestamp / NANOSECONDS_IN_WEEK;
+  size_t offset_since_beginning = timestamp - (weeks_passed * NANOSECONDS_IN_WEEK);
+  size_t current_minute = offset_since_beginning / NANOSECONDS_IN_MINUTE;
+
+  printf("%lu\n", current_minute);
+  (void) NANOSECONDS_IN_MINUTE;
+
+}

@@ -94,4 +94,13 @@ struct chart {
  */
 struct chart *chart_new(void);
 
+/*
+ * Updates the current chart
+ *
+ * @param cht the chart that will be updated
+ * @param bid the best bid price
+ * @param ask the best ask price
+ */
+void chart_update(struct chart* cht, uint32_t bid, uint32_t ask, size_t timestamp);
+
 #endif
