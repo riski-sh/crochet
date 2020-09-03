@@ -10,6 +10,7 @@
 
 #define OANDA_API_ROOT "api-fxpractice.oanda.com"
 
+#define OANDA_PRINT_NTERVAL_SECONDS 5.0
 /*
  * Starts an oanda exchange feed
  *

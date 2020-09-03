@@ -1,4 +1,3 @@
-#include <sys/cdefs.h>
 #include "ffjson.h"
 
 char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
@@ -63,7 +62,7 @@ _parse_string(char *str, size_t *idx)
   // loop through all the characters in the string
   // while (_valid_character(str, idx))
   //  ;
-  while (str[*idx] != (char)'"' && str[(*idx)-1] != (char)'\\') {
+  while (str[*idx] != (char)'"' && str[(*idx) - 1] != (char)'\\') {
     (*idx) += 1;
   }
 
@@ -286,7 +285,8 @@ __json_value
 json_parse(char *str)
 {
   if (!str) {
-    return NULL;
+    pprint_error("%s@%s no string given to parse (aborting)");
+    abort();
   }
 
   // the current index of the string we are looking at
@@ -296,6 +296,14 @@ json_parse(char *str)
   _parse_whitespace(str, &idx);
   __json_value val = _parse_value(str, &idx);
   return val;
+}
+
+void
+json_parse_cached(char *str, __json_value tree)
+{
+  // TODO implement this function
+  (void)str;
+  (void)tree;
 }
 
 #define _json_get(TYPE, VAL)                                                  \

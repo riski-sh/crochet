@@ -1,6 +1,8 @@
+#include <sys/cdefs.h>
+
 #include "oanda.h"
 
-static size_t
+static size_t __attribute_used__
 _oanda_timetots(char *str)
 {
   double val = strtod(str, NULL);
@@ -199,16 +201,18 @@ exchanges_oanda_init(char *key)
     clock_gettime(CLOCK_REALTIME, &end_time);
 #endif
 
-    if (end_time.tv_sec - start_time.tv_sec >= 1) {
+    if (end_time.tv_sec - start_time.tv_sec >=
+        (int)OANDA_PRINT_NTERVAL_SECONDS) {
 
-      double delta = (1.0-((num_messages*number_monitored) / (30.0*60.0*1.0)))*100.0;
-
+      double delta = (1.0 -
+                         ((num_messages * number_monitored) /
+                             (30.0 * 60.0 * OANDA_PRINT_NTERVAL_SECONDS))) *
+          100.0;
       if (delta >= 0) {
         pprint_error("oanda: poll loss %.2f﹪", delta);
       } else {
         pprint_info("oanda: poll loss %.2f﹪", delta);
       }
-
 
       num_messages = 0;
       num_valid_updates = 0;

@@ -60,6 +60,14 @@ struct json_array {
 __json_value json_parse(char *str);
 
 /*
+ * Takes an existing parse tree and given a json of the same structure
+ * will instead just fill in the new values and not create an entirely
+ * new json object. THIS IS HIGHLEY RECOMMENDED IF YOU ARE POLLING AND
+ * RECEIVING THE SAME JSON OBJECT BACK.
+ */
+void json_parse_cached(char *str, __json_value tree);
+
+/*
  * Frees a json object and all its children
  * @param root the root of the object
  */
