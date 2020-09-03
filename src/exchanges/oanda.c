@@ -2,7 +2,7 @@
 
 #include "oanda.h"
 
-static size_t __attribute_used__
+static size_t
 _oanda_timetots(char *str)
 {
   double val = strtod(str, NULL);
@@ -125,8 +125,6 @@ exchanges_oanda_init(char *key)
   clock_gettime(CLOCK_REALTIME, &start_time);
 #endif
 
-  /*
-  // Sync to next minute before starting updates
   struct timespec cur;
 
 #if defined(__FreeBSD__)
@@ -142,7 +140,7 @@ exchanges_oanda_init(char *key)
   while (nanosleep(&cur, &cur))
     ;
   pprint_info("sync successful");
-  */
+
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
