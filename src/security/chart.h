@@ -101,6 +101,7 @@ struct chart *chart_new(void);
  * @param bid the best bid price
  * @param ask the best ask price
  */
-void chart_update(struct chart* cht, uint32_t bid, uint32_t ask, size_t timestamp);
+void chart_update(
+    struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp);
 
 #endif

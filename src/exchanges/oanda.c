@@ -133,7 +133,7 @@ exchanges_oanda_init(char *key)
   clock_gettime(CLOCK_REALTIME, &cur);
 #endif
 
-  cur.tv_sec = 60-(cur.tv_sec % 60);
+  cur.tv_sec = 60 - (cur.tv_sec % 60);
   cur.tv_nsec = 999999999 - cur.tv_nsec;
 
   pprint_info("syncing to next minute before starting update loop");
