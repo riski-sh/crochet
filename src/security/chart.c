@@ -1,5 +1,8 @@
 #include "chart.h"
 
+/*
+ * Represents a day of week from the start of the epoch
+ */
 typedef enum {
   THURSDAY = 0,
   FRIDAY = 1,
@@ -12,6 +15,36 @@ typedef enum {
   // number of days in a week
   NUM_DOW_T = 7
 } dow_t;
+
+/*
+ * Updates a candle on the chart
+ *
+ * @param cht the chart to update
+ * @param bid the bid price
+ * @param idx the index of the candle
+ */
+static void
+_chart_update_candle(struct chart *cht, uint32_t bid, size_t idx)
+{
+  struct candle *cnd = &(cht->candles[idx]);
+  if (cnd->volume != 0) {
+    if (bid > cnd->high) {
+      cnd->high = bid;
+    }
+    if (bid < cnd->low) {
+      cnd->low = bid;
+    }
+    cnd->close = bid;
+    cnd->volume += 1;
+  } else {
+    cnd->close = bid;
+    cnd->open = bid;
+    cnd->high = bid;
+    cnd->low = bid;
+
+    cnd->volume += 1;
+  }
+}
 
 /*
  * Convert dow_t to numbers of days since previous sunday
@@ -77,8 +110,10 @@ void
 chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
 {
 
-  (void)cht;
-  (void)bid;
+  /*
+   * Unsure about what to do with the ask value
+   * will keep in for now. This only keeps track of the bid price.
+   */
   (void)ask;
 
   /*
@@ -103,5 +138,5 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   size_t minutes_since_sunday =
       (timestamp - beginning_of_week) / NANOSECONDS_IN_MINUTE;
 
-  (void) minutes_since_sunday;
+  _chart_update_candle(cht, bid, minutes_since_sunday);
 }
