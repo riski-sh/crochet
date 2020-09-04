@@ -104,5 +104,4 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
       (timestamp - beginning_of_week) / NANOSECONDS_IN_MINUTE;
 
   (void) minutes_since_sunday;
-
 }

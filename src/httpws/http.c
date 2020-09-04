@@ -230,7 +230,7 @@ static struct _http_response *
 _http_parse_response(char **res)
 {
 
-  struct _http_response *response = malloc(sizeof(struct _http_response));
+  struct _http_response *response = calloc(1, sizeof(struct _http_response));
 
   // the first token
   char *root_save = NULL;
@@ -252,7 +252,7 @@ _http_parse_response(char **res)
 
     tok = strtok_r(root_save, "\n", &root_save);
 
-    cur->next = malloc(sizeof(struct _http_response));
+    cur->next = calloc(1, sizeof(struct _http_response));
     cur = cur->next;
     cur->header_name = NULL;
     cur->header_value = NULL;
@@ -306,7 +306,7 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   int req_size = snprintf(
       NULL, 0, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
 
-  char *request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+  char *request = calloc(((unsigned long)req_size + 1), sizeof(char));
   sprintf(request, HTTP_WSS_UPGRADE_FMT, path, session->endpoint, key_encoded);
 
   // don't send over the NULL terminator
@@ -337,12 +337,12 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
   if (session->hashauth) {
     req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_AUTH_FMT, path,
         session->endpoint, session->authkey);
-    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    request = calloc(((unsigned long)req_size + 1), sizeof(char));
     sprintf(request, HTTP_GET_REQUEST_AUTH_FMT, path, session->endpoint,
         session->authkey);
   } else {
     req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, session->endpoint);
-    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    request = calloc(((unsigned long)req_size + 1), sizeof(char));
     sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
   }
 
@@ -369,12 +369,12 @@ http_get_request_generate(struct httpwss_session *session, char *path)
   if (session->hashauth) {
     req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_AUTH_FMT, path,
         session->endpoint, session->authkey);
-    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    request = calloc(((unsigned long)req_size + 1), sizeof(char));
     sprintf(request, HTTP_GET_REQUEST_AUTH_FMT, path, session->endpoint,
         session->authkey);
   } else {
     req_size = snprintf(NULL, 0, HTTP_GET_REQUEST_FMT, path, session->endpoint);
-    request = (char *)malloc(((unsigned long)req_size + 1) * sizeof(char));
+    request = calloc(((unsigned long)req_size + 1), sizeof(char));
     sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
   }
 
@@ -402,7 +402,7 @@ struct httpwss_session *
 httpwss_session_new(char *endpoint, char *port)
 {
 
-  struct httpwss_session *session = malloc(sizeof(struct httpwss_session));
+  struct httpwss_session *session = calloc(1, sizeof(struct httpwss_session));
 
   if (!session) {
     pprint_error("%s@%s:%d no more memory (aborting)", __FILE_NAME__, __func__,

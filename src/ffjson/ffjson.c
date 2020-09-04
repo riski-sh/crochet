@@ -157,9 +157,7 @@ _parse_array(char *str, size_t *idx)
   (*idx) += 1;
   _parse_whitespace(str, idx);
 
-  __json_array data = malloc(sizeof(struct json_array) * 1);
-  data->nxt = NULL;
-  data->val = NULL;
+  __json_array data = calloc(1, sizeof(struct json_array));
 
   // the array could be empty if the array is empty than we should find
   // a ] character if we do not then we must parse a value
@@ -170,10 +168,9 @@ _parse_array(char *str, size_t *idx)
     // parse the optional members of the array
     while (_parse_value_seperator(str, idx)) {
       // expand the array by 1
-      iter->nxt = malloc(sizeof(struct json_array) * 1);
+      iter->nxt = calloc(1, sizeof(struct json_array));
       iter = iter->nxt;
       iter->val = _parse_value(str, idx);
-      iter->nxt = NULL;
     }
     _parse_whitespace(str, idx);
   }
@@ -200,7 +197,7 @@ _parse_number(char *str, size_t *idx)
   size_t characters = (size_t)(pend - (&str[*idx]));
   (*idx) += characters;
 
-  __json_number n = (__json_number)malloc(sizeof(double) * 1);
+  __json_number n = (__json_number)calloc(1, sizeof(double));
   *n = number;
 
   return n;
@@ -227,19 +224,19 @@ _parse_value(char *str, size_t *idx)
 
   if (str[*idx] == '{') {
     // parse object
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_OBJECT;
     val->data = _parse_object(str, idx);
     return val;
   } else if (str[*idx] == '[') {
     // parse array
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_ARRAY;
     val->data = _parse_array(str, idx);
     return val;
   } else if (str[*idx] == '"') {
     // parse string
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_STRING;
     val->data = _parse_string(str, idx);
     return val;
@@ -248,26 +245,26 @@ _parse_value(char *str, size_t *idx)
       str[*idx] == '6' || str[*idx] == '7' || str[*idx] == '8' ||
       str[*idx] == '9' || str[*idx] == '0') {
     // parse number
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_NUMBER;
     val->data = _parse_number(str, idx);
     return val;
   } else if (strncmp(&(str[*idx]), "false", 5) == 0) {
     // parse false
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_FALSE;
     val->data = NULL;
     (*idx) += 5;
     return val;
   } else if (strncmp(&(str[*idx]), "true", 4) == 0) {
     // parse true
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_TRUE;
     val->data = NULL;
     (*idx) += 4;
     return val;
   } else if (strncmp(&(str[*idx]), "null", 4) == 0) {
-    __json_value val = malloc(sizeof(struct json_value) * 1);
+    __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_NULL;
     val->data = NULL;
     (*idx) += 4;

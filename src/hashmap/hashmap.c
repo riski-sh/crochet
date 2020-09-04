@@ -26,13 +26,13 @@ _map_list_add(struct _map_list **list, size_t ori_key, void *value)
 struct hashmap *
 hashmap_new(unsigned int num_bins)
 {
-  struct hashmap *map = malloc(sizeof(struct hashmap) * 1);
+  struct hashmap *map = calloc(1, sizeof(struct hashmap));
   if (!map) {
     pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__,
         __func__, __LINE__);
     abort();
   }
-  map->bins = malloc(sizeof(struct _map_list) * num_bins);
+  map->bins = calloc(num_bins, sizeof(struct _map_list));
   if (!map->bins) {
     pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__,
         __func__, __LINE__);
