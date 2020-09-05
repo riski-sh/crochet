@@ -1,13 +1,13 @@
 #include "hashmap.h"
 
-__always_inline static size_t
+static uint32_t
 sdbm(char *str)
 {
-  unsigned long hash = 0;
+  uint32_t hash = 0;
   int c;
 
   while ((c = *str++) && c != 0)
-    hash = (size_t)c + (hash << 6) + (hash << 16) - hash;
+    hash = (uint32_t)c + (hash << 6) + (hash << 16) - hash;
 
   return hash;
 }
@@ -53,8 +53,8 @@ hashmap_put(char *key, void *value, struct hashmap *map)
         __FILE_NAME__, __func__, __LINE__);
     abort();
   }
-  size_t hash = sdbm(key);
-  size_t bin = hash % map->num_bins;
+  uint32_t hash = sdbm(key);
+  uint32_t bin = hash % map->num_bins;
 
   struct _map_list **ll = &(map->bins[bin]);
   _map_list_add(ll, hash, value);
@@ -63,8 +63,8 @@ hashmap_put(char *key, void *value, struct hashmap *map)
 void *
 hashmap_get(char *key, struct hashmap *map)
 {
-  size_t hash = sdbm(key);
-  size_t bin = hash % map->num_bins;
+  uint32_t hash = sdbm(key);
+  uint32_t bin = hash % map->num_bins;
 
   struct _map_list *iter = map->bins[bin];
 
