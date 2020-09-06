@@ -132,6 +132,7 @@ exchanges_oanda_init(char *key)
         poll_request_cached_size, &response, record);
 
     if (response == NULL) {
+      pprint_warn("oanda: cloudflare disconnected reconnecting...");
       httpwss_session_free(master_session);
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
@@ -215,8 +216,11 @@ exchanges_oanda_init(char *key)
   }
 
   pprint_info("cleaning up exchange oanda...");
+  free(prev_res);
+  json_free(_response_root);
   free(instrument_update_full);
   free(instrument_update_end);
+  free(poll_request_cached);
   free(id);
   httpwss_session_free(master_session);
 }

@@ -9,7 +9,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-  set (CMAKE_C_FLAGS "-Weverything -Werror -Wpedantic -O2 -g")
+  set (CMAKE_C_FLAGS "-Weverything -Werror -Wpedantic -O2 -g -pg")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_C_FLAGS "-Wall -Wextra -Werror -Wpedantic -O2 -g")
   message (WARNING "gcc build will output a logs differently than clang")

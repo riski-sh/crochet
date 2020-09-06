@@ -1,15 +1,19 @@
 #include "hashmap.h"
 
-static uint32_t
+static uint64_t
 sdbm(char *str)
 {
-  uint32_t hash = 0;
-  int c;
+  uint64_t sum = 0;
+  uint64_t p_pow = 1;
+  const uint64_t p = 51;
+  const uint64_t m = 100000009;
 
-  while ((c = *str++) && c != 0)
-    hash = (uint32_t)c + (hash << 6) + (hash << 16) - hash;
+  for (int i = 0; str[i] != '\x0'; ++i) {
+    sum = (sum + (uint32_t)(str[i] - 'a' + 1) * p_pow) % m;
+    p_pow = (p_pow * p) % m;
+  }
 
-  return hash;
+  return sum;
 }
 
 static void
@@ -24,7 +28,7 @@ _map_list_add(struct _map_list **list, size_t ori_key, void *value)
 }
 
 struct hashmap *
-hashmap_new(unsigned int num_bins)
+hashmap_new(uint64_t num_bins)
 {
   struct hashmap *map = calloc(1, sizeof(struct hashmap));
   if (!map) {
@@ -53,8 +57,9 @@ hashmap_put(char *key, void *value, struct hashmap *map)
         __FILE_NAME__, __func__, __LINE__);
     abort();
   }
-  uint32_t hash = sdbm(key);
-  uint32_t bin = hash % map->num_bins;
+
+  uint64_t hash = sdbm(key);
+  uint64_t bin = hash % map->num_bins;
 
   struct _map_list **ll = &(map->bins[bin]);
   _map_list_add(ll, hash, value);
@@ -63,8 +68,8 @@ hashmap_put(char *key, void *value, struct hashmap *map)
 void *
 hashmap_get(char *key, struct hashmap *map)
 {
-  uint32_t hash = sdbm(key);
-  uint32_t bin = hash % map->num_bins;
+  uint64_t hash = sdbm(key);
+  uint64_t bin = hash % map->num_bins;
 
   struct _map_list *iter = map->bins[bin];
 

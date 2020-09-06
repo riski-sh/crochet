@@ -19,12 +19,12 @@ struct hashmap {
    * store the number of bins to remember what to mod by
    * during the hash
    */
-  unsigned int num_bins;
+  uint64_t num_bins;
 
   /*
    * explicit padding
    */
-  char _p1[4];
+  char _p1[8];
 };
 
 /*
@@ -42,7 +42,7 @@ struct _map_list {
  * @param num_bins the number of bins this hashmap to use
  * @return a newly created hashmap
  */
-struct hashmap *hashmap_new(unsigned int num_bins);
+struct hashmap *hashmap_new(uint64_t num_bins);
 
 /*
  * Frees the hashmap struct created by hashmap_new

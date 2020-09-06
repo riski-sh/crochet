@@ -132,8 +132,8 @@ _parse_object(char *str, size_t *idx, __json_object cached)
   __json_object obj = NULL;
 
   if (!cached) {
-    // 16 because R4stl1n said so
-    obj = hashmap_new(16);
+    // sorry R4stl1n 16 not a good number, 51 is tho ...
+    obj = hashmap_new(51);
 
     if (str[*idx] == '"') {
       // loop through and parse all the members
