@@ -65,7 +65,7 @@ __json_value json_parse(char *str);
  * new json object. THIS IS HIGHLEY RECOMMENDED IF YOU ARE POLLING AND
  * RECEIVING THE SAME JSON OBJECT BACK.
  */
-void json_parse_cached(char *str, __json_value tree);
+void json_parse_cached(char *str, size_t *idx, __json_value tree);
 
 /*
  * Frees a json object and all its children

@@ -125,22 +125,8 @@ exchanges_oanda_init(char *key)
   clock_gettime(CLOCK_REALTIME, &start_time);
 #endif
 
-  struct timespec cur;
-
-#if defined(__FreeBSD__)
-  clock_gettime(CLOCK_REALTIME_FAST, &cur);
-#else
-  clock_gettime(CLOCK_REALTIME, &cur);
-#endif
-
-  cur.tv_sec = 60 - (cur.tv_sec % 60);
-  cur.tv_nsec = 999999999 - cur.tv_nsec;
-
-  pprint_info("syncing to next minute before starting update loop");
-  while (nanosleep(&cur, &cur))
-    ;
-  pprint_info("sync successful");
-
+  __json_value _response_root = NULL;
+  char *prev_res = NULL;
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
@@ -153,7 +139,15 @@ exchanges_oanda_init(char *key)
       continue;
     }
 
-    __json_value _response_root = json_parse(response);
+    if (_response_root == NULL) {
+      _response_root = json_parse(response);
+      prev_res = response;
+    } else {
+      size_t idx = 0;
+      json_parse_cached(response, &idx, _response_root);
+      free(prev_res);
+      prev_res = response;
+    }
     __json_object _response_data = json_get_object(_response_root);
     __json_array _prices =
         json_get_array(hashmap_get("prices", _response_data));
@@ -186,10 +180,6 @@ exchanges_oanda_init(char *key)
 
       _prices = _prices->nxt;
     }
-
-    json_free(_response_root);
-
-    free(response);
 
     num_messages += 1;
 
