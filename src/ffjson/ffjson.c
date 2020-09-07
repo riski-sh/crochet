@@ -29,34 +29,13 @@ _parse_value_seperator(char *str, size_t *idx)
   return false;
 }
 
-/*
-__always_inline static bool
-_valid_character(char *str, size_t *idx)
-{
-  char c = str[*idx];
-
-  if (c != '"') {
-    (*idx) += 1;
-    return true;
-  }
-
-  char b = str[(*idx) - 1];
-  if (b == '\\') {
-    (*idx) += 1;
-    return true;
-  }
-
-  return false;
-}
-*/
-
 static __json_string
 _parse_string(char *str, size_t *idx)
 {
 
   if (str[*idx] != '"') {
-    pprint_error("expected \" but got %c while parsing a string (aborting)",
-        str[*idx]);
+    pprint_error(
+        "expected \" but got %c while parsing a string (aborting)", str[*idx]);
     abort();
   }
   // only gets called if str[*idx]
@@ -117,7 +96,7 @@ _parse_object(char *str, size_t *idx, __json_object cached)
     pprint_error("%s@%s:%d expected { got %c (aborting)", __FILE_NAME__,
         __func__, __LINE__, str[*idx]);
 
-    pprint_info("%s",&str[(*idx)]);
+    pprint_info("%s", &str[(*idx)]);
     abort();
   }
 
@@ -349,7 +328,13 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
   // ws value ws
   _parse_whitespace(str, idx);
 
-  // pprint_warn("parsing cached %s", JSON_TYPE_STR[tree->t]);
+  if (!tree ||
+      (tree->t != JSON_TYPE_TRUE && tree->t != JSON_TYPE_FALSE &&
+          tree->t != JSON_TYPE_NULL && tree->data == NULL)) {
+    pprint_error("the json received is not the same and therefore cannot be "
+                 "cache parsed (aborting)");
+    abort();
+  }
 
   switch (tree->t) {
   case JSON_TYPE_OBJECT:
@@ -359,7 +344,7 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
     _parse_array(str, idx, tree->data);
     break;
   case JSON_TYPE_NUMBER:
-    _parse_number(str,idx, tree->data);
+    _parse_number(str, idx, tree->data);
     break;
   case JSON_TYPE_STRING:
     tree->data = _parse_string(str, idx);
@@ -382,7 +367,6 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
     pprint_error("invalid json type while parsing cached tree");
     abort();
   }
-
 }
 
 #define _json_get(TYPE, VAL)                                                  \

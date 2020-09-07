@@ -48,7 +48,7 @@ pprint_info(const char *str, ...)
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s crochet: ", time);
+  printf("%s ", time);
 
   va_list args;
   va_start(args, str);
@@ -65,7 +65,7 @@ pprint_warn(const char *str, ...)
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s crochet: \x1b[93m", time);
+  printf("%s \x1b[93m", time);
   va_list args;
   va_start(args, str);
   vprintf(str, args);
@@ -81,7 +81,7 @@ pprint_error(const char *str, ...)
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s crochet: \x1b[91m", time);
+  printf("%s \x1b[91m", time);
 
   va_list args;
   va_start(args, str);

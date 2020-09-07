@@ -3,17 +3,16 @@
 static uint64_t
 sdbm(char *str)
 {
-  uint64_t sum = 0;
-  uint64_t p_pow = 1;
-  const uint64_t p = 51;
-  const uint64_t m = 100000009;
-
-  for (int i = 0; str[i] != '\x0'; ++i) {
-    sum = (sum + (uint32_t)(str[i] - 'a' + 1) * p_pow) % m;
-    p_pow = (p_pow * p) % m;
-  }
-
-  return sum;
+    uint32_t hash = 0;
+    for(; *str; ++str) {
+        hash += (unsigned int)*str;
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
 }
 
 static void
@@ -36,7 +35,7 @@ hashmap_new(uint64_t num_bins)
         __func__, __LINE__);
     abort();
   }
-  map->bins = calloc(num_bins, sizeof(struct _map_list));
+  map->bins = calloc(num_bins, sizeof(struct _map_list *));
   if (!map->bins) {
     pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__,
         __func__, __LINE__);
