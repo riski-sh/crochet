@@ -126,7 +126,6 @@ exchanges_oanda_init(char *key)
 #endif
 
   __json_value _response_root = NULL;
-  char *prev_res = NULL;
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
         poll_request_cached_size, &response, record);
@@ -142,12 +141,9 @@ exchanges_oanda_init(char *key)
 
     if (_response_root == NULL) {
       _response_root = json_parse(response);
-      prev_res = response;
     } else {
       size_t idx = 0;
       json_parse_cached(response, &idx, _response_root);
-      free(prev_res);
-      prev_res = response;
     }
     __json_object _response_data = json_get_object(_response_root);
     __json_array _prices =
@@ -216,7 +212,7 @@ exchanges_oanda_init(char *key)
   }
 
   pprint_info("cleaning up exchange oanda...");
-  free(prev_res);
+  free(response);
   json_free(_response_root);
   free(instrument_update_full);
   free(instrument_update_end);

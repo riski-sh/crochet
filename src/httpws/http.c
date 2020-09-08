@@ -413,12 +413,10 @@ http_get_request_cached(struct httpwss_session *session, char *request,
     abort();
   }
 
-  char *_local_response = NULL;
   size_t _local_len = 0;
   (void) record;
 
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
-  *response = _local_response;
+  _http_ssl_read_all(session->ssl, response, &_local_len);
 }
 
 struct httpwss_session *
