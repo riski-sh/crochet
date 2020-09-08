@@ -457,12 +457,22 @@ httpwss_session_new(char *endpoint, char *port)
   pprint_info("connection requested...");
   // connect the socket to the remote host
   connect(session->fd, res->ai_addr, res->ai_addrlen);
+
+#ifdef __FreeBSD__
+  if (errno != 36) {
+    pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)",
+        __FILE_NAME__, __func__, __LINE__, endpoint, port);
+    pprint_error("errrno[%d]: %s", errno, strerror(errno));
+    abort();
+  }
+#else
   if (errno != 115) {
     pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)",
         __FILE_NAME__, __func__, __LINE__, endpoint, port);
     pprint_error("errrno[%d]: %s", errno, strerror(errno));
     abort();
   }
+#endif
 
   // poll the socket until read
   struct pollfd pfd;
