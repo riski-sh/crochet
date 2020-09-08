@@ -66,6 +66,7 @@ struct httpwss_session {
    * the authorization key if needed
    */
   char *authkey;
+
 };
 
 /*
@@ -109,12 +110,10 @@ char *http_get_request_generate(struct httpwss_session *session, char *path);
  * @param request the request to send
  * @param req_size the length of the request
  * @param response a place to store the response string
- * @param record a cached record value to be used -- note it is recommended to
- * use a record size of 16384.
  *
  */
 void http_get_request_cached(struct httpwss_session *session, char *request,
-    int req_size, char **response, char *record);
+    int req_size, char **response, size_t *allocated);
 
 /*
  * Creates a new httpwss session to be used.

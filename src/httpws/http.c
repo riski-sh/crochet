@@ -204,7 +204,15 @@ _http_ssl_read_all(SSL *ssl, char **response, size_t *len)
 
   } while (header_name[0] != '\x0' && header_value[0] != '\x0');
 
-  pprint_warn("connection closed, reconnect after next poll");
+  if (!keep_alive) {
+    if (content_length == 0 && !is_chuncked) {
+      free(*response);
+      *response = NULL;
+      *len = 0;
+      return;
+    }
+    pprint_warn("connection closed, reconnect after next poll");
+  }
 
   if (is_chuncked) {
 
@@ -407,7 +415,7 @@ http_get_request_generate(struct httpwss_session *session, char *path)
 
 void
 http_get_request_cached(struct httpwss_session *session, char *request,
-    int req_size, char **response, char *record)
+    int req_size, char **response, size_t *allocated)
 {
   if (req_size != SSL_write(session->ssl, request, req_size)) {
     pprint_error("%s@%s:%d couldn't write to socket (aborting)", __FILE_NAME__,
@@ -415,10 +423,7 @@ http_get_request_cached(struct httpwss_session *session, char *request,
     abort();
   }
 
-  size_t _local_len = 0;
-  (void) record;
-
-  _http_ssl_read_all(session->ssl, response, &_local_len);
+  _http_ssl_read_all(session->ssl, response, allocated);
 }
 
 struct httpwss_session *

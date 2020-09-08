@@ -69,7 +69,6 @@ exchanges_oanda_init(char *key)
 {
 
   // create a reusable record for openssl read
-  char record[16384];
 
   struct httpwss_session *master_session =
       httpwss_session_new(OANDA_API_ROOT, "443");
@@ -127,9 +126,12 @@ exchanges_oanda_init(char *key)
 #endif
 
   __json_value _response_root = NULL;
+
+  response = NULL;
+  size_t allocated = 0;
   while (globals_continue(NULL)) {
     http_get_request_cached(master_session, poll_request_cached,
-        poll_request_cached_size, &response, record);
+        poll_request_cached_size, &response, &allocated);
 
     if (response == NULL) {
       pprint_warn("oanda: cloudflare disconnected reconnecting...");
@@ -137,6 +139,8 @@ exchanges_oanda_init(char *key)
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
       master_session->authkey = key;
+      response = NULL;
+      allocated = 0;
       continue;
     }
 
