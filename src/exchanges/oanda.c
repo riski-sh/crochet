@@ -108,6 +108,7 @@ exchanges_oanda_init(char *key)
       instrument_update_end);
 
   free(response);
+  response = NULL;
 
   char *poll_request_cached =
       http_get_request_generate(master_session, instrument_update_full);
