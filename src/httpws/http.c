@@ -185,7 +185,7 @@ _http_ssl_read_all(SSL *ssl, char **response, size_t *len)
     if (!found_keep_alive) {
       if (strcmp(header_name, "Connection") == 0) {
         found_keep_alive = true;
-        if (strcmp(header_value, "keep-alive") == 0) {
+        if (strcmp(header_value," keep-alive") == 0) {
           keep_alive = true;
         }
       }
@@ -203,6 +203,8 @@ _http_ssl_read_all(SSL *ssl, char **response, size_t *len)
     }
 
   } while (header_name[0] != '\x0' && header_value[0] != '\x0');
+
+  pprint_warn("connection closed, reconnect after next poll");
 
   if (is_chuncked) {
 
