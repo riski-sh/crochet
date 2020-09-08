@@ -3,16 +3,16 @@
 static uint64_t
 sdbm(char *str)
 {
-    uint32_t hash = 0;
-    for(; *str; ++str) {
-        hash += (unsigned int)*str;
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-    return hash;
+  uint32_t hash = 0;
+  for (; *str; ++str) {
+    hash += (unsigned int)*str;
+    hash += (hash << 10);
+    hash ^= (hash >> 6);
+  }
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
+  return hash;
 }
 
 static void

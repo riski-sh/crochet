@@ -1,25 +1,28 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#include <sys/cdefs.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netdb.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <poll.h>
 #include <pprint.h>
 #include <stdbool.h>
 
 #include "base64.h"
-
-#define HTTP_CR_LF "\r\n"
 
 /*
  * The current length of the pre encoded key needed for web socket
  * communication.
  */
 #define HTTP_WSS_KEY_LEN 16
+
+#define HTTP_WSS_MAX_TLS_RECORD 16384
 
 /*
  * Structure that represents a session towards a websocket connection.

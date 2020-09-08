@@ -99,6 +99,7 @@ main(int argc, char **argv)
   pprint_info("setting up openssl");
 
   SSL_load_error_strings();
+  ERR_load_crypto_strings();
   SSL_library_init();
 
   __json_object _oanda = json_get_object(hashmap_get("oanda", config));

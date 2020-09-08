@@ -1,5 +1,9 @@
+#include <sys/poll.h>
+
 #include <netdb.h>
+#include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/sslerr.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -45,222 +49,241 @@ enum _http_parse_state {
 
 typedef enum { CONTENT_LENGTH = 0, CHUNCKED = 1, UNKNOWN = 2 } data_t;
 
-static struct _http_response *_http_parse_response(char **res);
-static void _http_response_free(struct _http_response *res);
+// static struct _http_response *_http_parse_response(char **res);
+// static void _http_response_free(struct _http_response *res);
 
-/*
- * Read everything into one buffer
- */
 static void
-_http_ssl_read_all(SSL *ssl, char **_r, uint32_t *_n, char *_record)
+_http_ssl_selectrfd(SSL *ssl)
 {
-  // SSL fragment can contain maximum of 16kb
+  fd_set fds;
+  struct timeval tv;
+  tv.tv_sec = 5;
+  tv.tv_usec = 0;
 
-  char *record = NULL;
-  if (_record == NULL) {
-    record = calloc(16384, sizeof(char));
+  int sock = SSL_get_rfd(ssl);
+  FD_ZERO(&fds);
+  FD_SET(sock, &fds);
+
+  int err = select(sock + 1, &fds, NULL, NULL, &tv);
+  if (err > 0) {
+    return;
+  }
+
+  if (err == 0) {
+    // timeout...
+    pprint_error("connection time out");
+    abort();
   } else {
-    record = _record;
-  }
-
-  int total_read = 0;
-  char *res = NULL;
-  char *root_res_ptr = NULL;
-  int fragment_size = 0;
-
-  while (fragment_size == 0) {
-    fragment_size = SSL_read(ssl, record, 16383);
-    if (fragment_size == 0) {
-      *_r = NULL;
-      *_n = 0;
-      return;
-    }
-    record[fragment_size] = '\x0';
-    res = calloc((size_t)(total_read + fragment_size + 1), sizeof(char));
-    root_res_ptr = res;
-    memcpy(&(res[total_read]), record, (size_t)fragment_size);
-    total_read += fragment_size;
-
-    if (_record == NULL) {
-      free(record);
-    }
-  }
-
-  struct _http_response *headers = _http_parse_response(&res);
-  data_t read_format = UNKNOWN;
-
-  struct _http_response *headers_iter = headers;
-  while (headers_iter) {
-    if (headers_iter->header_name) {
-      if (strcmp(headers_iter->header_name, "Content-Length") == 0) {
-        read_format = CONTENT_LENGTH;
-        break;
-      } else if (strcmp(headers_iter->header_name, "Transfer-Encoding") == 0) {
-        read_format = CHUNCKED;
-        break;
-      } else if (strcmp(headers_iter->header_name, "Upgrade") == 0) {
-        free(root_res_ptr);
-        return;
-      }
-    }
-    headers_iter = headers_iter->next;
-  }
-
-  if (read_format == CONTENT_LENGTH) {
-    // data remaining
-    int data_remaining = (int)strlen(res);
-    int content_length = atoi(headers_iter->header_value);
-
-    if (data_remaining != content_length) {
-      char *chunk = calloc((size_t)content_length + 1, sizeof(char));
-      memcpy(chunk, res, (size_t)data_remaining);
-
-      int read = data_remaining;
-
-      while (read != content_length) {
-        read += SSL_read(ssl, &(chunk[read]), (content_length - read));
-      }
-
-      *_r = chunk;
-      *_n = (uint32_t)content_length;
-
-      free(root_res_ptr);
-    }
-
-    // entire data length is contained inside this record
-    if (data_remaining == content_length) {
-      *_r = strndup(res, (size_t)content_length);
-      *_n = (uint32_t)content_length;
-      _http_response_free(headers);
-      free(root_res_ptr);
-    }
-  } else if (read_format == CHUNCKED) {
-    int data_remaining = (int)strlen(res);
-    if (data_remaining > 0) {
-      char *chunk_save = NULL;
-      char *first_chunk_size_str = strtok_r(res, "\n", &chunk_save);
-      char *nxt_data = strtok_r(chunk_save, "\r", &chunk_save);
-
-      size_t total_chunk_size = strtoul(first_chunk_size_str, NULL, 16);
-
-      char *chunk = calloc(total_chunk_size + 1, sizeof(char));
-      if (!chunk) {
-        printf("error can't create memory?\n");
-        abort();
-      }
-      size_t global_total_read = total_chunk_size;
-
-      size_t partial_chunk_len = strlen(nxt_data);
-      memcpy(chunk, nxt_data, partial_chunk_len);
-
-      size_t chunk_read = 0;
-      char endings[2];
-
-      if (partial_chunk_len != total_chunk_size) {
-        chunk_read = partial_chunk_len;
-        while (chunk_read != total_chunk_size) {
-          chunk_read += (size_t)SSL_read(
-              ssl, &(chunk[chunk_read]), (int)(total_chunk_size - chunk_read));
-        }
-        SSL_read(ssl, endings, 2);
-      }
-
-      free(root_res_ptr);
-
-      while (1) {
-        char chunk_len[9] = { 0 };
-        int chunk_len_idx = 0;
-        do {
-          // loop until \r
-          if (chunk_len_idx >= 8) {
-            exit(1);
-          }
-          chunk_len_idx += SSL_read(ssl, &(chunk_len[chunk_len_idx]), 2);
-          if (chunk_len[chunk_len_idx - 1] == '\r') {
-            SSL_read(ssl, endings, 1);
-            chunk_len[chunk_len_idx - 1] = '\x0';
-            break;
-          } else if (chunk_len[chunk_len_idx - 1] == '\n') {
-            chunk_len[chunk_len_idx - 2] = '\x0';
-            break;
-          }
-        } while (1);
-        total_chunk_size = strtoul(chunk_len, NULL, 16);
-
-        if (total_chunk_size == 0) {
-          SSL_read(ssl, endings, 2);
-          break;
-        }
-
-        chunk_read = 0;
-        chunk = realloc(chunk, global_total_read + total_chunk_size + 1);
-
-        while (chunk_read != total_chunk_size) {
-          int ret = SSL_read(ssl, &(chunk[global_total_read]),
-              (int)(total_chunk_size - chunk_read));
-          global_total_read += (size_t)ret;
-          chunk_read += (size_t)ret;
-          chunk[global_total_read] = '\x0';
-        }
-        SSL_read(ssl, endings, 2);
-      }
-      chunk[global_total_read] = '\x0';
-      *_r = chunk;
-      *_n = (uint32_t)global_total_read;
-      _http_response_free(headers);
-      return;
-    }
-  } else {
+    // error...
+    pprint_error("select error in SSL_ERROR_WANT_READ");
     abort();
   }
 }
 
 static void
-_http_response_free(struct _http_response *res)
+_http_ssl_selectwfd(SSL *ssl)
 {
-  struct _http_response *iter = res;
-  while (iter) {
-    struct _http_response *tmp = iter->next;
-    free(iter);
-    iter = tmp;
+  fd_set fds;
+  struct timeval tv;
+  tv.tv_sec = 5;
+  tv.tv_usec = 0;
+
+  int sock = SSL_get_wfd(ssl);
+  FD_ZERO(&fds);
+  FD_SET(sock, &fds);
+
+  int err = select(sock + 1, NULL, &fds, NULL, &tv);
+  if (err > 0) {
+    return;
+  }
+
+  if (err == 0) {
+    // timeout...
+    pprint_error("connection time out");
+    abort();
+  } else {
+    // error...
+    pprint_error("select error in SSL_ERROR_WANT_READ");
+    abort();
   }
 }
 
-static struct _http_response *
-_http_parse_response(char **res)
+static void
+_http_ssl_read_header(SSL *ssl, char **name, char **value)
 {
+  /*
+   * Holds the header line, this client can not accept headers greater than
+   * 8kb
+   */
+  static char header[8 * 1024] = { 0 };
 
-  struct _http_response *response = calloc(1, sizeof(struct _http_response));
+  int index = 0;
+  int ssl_read_err = 0;
 
-  // the first token
-  char *root_save = NULL;
-  char *tok = strtok_r(*res, "\n", &root_save);
-  tok = strtok_r(root_save, "\n", &root_save);
+  bool set_name = false;
 
-  struct _http_response *cur = response;
-  cur->header_name = NULL;
-  cur->header_value = NULL;
-  cur->next = NULL;
+  do {
+    while ((ssl_read_err = SSL_read(ssl, &(header[index]), 1)) &&
+        ssl_read_err <= 0) {
+      int err = SSL_get_error(ssl, ssl_read_err);
+      switch (err) {
+      case SSL_ERROR_WANT_READ:
+        _http_ssl_selectrfd(ssl);
+        continue;
+      case SSL_ERROR_WANT_WRITE:
+        _http_ssl_selectwfd(ssl);
+        continue;
+      default:
+        pprint_error("unknown error\n");
+      }
+    }
+    if (header[index - 1] == ':') {
+      header[index - 1] = '\x0';
+      *value = &(header[index]);
+      *name = header;
+      set_name = true;
+    }
+    index += 1;
+  } while (header[index - 1] != '\n');
 
-  while (tok[0] != '\r') {
-    char *header_save = NULL;
-    char *name = strtok_r(tok, ":", &header_save);
-    char *value = strtok_r(header_save, ":", &header_save);
-
-    cur->header_name = name;
-    cur->header_value = value;
-
-    tok = strtok_r(root_save, "\n", &root_save);
-
-    cur->next = calloc(1, sizeof(struct _http_response));
-    cur = cur->next;
-    cur->header_name = NULL;
-    cur->header_value = NULL;
-    cur->next = NULL;
+  if (!set_name) {
+    *value = header;
+    *name = header;
   }
 
-  *res = root_save;
-  return response;
+  header[index-2] = '\x0';
+}
+
+/*
+ * Reads the entire response
+ *
+ * @param ssl the ssl to read from
+ * @param response a pointer to some buffer to hold the response. this buffer
+ * may be reused to avoid calling realloc.
+ * @param len the total length this buffer can hold
+ */
+static void
+_http_ssl_read_all(SSL *ssl, char **response, size_t *len)
+{
+  (void)response;
+  (void)len;
+
+  char *header_name = NULL;
+  char *header_value = NULL;
+
+  bool found_keep_alive = false;
+  bool found_payload_type = false;
+
+  bool keep_alive = false;
+  bool is_chuncked = false;
+
+  size_t content_length = 0;
+
+  do {
+    _http_ssl_read_header(ssl, &header_name, &header_value);
+
+    if (!found_keep_alive) {
+      if (strcmp(header_name, "Connection") == 0) {
+        found_keep_alive = true;
+        if (strcmp(header_value, "keep-alive") == 0) {
+          keep_alive = true;
+        }
+      }
+    }
+
+    if (!found_payload_type) {
+      if (strcmp(header_name, "Content-Length") == 0) {
+        content_length = strtoul(header_value, NULL, 10);
+        found_payload_type = true;
+      } else if (strcmp(header_name, "Transfer-Encoding") == 0 &&
+          strcmp(header_value, " chunked") == 0) {
+        is_chuncked = true;
+        found_payload_type = true;
+      }
+    }
+
+  } while (header_name[0] != '\x0' && header_value[0] != '\x0');
+
+  if (is_chuncked) {
+
+    char *chunk_len = NULL;
+    size_t total_length = 0;
+    size_t total_read = 0;
+
+    _http_ssl_read_header(ssl, &chunk_len, &chunk_len);
+    size_t chunk_len_d = strtoul(chunk_len, NULL, 16);
+
+    while (chunk_len_d != 0) {
+      total_length += chunk_len_d;
+
+      if (total_length >= *len) {
+        *response = realloc(*response, total_length * 2 * sizeof(char));
+
+        if (!(*response)) {
+          pprint_error("unable to allocate %lu", total_length * 2);
+        }
+
+        *len = total_length * 2;
+      }
+
+      int ssl_ret = 0;
+      while ((size_t)total_read != total_length &&
+          (ssl_ret = SSL_read(ssl, &((*response)[total_read]),
+               (int)total_length - (int)total_read))) {
+        if (ssl_ret > 0) {
+          total_read += (size_t)ssl_ret;
+        } else {
+          int err = SSL_get_error(ssl, ssl_ret);
+          switch (err) {
+          case SSL_ERROR_WANT_READ:
+            _http_ssl_selectrfd(ssl);
+            continue;
+          case SSL_ERROR_WANT_WRITE:
+            _http_ssl_selectwfd(ssl);
+            continue;
+          default:
+            pprint_error("unknown error\n");
+          }
+        }
+      }
+
+      (*response)[total_read] = '\x0';
+
+      _http_ssl_read_header(ssl, &chunk_len, &chunk_len);
+      _http_ssl_read_header(ssl, &chunk_len, &chunk_len);
+      chunk_len_d = strtoul(chunk_len, NULL, 16);
+    }
+    _http_ssl_read_header(ssl, &chunk_len, &chunk_len);
+  } else {
+    pprint_warn("processing full payload of length %lu", content_length);
+    if (content_length >= (*len)) {
+      *response = realloc(*response, (content_length + 1) * sizeof(char));
+      *len = (content_length);
+    }
+
+    int ssl_ret = 0;
+    int read = 0;
+    while ((size_t)read != content_length &&
+        (ssl_ret = SSL_read(
+             ssl, &((*response)[read]), (int)content_length - (int)read))) {
+      if (ssl_ret > 0) {
+        read += (size_t)ssl_ret;
+      } else {
+        int err = SSL_get_error(ssl, read);
+        switch (err) {
+        case SSL_ERROR_WANT_READ:
+          _http_ssl_selectrfd(ssl);
+          continue;
+        case SSL_ERROR_WANT_WRITE:
+          _http_ssl_selectwfd(ssl);
+          continue;
+        default:
+          pprint_error("unknown error\n");
+        }
+      }
+    }
+    (*response)[content_length] = '\x0';
+  }
 }
 
 int
@@ -318,12 +341,11 @@ http_wss_upgrade(struct httpwss_session *session, char *path)
   // Sec-WebSocket-Accept header.
 
   char *response = NULL;
-  uint32_t test = 0;
+  size_t test = 0;
 
-  _http_ssl_read_all(session->ssl, &response, &test, NULL);
+  _http_ssl_read_all(session->ssl, &response, &test);
 
   free(key_encoded);
-
   session->iswss = true;
   return 0;
 }
@@ -346,9 +368,6 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
     sprintf(request, HTTP_GET_REQUEST_FMT, path, session->endpoint);
   }
 
-  char *_local_response = NULL;
-  uint32_t _local_len = 0;
-
   if (req_size != SSL_write(session->ssl, request, req_size)) {
     pprint_error("%s@%s:%d couldn't write to socket (aborting)", __FILE_NAME__,
         __func__, __LINE__);
@@ -357,8 +376,11 @@ http_get_request(struct httpwss_session *session, char *path, char **response)
 
   free(request);
 
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len, NULL);
-  *response = _local_response;
+  char *response_ = NULL;
+  size_t response_len = 0;
+
+  _http_ssl_read_all(session->ssl, &response_, &response_len);
+  *response = response_;
 }
 
 char *
@@ -392,9 +414,10 @@ http_get_request_cached(struct httpwss_session *session, char *request,
   }
 
   char *_local_response = NULL;
-  uint32_t _local_len = 0;
+  size_t _local_len = 0;
+  (void) record;
 
-  _http_ssl_read_all(session->ssl, &_local_response, &_local_len, record);
+  _http_ssl_read_all(session->ssl, &_local_response, &_local_len);
   *response = _local_response;
 }
 
@@ -423,19 +446,31 @@ httpwss_session_new(char *endpoint, char *port)
   }
 
   // create the socket
-  session->fd = socket(AF_INET, SOCK_STREAM, 0);
+  session->fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (session->fd == -1) {
     pprint_error("%s@%s:%d socket fd failed (aborting)", __FILE_NAME__,
         __func__, __LINE__);
+    pprint_error("socket returned %d", session->fd);
     abort();
   }
 
+  pprint_info("connection requested...");
   // connect the socket to the remote host
-  if (connect(session->fd, res->ai_addr, res->ai_addrlen) == -1) {
+  connect(session->fd, res->ai_addr, res->ai_addrlen);
+  if (errno != 115) {
     pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)",
         __FILE_NAME__, __func__, __LINE__, endpoint, port);
+    pprint_error("errrno[%d]: %s", errno, strerror(errno));
     abort();
   }
+
+  // poll the socket until read
+  struct pollfd pfd;
+  pfd.fd = session->fd;
+  pfd.events = POLLOUT | POLLIN;
+
+  poll(&pfd, 1, -1);
+  pprint_info("connection established");
 
   // prime SSL for establishing TLS connection
   const SSL_METHOD *method = TLS_client_method();
@@ -445,15 +480,25 @@ httpwss_session_new(char *endpoint, char *port)
     ERR_print_errors_fp(stdout);
     abort();
   }
+
   session->ssl = SSL_new(ctx);
   SSL_set_fd(session->ssl, session->fd);
   SSL_set_tlsext_host_name(session->ssl, endpoint);
 
   // perform the TLS handshake
-  if (SSL_connect(session->ssl) == -1) {
-    ERR_print_errors_fp(stdout);
-    abort();
+  int ret = 0;
+  while ((ret = SSL_connect(session->ssl)) && ret <= 0) {
+    switch (SSL_get_error(session->ssl, ret)) {
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE:
+      poll(&pfd, 1, -1);
+      break;
+    default:
+      abort();
+    }
   }
+
+  pprint_info("ssl context established");
 
   SSL_CTX_free(ctx);
 
