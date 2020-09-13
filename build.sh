@@ -116,10 +116,9 @@ do
     set -e
     echo "CC $objname"
 
-    set -x
     printf "\t{\n\t\t\"directory\":\"$i\",\n\t\t\"file\":\"$f\",\n\t\t\"command\":\"$CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname\"\n\t},\n" >> $CWD/compile_commands.json
-    set +x
     $CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname
+
     set +e
   done
 
