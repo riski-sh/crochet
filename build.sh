@@ -1,4 +1,4 @@
-#!/bin/env bash
+#! env bash
 
 MODNAME="crochet"
 
@@ -25,8 +25,9 @@ MODULES=("${CWD}/src/exchanges/" "${CWD}/src/ffjson/" "${CWD}/src/finmath/"
 MAINC="${CWD}/src/main.c"
 
 # Define default W flags
-WFLAGS=("-Weverything" "-Wpedantic" "-Werror" "-O2" "-g")
-
+WFLAGS=("-Weverything" "-Wpedantic" "-Werror" "-Wno-error=padded"
+	"-Wno-error=reserved-id-macro" "-Wno-padded" "-Wno-reserved-id-macro" "-O2" "-g")
+ 
 # Define default CFLAGS
 CFLAGS=("-I$CWD" "-I$CWD/src/")
 

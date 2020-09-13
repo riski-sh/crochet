@@ -21,3 +21,4 @@ callgrind.*
 profiling/*
 .bhash
 objects/
+crochet
