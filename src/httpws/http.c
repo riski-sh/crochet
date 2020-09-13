@@ -451,7 +451,13 @@ httpwss_session_new(char *endpoint, char *port)
   }
 
   // create the socket
+
+#ifdef __FreeBSD__
   session->fd = socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0);
+#else
+  session->fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+#endif
+
   if (session->fd == -1) {
     pprint_error("%s@%s:%d socket fd failed (aborting)", __FILE_NAME__,
         __func__, __LINE__);

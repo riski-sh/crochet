@@ -21,20 +21,13 @@ mkdir -p $CWD/objects > /dev/null 2>&1
 REQUIRES="openssl"
 
 # A list of modules that will be compiled
-MODULES="
-$CWD/src/exchanges/  $CWD/src/ffjson/  $CWD/src/finmath/
-$CWD/src/hashmap/    $CWD/src/httpws/  $CWD/src/orderbooks/
-$CWD/src/security/   $CWD/src/pprint   $CWD/src/globals/
-"
+MODULES="$CWD/src/exchanges/ $CWD/src/ffjson/ $CWD/src/finmath/ $CWD/src/hashmap/ $CWD/src/httpws/ $CWD/src/orderbooks/ $CWD/src/security/ $CWD/src/pprint $CWD/src/globals/"
 
 # The single file that contains the main class
 MAINC="$CWD/src/main.c"
 
 # Define default W flags
-WFLAGS="
--Weverything -Wpedantic -Werror -Wno-error=padded 
--Wno-error=reserved-id-macro -Wno-padded -Wno-reserved-id-macro
-"
+WFLAGS="-Weverything -Wpedantic -Werror -Wno-error=padded -Wno-error=reserved-id-macro -Wno-padded -Wno-reserved-id-macro"
 
 # Define default CFLAGS
 CFLAGS="-I$CWD -I$CWD/src/"
@@ -77,6 +70,13 @@ do
   LFLAGS="$CFLAGS `pkg-config --libs $lib`"
 done
 
+rm compile_commands.json
+touch compile_commands.json
+
+set -x
+printf "[\n" >> compile_commands.json
+set +x
+
 # Loop through each subdirectory defined in the MODULES array
 for i in $MODULES
 do
@@ -115,6 +115,10 @@ do
     MODULEOBJECTS="$MODULEOBJECTS $CWD/objects/$objname"
     set -e
     echo "CC $objname"
+
+    set -x
+    printf "\t{\n\t\t\"directory\":\"$i\",\n\t\t\"file\":\"$f\",\n\t\t\"command\":\"$CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname\"\n\t},\n" >> $CWD/compile_commands.json
+    set +x
     $CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname
     set +e
   done
@@ -131,10 +135,15 @@ do
   rm .bhashtmp
   find . -name "*.c" | xargs shasum >> .bhash
 
-  echo 
+  echo
 done
 
 cd $CWD
 echo CC $MODNAME
 
 $CC -o $MODNAME $LFLAGS $CFLAGS $MAINC ./objects/*.so
+
+# Remove last character of the compile commands json since it is a , but there
+# are no more elements in the array
+sed -i '$ s/.$//' compile_commands.json
+printf "]\n" >> compile_commands.json
