@@ -199,9 +199,9 @@ exchanges_oanda_init(char *key)
                              (30.0 * 60.0 * OANDA_PRINT_NTERVAL_SECONDS))) *
           100.0;
       if (delta >= 0) {
-        pprint_error("oanda: poll loss %.2f﹪", delta);
+        pprint_error("oanda: poll loss %.2f", delta);
       } else {
-        pprint_info("oanda: poll loss %.2f﹪", delta);
+        pprint_info("oanda: poll loss %.2f", delta);
       }
 
       num_messages = 0;

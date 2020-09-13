@@ -4,23 +4,6 @@
  * (C) washcloth et al.
  */
 
-#include <ffjson/ffjson.h>
-#if defined(DO_UNIT_TESTS)
-#include <orderbooks/book.h>
-#include <stdlib.h>
-int
-main(int argc, char **argv)
-{
-  (void)argc;
-  (void)argv;
-
-  UNIT_TEST_DO(book_query)
-
-  return 0;
-}
-
-#else
-
 #include <exchanges/exchanges.h>
 #include <exchanges/exhangesall.h>
 #include <globals/globals.h>
@@ -128,4 +111,3 @@ main(int argc, char **argv)
   pprint_info("goodbye");
   return 0;
 }
-#endif

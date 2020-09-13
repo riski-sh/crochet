@@ -451,7 +451,7 @@ httpwss_session_new(char *endpoint, char *port)
   }
 
   // create the socket
-  session->fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+  session->fd = socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (session->fd == -1) {
     pprint_error("%s@%s:%d socket fd failed (aborting)", __FILE_NAME__,
         __func__, __LINE__);
