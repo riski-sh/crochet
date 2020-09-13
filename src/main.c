@@ -4,7 +4,7 @@
  * (C) washcloth et al.
  */
 
-#include "ffjson/ffjson.h"
+#include <ffjson/ffjson.h>
 #if defined(DO_UNIT_TESTS)
 #include <orderbooks/book.h>
 #include <stdlib.h>
@@ -23,7 +23,7 @@ main(int argc, char **argv)
 
 #include <exchanges/exchanges.h>
 #include <exchanges/exhangesall.h>
-#include <globals.h>
+#include <globals/globals.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -32,7 +32,7 @@ main(int argc, char **argv)
 #include <stdio.h>
 #include <time.h>
 
-#include "pprint.h"
+#include <pprint/pprint.h>
 
 static __json_value
 _load_config(char *file, char **raw)

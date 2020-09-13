@@ -11,7 +11,7 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <poll.h>
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <stdbool.h>
 
 #include "base64.h"

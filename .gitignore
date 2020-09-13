@@ -19,3 +19,5 @@ build/
 config.json
 callgrind.*
 profiling/*
+.bhash
+objects/

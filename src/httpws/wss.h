@@ -18,7 +18,7 @@
 #include <netdb.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <unistd.h>
 
 #include "http.h"

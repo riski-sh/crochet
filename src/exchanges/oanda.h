@@ -3,9 +3,9 @@
 
 #include <exchanges/exchanges.h>
 #include <ffjson/ffjson.h>
-#include <globals.h>
+#include <globals/globals.h>
 #include <httpws/http.h>
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <security/security.h>
 
 #define OANDA_API_ROOT "api-fxpractice.oanda.com"

@@ -1,7 +1,7 @@
 #ifndef BOOK_H
 #define BOOK_H
 
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 #ifndef CHART_H
 #define CHART_H
 
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <stdint.h>
 #include <stdlib.h>
 

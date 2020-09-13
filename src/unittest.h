@@ -1,7 +1,7 @@
 #ifndef UNIT_TEST_H
 #define UNIT_TEST_H
 
-#include <pprint.h>
+#include <pprint/pprint.h>
 
 #define DEFINE_TEST_H(FUNC_NAME) void test_##FUNC_NAME(void)
 

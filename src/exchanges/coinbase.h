@@ -3,11 +3,11 @@
 
 #include <ffjson/ffjson.h>
 #include <finmath/base_conversion.h>
-#include <globals.h>
+#include <globals/globals.h>
 #include <httpws/http.h>
 #include <httpws/wss.h>
 #include <orderbooks/coinbase.h>
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <pthread.h>
 
 /*

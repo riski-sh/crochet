@@ -6,7 +6,7 @@
 #define FFJSON_H
 
 #include <hashmap/hashmap.h>
-#include <pprint.h>
+#include <pprint/pprint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

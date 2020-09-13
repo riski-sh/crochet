@@ -1,4 +1,4 @@
-#include <globals.h>
+#include <globals/globals.h>
 
 bool
 globals_continue(bool *val)
