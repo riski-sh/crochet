@@ -122,5 +122,6 @@ do
 done
 
 cd $CWD
-echo $CC -o $MODNAME $LFLAGS $CFLAGS $MAINC ./objects/*.so
+echo $CC -o $MODNAME ${LFLAGS[*]// /} $CFLAGS $MAINC ./objects/*.so
+
 $CC -o $MODNAME ${LFLAGS[*]// /} ${CFLAGS[*]// /} $MAINC ./objects/*.so
