@@ -194,15 +194,8 @@ exchanges_oanda_init(char *key)
     if (end_time.tv_sec - start_time.tv_sec >=
         (int)OANDA_PRINT_NTERVAL_SECONDS) {
 
-      double delta = (1.0 -
-                         ((num_messages * number_monitored) /
-                             (30.0 * 60.0 * OANDA_PRINT_NTERVAL_SECONDS))) *
-          100.0;
-      if (delta >= 0) {
-        pprint_error("oanda: poll loss %.2f", delta);
-      } else {
-        pprint_info("oanda: poll loss %.2f", delta);
-      }
+      pprint_info("oanda: requests=%lu updates=%lu",
+          num_messages * number_monitored, num_valid_updates);
 
       num_messages = 0;
       num_valid_updates = 0;

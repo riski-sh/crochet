@@ -73,9 +73,7 @@ done
 rm compile_commands.json
 touch compile_commands.json
 
-set -x
 printf "[\n" >> compile_commands.json
-set +x
 
 # Loop through each subdirectory defined in the MODULES array
 for i in $MODULES
@@ -96,15 +94,7 @@ do
   # of the last build
   DIFFS=`diff .bhash .bhashtmp`
 
-  # If there are no differences remove the temp file and continue on to the
-  # next submodule
-  if [ -z "$DIFFS" ]; then
-    rm .bhashtmp
-    echo SKIP $BASEMODULENAME
-    continue
-  fi
-
-  echo MO $BASEMODULENAME
+  echo "---> $BASEMODULENAME"
 
   MODULEOBJECTS=""
 
@@ -114,19 +104,30 @@ do
     objname=$(echo "$f" | cut -f 1 -d '.')\.o
     MODULEOBJECTS="$MODULEOBJECTS $CWD/objects/$objname"
     set -e
-    echo "CC $objname"
 
     printf "\t{\n\t\t\"directory\":\"$i\",\n\t\t\"file\":\"$f\",\n\t\t\"command\":\"$CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname\"\n\t},\n" >> $CWD/compile_commands.json
+
+    # If there are no differences remove the temp file and continue on to the
+    # next submodule
+    if [ -z "$DIFFS" ]; then
+      echo SKIP $f
+      continue;
+    fi
+
+    echo "CC $objname"
     $CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname
 
     set +e
   done
 
   # Create a shared library
-  echo "SO $BASEMODULENAME.so"
-  $CC -shared $MODULEOBJECTS -o $CWD/objects/$BASEMODULENAME\.so
 
-  rm -rf $MODULEOBJECTS
+  if [ -z "$DIFFS" ]; then
+    echo "SKIP $BASEMODULENAME.so"
+  else
+    echo "SO $BASEMODULENAME.so"
+    $CC -shared $MODULEOBJECTS -o $CWD/objects/$BASEMODULENAME\.so
+  fi
 
   # Remove the current bhash and bhashtmp files
   # Write out a new bhash file.
@@ -134,15 +135,17 @@ do
   rm .bhashtmp
   find . -name "*.c" | xargs shasum >> .bhash
 
+  echo "<--- $BASEMODULENAME"
   echo
 done
 
 cd $CWD
-echo CC $MODNAME
+echo BB $MODNAME
 
 $CC -o $MODNAME $LFLAGS $CFLAGS $MAINC ./objects/*.so
 
 # Remove last character of the compile commands json since it is a , but there
 # are no more elements in the array
 sed -i '$ s/.$//' compile_commands.json
+
 printf "]\n" >> compile_commands.json
