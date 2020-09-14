@@ -1,0 +1,14 @@
+{
+  "name": "crochet",
+  "version": "1.0.0",
+  "description": "A web front end framework designed for algorithmic traders",
+  "main": "index.js",
+  "author": "washcloth et al",
+  "license": "BSD",
+  "scripts": {
+    "main": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
