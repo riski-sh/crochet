@@ -146,6 +146,6 @@ $CC -o $MODNAME $LFLAGS $CFLAGS $MAINC ./objects/*.so
 
 # Remove last character of the compile commands json since it is a , but there
 # are no more elements in the array
-sed -i '$ s/.$//' compile_commands.json
+truncate -s-1 compile_commands.json
 
 printf "]\n" >> compile_commands.json
