@@ -25,3 +25,4 @@ crochet
 compile_commands.json
 node_modules
 *.core
+*.js
