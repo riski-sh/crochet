@@ -34,11 +34,6 @@ struct httpwss_session {
   int fd;
 
   /*
-   * struct padding
-   */
-  char _p1[4];
-
-  /*
    * the host this session is connected to
    */
   char *endpoint;
@@ -47,8 +42,6 @@ struct httpwss_session {
    * an SSL instance for SSL/TLS communication
    */
   SSL *ssl;
-
-  char _p2[7];
 
   /*
    * set to true if this session has been upgraded to a websocket
@@ -59,8 +52,6 @@ struct httpwss_session {
    * send an authorization header
    */
   bool hashauth;
-
-  char _p3[7];
 
   /*
    * the authorization key if needed

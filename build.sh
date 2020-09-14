@@ -21,7 +21,7 @@ mkdir -p $CWD/objects > /dev/null 2>&1
 REQUIRES="openssl"
 
 # A list of modules that will be compiled
-MODULES="$CWD/src/exchanges/ $CWD/src/ffjson/ $CWD/src/finmath/ $CWD/src/hashmap/ $CWD/src/httpws/ $CWD/src/orderbooks/ $CWD/src/security/ $CWD/src/pprint $CWD/src/globals/"
+MODULES="$CWD/src/exchanges/ $CWD/src/ffjson/ $CWD/src/finmath/ $CWD/src/hashmap/ $CWD/src/httpws/ $CWD/src/orderbooks/ $CWD/src/security/ $CWD/src/pprint/ $CWD/src/globals/"
 
 # The single file that contains the main class
 MAINC="$CWD/src/main.c"
@@ -30,7 +30,7 @@ MAINC="$CWD/src/main.c"
 WFLAGS="-Weverything -Wpedantic -Werror -Wno-error=padded -Wno-error=reserved-id-macro -Wno-padded -Wno-reserved-id-macro"
 
 # Define default CFLAGS
-CFLAGS="-I$CWD -I$CWD/src/"
+CFLAGS="-I$CWD -I$CWD/libs/ -I$CWD/src/"
 
 # Define default LFLAGS
 LFLAGS=""
