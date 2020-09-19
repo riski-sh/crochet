@@ -57,7 +57,6 @@ struct httpwss_session {
    * the authorization key if needed
    */
   char *authkey;
-
 };
 
 /*

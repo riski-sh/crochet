@@ -53,7 +53,7 @@ _parse_string(char *str, size_t *idx)
 
   // we only get here if we have reached the end of the string
   // therefore str[*idx] must equal " and str[*idx - 1] is not
-  // equal to \
+  // equal to a back slash
 
   // Since this is a valid string some trickery will be here to avoid
   // creating a new string. Simply turn the ending " into a null character

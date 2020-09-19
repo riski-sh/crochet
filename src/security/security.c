@@ -16,7 +16,7 @@ bool
 security_update(
     struct security *sec, size_t timestamp, char *best_bid, char *best_ask)
 {
-  const static int pow10[7] = { 1, 10, 100, 1000, 10000, 100000, 1000000 };
+  static const int pow10[7] = { 1, 10, 100, 1000, 10000, 100000, 1000000 };
 
   if (timestamp <= sec->last_update) {
     return false;

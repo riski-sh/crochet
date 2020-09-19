@@ -1,21 +1,32 @@
 #!/bin/sh
 
+COLORGREEN=$(tput setaf 2)
+COLORCLEAR=$(tput setaf 0)
+
 MODNAME="crochet"
 
 if [ ! -z "$1" ] && [ "$1" = "clean" ]; then
   for h in `find . -name ".bhash"`
   do
-    echo "RM $h"
+    echo rm $h
     rm $h
   done
   echo
+
+  echo "rm -rf ./out/"
+  rm -rf ./out/
+
+  echo "rm -rf ./obj/"
+  rm -rf ./obj/
+
 fi
 
 # Retreive the current working directory
 CWD=$(pwd)
 
 # Make sure we create an objects folder to store all the objects
-mkdir -p $CWD/objects > /dev/null 2>&1
+mkdir -p $CWD/obj > /dev/null 2>&1
+mkdir -p $CWD/out > /dev/null 2>&1
 
 # A list of required libraries
 REQUIRES="openssl"
@@ -27,10 +38,19 @@ MODULES="$CWD/src/exchanges/ $CWD/src/ffjson/ $CWD/src/finmath/ $CWD/src/hashmap
 MAINC="$CWD/src/main.c"
 
 # Define default W flags
-WFLAGS="-Weverything -Wpedantic -Werror -Wno-error=padded -Wno-error=reserved-id-macro -Wno-padded -Wno-reserved-id-macro"
+WFLAGS="-Wall -Wextra -Wpedantic -Werror"
 
 # Define default CFLAGS
 CFLAGS="-I$CWD -I$CWD/libs/ -I$CWD/src/"
+
+# Define the default DFLAGS
+DFLAGS="-D_POSIX_C_SOURCE=200809L -D_FORTIFY_SOURCE=2"
+
+
+echo "#ifndef CONFIG_IN_H" > src/config.h
+echo "#define CONFIG_IN_H" >> src/config.h
+echo "#define CONFIG_IN_DATE \"$(date) UTC\"" >> src/config.h
+echo "#endif" >> src/config.h
 
 # Define default LFLAGS
 LFLAGS=""
@@ -47,6 +67,21 @@ if [ -z $CC ]; then
   fi
 fi
 
+echo -n 'checking compiler... '
+COMPILERVERSION=`gcc --version | head -n 1 | xargs echo`
+if [ $? -ne 0 ]; then
+  echo 'notfound'
+fi
+
+echo $COMPILERVERSION
+
+echo "#ifndef CONFIG_IN_H" > config.h
+echo "  #define CONFIG_IN_H" >> config.h
+echo "  #define CONFIG_IN_DATE \"$(date -u)\"" >> config.h
+echo "  #define CONFIG_IN_GITREV \"$(git log | grep "^commit" | wc -l)\"" >> config.h
+echo "#endif" >> config.h
+
+
 # Look for pkg-config
 PKGCFG=$(command -v pkg-config)
 if [ -z $PKGCFG ]; then
@@ -60,15 +95,22 @@ for lib in $REQUIRES
 do
 
   # Test pkg-config to make sure the library exists
+
+  echo -n 'checking openssl... '
+
   pkg-config $lib
   if [ $? -ne 0 ]; then
-    echo "error: unable to locate $lib"
+    echo "notfound"
     exit 1
   fi
+
+  echo `pkg-config --modversion openssl`
 
   CFLAGS="$CFLAGS `pkg-config --cflags $lib`"
   LFLAGS="$CFLAGS `pkg-config --libs $lib`"
 done
+
+echo
 
 rm compile_commands.json
 touch compile_commands.json
@@ -82,6 +124,8 @@ do
   # Go int othe module subdirectory
   cd $i
 
+  echo "[$COLORGREEN $i $COLORCLEAR]"
+
   BASEMODULENAME=`basename $i`
 
   # Touch the .bhash file to make sure it exists
@@ -94,18 +138,16 @@ do
   # of the last build
   DIFFS=`diff .bhash .bhashtmp`
 
-  echo "---> $BASEMODULENAME"
-
   MODULEOBJECTS=""
 
   # Loop through each c file in this folder and compile it
   for f in *.c
   do
     objname=$(echo "$f" | cut -f 1 -d '.')\.o
-    MODULEOBJECTS="$MODULEOBJECTS $CWD/objects/$objname"
+    MODULEOBJECTS="$MODULEOBJECTS $CWD/obj/$objname"
     set -e
 
-    printf "\t{\n\t\t\"directory\":\"$i\",\n\t\t\"file\":\"$f\",\n\t\t\"command\":\"$CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname\"\n\t},\n" >> $CWD/compile_commands.json
+    printf "\t{\n\t\t\"directory\":\"$i\",\n\t\t\"file\":\"$f\",\n\t\t\"command\":\"$CC -c -fPIC -O2 -g -std=c11 $DFLAGS $CFLAGS $WFLAGS $f -o $CWD/obj/$objname\"\n\t},\n" >> $CWD/compile_commands.json
 
     # If there are no differences remove the temp file and continue on to the
     # next submodule
@@ -114,38 +156,35 @@ do
       continue;
     fi
 
-    echo "CC $objname"
-    $CC -c -fPIC -O2 -g $CFLAGS $WFLAGS $f -o $CWD/objects/$objname
+    echo $CC -c -fPIC -O2 -g -std=c11 $DFLAGS $CFLAGS $WFLAGS $f -o $CWD/obj/$objname
+    $CC -c -fPIC -O2 -g -std=c11 $DFLAGS $CFLAGS $WFLAGS $f -o $CWD/obj/$objname
 
     set +e
   done
 
   # Create a shared library
-
-  if [ -z "$DIFFS" ]; then
-    echo "SKIP $BASEMODULENAME.so"
-  else
-    echo "SO $BASEMODULENAME.so"
-    $CC -shared $MODULEOBJECTS -o $CWD/objects/$BASEMODULENAME\.so
+  if [ ! -z "$DIFFS" ]; then
+    echo $CC  -shared -O2 -g -std=c11 $DFLAGS $CFLAGS $WFLAGS $MODULEOBJECTS -o $CWD/out/$BASEMODULENAME\.so
+    $CC -shared -O2 -g -std=c11 $DFLAGS $CFLAGS $WFLAGS $MODULEOBJECTS -o $CWD/out/$BASEMODULENAME\.so
   fi
 
   # Remove the current bhash and bhashtmp files
   # Write out a new bhash file.
   rm .bhash
   rm .bhashtmp
+
   find . -name "*.c" | xargs shasum >> .bhash
 
-  echo "<--- $BASEMODULENAME"
   echo
 done
 
 cd $CWD
-echo BB $MODNAME
+echo $CC -std=c11 -O2 -g $DFLAGS $LFLAGS $CFLAGS $WFLAGS -o out/$MODNAME $MAINC ./out/*.so
+$CC -std=c11 -O2 -g $DFLAGS $LFLAGS $CFLAGS $WFLAGS -o out/$MODNAME $MAINC ./out/*.so
 
-$CC -o $MODNAME $LFLAGS $CFLAGS $MAINC ./objects/*.so
 
 # Remove last character of the compile commands json since it is a , but there
 # are no more elements in the array
-truncate -s-1 compile_commands.json
+truncate -s -2 compile_commands.json
 
-printf "]\n" >> compile_commands.json
+printf "\n]\n" >> compile_commands.json

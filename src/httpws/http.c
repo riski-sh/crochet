@@ -151,7 +151,7 @@ _http_ssl_read_header(SSL *ssl, char **name, char **value)
     *name = header;
   }
 
-  header[index-2] = '\x0';
+  header[index - 2] = '\x0';
 }
 
 /*
@@ -185,7 +185,7 @@ _http_ssl_read_all(SSL *ssl, char **response, size_t *len)
     if (!found_keep_alive) {
       if (strcmp(header_name, "Connection") == 0) {
         found_keep_alive = true;
-        if (strcmp(header_value," keep-alive") == 0) {
+        if (strcmp(header_value, " keep-alive") == 0) {
           keep_alive = true;
         }
       }

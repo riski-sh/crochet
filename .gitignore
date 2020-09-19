@@ -20,9 +20,12 @@ config.json
 callgrind.*
 profiling/*
 .bhash
-objects/
+obj/
+out/
 crochet
 compile_commands.json
 node_modules
 *.core
 *.js
+config.h
+*.tsbuildinfo

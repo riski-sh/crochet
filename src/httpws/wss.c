@@ -26,7 +26,13 @@ _wss_new_mask()
 
   FILE *fp = fopen("/dev/urandom", "rb");
   uint32_t mask;
-  fread(&mask, sizeof(uint32_t), 1, fp);
+  int read = fread(&mask, sizeof(uint32_t), 1, fp);
+  if (read != 1) {
+    pprint_error(
+        "%s@%s:%d unable to read 1 uint32_t from /dev/urandom (aborting)",
+        __FILE_NAME__, __func__, __LINE__);
+    abort();
+  }
   fclose(fp);
   return mask;
 }
@@ -61,7 +67,7 @@ enum WSS_ERR
 wss_read_text(struct httpwss_session *session, char **value)
 {
   struct _wss_packet h;
-  bzero(&h, sizeof(struct _wss_packet));
+  memset(&h, 0, sizeof(struct _wss_packet));
 
   unsigned char h1 = 0;
   if (SSL_read(session->ssl, &h1, 1) != 1) {
@@ -156,7 +162,8 @@ wss_send_text(
     struct httpwss_session *session, unsigned char *text, uint64_t len)
 {
   struct _wss_packet to_send;
-  bzero(&to_send, sizeof(struct _wss_packet));
+  memset(&to_send, 0, sizeof(struct _wss_packet));
+
   to_send.fin = 1;
   to_send.rsv1 = 0;
   to_send.rsv2 = 0;
