@@ -453,9 +453,9 @@ httpwss_session_new(char *endpoint, char *port)
   // create the socket
 
 #ifdef __FreeBSD__
-  session->fd = socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0);
+  session->fd = socket(AF_INET6, SOCK_STREAM, 0);
 #else
-  session->fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+  session->fd = socket(AF_INET, SOCK_STREAM, 0);
 #endif
 
   if (session->fd == -1) {
@@ -467,23 +467,14 @@ httpwss_session_new(char *endpoint, char *port)
 
   pprint_info("connection requested...");
   // connect the socket to the remote host
-  connect(session->fd, res->ai_addr, res->ai_addrlen);
+  int ret = connect(session->fd, res->ai_addr, res->ai_addrlen);
 
-#ifdef __FreeBSD__
-  if (errno != 36) {
+  if (ret != 0) {
     pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)",
         __FILE_NAME__, __func__, __LINE__, endpoint, port);
     pprint_error("errrno[%d]: %s", errno, strerror(errno));
     abort();
   }
-#else
-  if (errno != 115) {
-    pprint_error("%s@%s:%d connection failed for %s on port %s (aborting)",
-        __FILE_NAME__, __func__, __LINE__, endpoint, port);
-    pprint_error("errrno[%d]: %s", errno, strerror(errno));
-    abort();
-  }
-#endif
 
   // poll the socket until read
   struct pollfd pfd;
@@ -507,7 +498,7 @@ httpwss_session_new(char *endpoint, char *port)
   SSL_set_tlsext_host_name(session->ssl, endpoint);
 
   // perform the TLS handshake
-  int ret = 0;
+  ret = 0;
   while ((ret = SSL_connect(session->ssl)) && ret <= 0) {
     switch (SSL_get_error(session->ssl, ret)) {
     case SSL_ERROR_WANT_READ:
