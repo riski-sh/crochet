@@ -4,6 +4,7 @@
 #include <pprint/pprint.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <status.h>
 
 /*
  *  Hash map struct is public to allow for users to define
@@ -40,9 +41,10 @@ struct _map_list {
 /*
  * Creates a new hashmap
  * @param num_bins the number of bins this hashmap to use
- * @return a newly created hashmap
+ * @param _ret will allocate *_ret to a new hashmap struct
+ * @return the status code
  */
-struct hashmap *hashmap_new(uint64_t num_bins);
+status_t hashmap_new(uint64_t num_bins, struct hashmap **_ret);
 
 /*
  * Frees the hashmap struct created by hashmap_new

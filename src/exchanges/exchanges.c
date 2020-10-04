@@ -5,16 +5,18 @@ static struct hashmap *securities = NULL;
 void
 exchange_init()
 {
-  securities = hashmap_new(1024);
+  /*
+   * TODO change the return value
+   */
+  hashmap_new(1024, &securities);
 }
 
 void
 exchange_put(char *name, struct security *sec)
 {
   if (!securities) {
-    pprint_error("%s@%s:%d must call exchange_init before adding exchange data "
-                 "(aborting)",
-        __FILE_NAME__, __func__, __LINE__);
+    pprint_error("%s", "must call exchange_init before adding exchange data "
+                 "(aborting)");
     abort();
   }
   hashmap_put(name, sec, securities);

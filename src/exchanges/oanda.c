@@ -1,7 +1,6 @@
-#include <sys/cdefs.h>
-
 #include "oanda.h"
 
+/*
 static size_t
 _oanda_timetots(char *str)
 {
@@ -63,18 +62,17 @@ _oanda_gen_currency_list(char *response, int *num_instruments)
   json_free(_root);
   return currency_list;
 }
-
+*/
 void
 exchanges_oanda_init(char *key)
 {
 
   // create a reusable record for openssl read
+  (void) key;
+  struct tls_session *master_session = NULL;
+  tls_session_new(OANDA_API_ROOT, "443", &master_session);
 
-  struct httpwss_session *master_session =
-      httpwss_session_new(OANDA_API_ROOT, "443");
-  master_session->hashauth = true;
-  master_session->authkey = key;
-
+  /*
   char *response = NULL;
   http_get_request(master_session, "/v3/accounts", &response);
 
@@ -217,4 +215,7 @@ exchanges_oanda_init(char *key)
   free(poll_request_cached);
   free(id);
   httpwss_session_free(master_session);
+  */
+
+  tls_session_free(&master_session);
 }

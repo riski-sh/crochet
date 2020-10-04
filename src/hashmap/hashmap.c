@@ -1,4 +1,5 @@
 #include "hashmap.h"
+#include "status.h"
 
 static uint64_t
 sdbm(char *str)
@@ -26,26 +27,37 @@ _map_list_add(struct _map_list **list, size_t ori_key, void *value)
   val->value = value;
 }
 
-struct hashmap *
-hashmap_new(uint64_t num_bins)
+status_t
+hashmap_new(uint64_t num_bins, struct hashmap **_ret)
 {
+
+  if (*_ret != NULL) {
+    pprint_error("%s", "will not allocate a pointer that doesn't have a value "
+                      "of NULL");
+    return STATUS_EXPECTED_NULL;
+  }
+
   struct hashmap *map = calloc(1, sizeof(struct hashmap));
+
   if (!map) {
-    pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__,
-        __func__, __LINE__);
-    abort();
+    pprint_error("unable to aquire %lu bytes for hashmap",
+        sizeof(struct hashmap));
+    return STATUS_ALLOC_ERR;
   }
   map->bins = calloc(num_bins, sizeof(struct _map_list *));
   if (!map->bins) {
-    pprint_error("%s@%s:%d not enough memory (aborting)", __FILE_NAME__,
-        __func__, __LINE__);
-    abort();
+    pprint_error("unable to aquire %lu bytes for hashmap bins",
+        (num_bins * sizeof(struct _map_list* *)));
+    return STATUS_ALLOC_ERR;
   }
   for (unsigned int i = 0; i < num_bins; ++i) {
     map->bins[i] = NULL;
   }
   map->num_bins = num_bins;
-  return map;
+
+  *_ret = map;
+
+  return STATUS_OK;
 }
 
 void

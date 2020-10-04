@@ -4,7 +4,7 @@
 #include <ffjson/ffjson.h>
 #include <finmath/base_conversion.h>
 #include <globals/globals.h>
-#include <httpws/http.h>
+#include <httpws/session.h>
 #include <httpws/wss.h>
 #include <orderbooks/coinbase.h>
 #include <pprint/pprint.h>

@@ -1,5 +1,6 @@
 #include "wss.h"
 
+/*
 struct _wss_packet {
   uint8_t fin;
   uint8_t rsv1;
@@ -16,10 +17,14 @@ struct _wss_packet {
   char _p3[4]; // pad here
 };
 
+*/
+
 /*
  * Generates a new mask to use for sending data
  * @return a value to mask data with
  */
+
+/*
 static uint32_t
 _wss_new_mask()
 {
@@ -36,11 +41,14 @@ _wss_new_mask()
   fclose(fp);
   return mask;
 }
+*/
 
 /*
  * Write a web socket frame header to the session given a header
  * After this is called masked data may be sent to the server.
  */
+
+/*
 static void
 _wss_send_header(struct httpwss_session *session, struct _wss_packet *p)
 {
@@ -212,3 +220,4 @@ wss_client(
 
   return WSS_ERR_NONE;
 }
+*/

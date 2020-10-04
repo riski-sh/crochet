@@ -72,8 +72,7 @@ _parse_member(char *str, size_t *idx, char **name, __json_value *_val,
   // verify name-separator
   _parse_whitespace(str, idx);
   if (str[*idx] != ':') {
-    pprint_error("%s@%s:%d expected a : after name %s (aborting)",
-        __FILE_NAME__, __func__, __LINE__, member_name);
+    pprint_error("expected a : after name %s (aborting)", member_name);
     abort();
   }
   (*idx) += 1;
@@ -93,8 +92,8 @@ static __json_object
 _parse_object(char *str, size_t *idx, __json_object cached)
 {
   if (str[*idx] != '{') {
-    pprint_error("%s@%s:%d expected { got %c (aborting)", __FILE_NAME__,
-        __func__, __LINE__, str[*idx]);
+    pprint_error("expected { got %c (aborting)", __FILE_NAME__,
+        str[*idx]);
 
     pprint_info("%s", &str[(*idx)]);
     abort();
@@ -112,7 +111,9 @@ _parse_object(char *str, size_t *idx, __json_object cached)
 
   if (!cached) {
     // sorry R4stl1n 16 not a good number, 51 is tho ...
-    obj = hashmap_new(51);
+    //
+    // TODO check this return value
+    hashmap_new(51, &obj);
 
     if (str[*idx] == '"') {
       // loop through and parse all the members
@@ -139,8 +140,7 @@ _parse_object(char *str, size_t *idx, __json_object cached)
 
   _parse_whitespace(str, idx);
   if (str[*idx] != '}') {
-    pprint_error("%s@%s:%d invalid object expected } got %s (aborting)",
-        __FILE_NAME__, __func__, __LINE__, str[*idx]);
+    pprint_error("invalid object expected } got %s (aborting)", str[*idx]);
     abort();
   }
   (*idx) += 1;
@@ -157,8 +157,7 @@ static __json_array
 _parse_array(char *str, size_t *idx, __json_array cached)
 {
   if (str[*idx] != '[') {
-    pprint_info("%s@%s:%d expected [ got %s (aborting)", __FILE_NAME__,
-        __func__, __LINE__, str[*idx]);
+    pprint_info("expected [ got %s (aborting)", str[*idx]);
     abort();
   }
 
@@ -195,8 +194,7 @@ _parse_array(char *str, size_t *idx, __json_array cached)
 
   // verify end array
   if (str[*idx] != ']') {
-    pprint_error("%s@%s:%d expected ] got %c", __FILE_NAME__, __func__,
-        __LINE__, str[*idx]);
+    pprint_error("expected ] got %c", str[*idx]);
     abort();
   }
   (*idx) += 1;
@@ -298,9 +296,8 @@ _parse_value(char *str, size_t *idx)
     return val;
   } else {
     pprint_error(
-        "%s@%s:%d expected object|array|string|true|false|null|number in json"
-        " %s %lu (aborting)",
-        __FILE_NAME__, __func__, __LINE__, &(str[*idx]), *idx);
+        "expected object|array|string|true|false|null|number in json"
+        "%s %lu (aborting)", &(str[*idx]), *idx);
     abort();
   }
 }
@@ -309,7 +306,7 @@ __json_value
 json_parse(char *str)
 {
   if (!str) {
-    pprint_error("%s@%s no string given to parse (aborting)");
+    pprint_error("%s", "no string given to parse (aborting)");
     abort();
   }
 
@@ -331,8 +328,7 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
   if (!tree ||
       (tree->t != JSON_TYPE_TRUE && tree->t != JSON_TYPE_FALSE &&
           tree->t != JSON_TYPE_NULL && tree->data == NULL)) {
-    pprint_error("the json received is not the same and therefore cannot be "
-                 "cache parsed (aborting)");
+    pprint_error("%s", "the json received is not the same and therefore cannot be cache parsed (aborting)");
     abort();
   }
 
@@ -364,7 +360,7 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
     }
     break;
   case JSON_TYPE_NUM:
-    pprint_error("invalid json type while parsing cached tree");
+    pprint_error("%s", "invalid json type while parsing cached tree");
     abort();
   }
 }
@@ -410,8 +406,8 @@ json_get_bool(__json_value val)
     return false;
   } else {
     pprint_error(
-        "%s@%s:%d expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
-        __FILE_NAME__, __func__, __LINE__, JSON_TYPE_STR[val->t]);
+        "expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
+        JSON_TYPE_STR[val->t]);
     abort();
   }
 }

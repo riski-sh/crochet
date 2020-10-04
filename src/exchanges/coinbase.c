@@ -1,5 +1,6 @@
 #include "coinbase.h"
 
+/*
 static void
 _subscribe(char *id, struct httpwss_session *coinbase_local)
 {
@@ -103,7 +104,7 @@ _parse_done(__json_object msg, coinbase_book **bid, coinbase_book **ask)
   __json_value _price = hashmap_get("price", msg);
 
   if (!_size || !_price) {
-    pprint_warn("skipping market done");
+    pprint_warn("%s", "skipping market done");
     return;
   }
 
@@ -190,7 +191,7 @@ _parse_match(__json_object msg, coinbase_book **bid, coinbase_book **ask)
     abort();
   }
 }
-
+*/
 /*
  * Pulls the full order book and starts processing the order book values.
  *
@@ -203,6 +204,7 @@ _parse_match(__json_object msg, coinbase_book **bid, coinbase_book **ask)
  * @param id id is really a char* and contains the id needed to pull the
  * coinbase full orderbook.
  */
+/*
 static void
 _coinbase_start(void *id)
 {
@@ -237,8 +239,10 @@ _coinbase_start(void *id)
   coinbase_book *ask_book = NULL;
 
   char *buffer = NULL;
-  struct httpwss_session *coinbase_rest =
-      httpwss_session_new(COINBASE_API, "443");
+
+  struct httpwss_session *coinbase_rest = NULL;
+  httpwss_session_new(COINBASE_API, "433", &coinbase_rest);
+
   http_get_request(coinbase_rest, full_book_request, &buffer);
 
   free(full_book_request);
@@ -336,18 +340,18 @@ _coinbase_start(void *id)
       num_msg = 1;
     }
 
-    /*
-    struct coinbase_book_level bid_top;
-    struct coinbase_book_level ask_top;
-    coinbase_book_get(bid_book, BOOK_BID, 1, &bid_top);
-    coinbase_book_get(bid_book, BOOK_ASK, 1, &ask_top);
+    // struct coinbase_book_level bid_top;
+    // struct coinbase_book_level ask_top;
+    // coinbase_book_get(bid_book, BOOK_BID, 1, &bid_top);
+    // coinbase_book_get(bid_book, BOOK_ASK, 1, &ask_top);
 
-    printf("%.2f %.8f\n", (double)(bid_top.level) / 100.0,
-        (double)(bid_top.total) / 100000000.0);
-        */
+    // printf("%.2f %.8f\n", (double)(bid_top.level) / 100.0,
+    //    (double)(bid_top.total) / 100000000.0);
   }
 }
+*/
 
+/*
 void
 exchanges_coinbase_init(void)
 {
@@ -387,3 +391,4 @@ exchanges_coinbase_init(void)
   json_free(prod_list_json);
   free(full_products);
 }
+*/

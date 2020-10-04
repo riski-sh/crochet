@@ -4,7 +4,7 @@
 #include <exchanges/exchanges.h>
 #include <ffjson/ffjson.h>
 #include <globals/globals.h>
-#include <httpws/http.h>
+#include <httpws/session.h>
 #include <pprint/pprint.h>
 #include <security/security.h>
 

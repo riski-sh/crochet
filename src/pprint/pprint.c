@@ -41,15 +41,15 @@ _pprint_time(char (*time)[TIME_STR_LEN])
       current_time.tv_nsec);
 }
 
-void __attribute__((__format__(__printf__, 1, 0)))
-pprint_info(const char *str, ...)
+void __attribute__((__format__(__printf__, 4, 0)))
+_pprint_info(const char *file, const char *func, const int line,
+    const char *str, ...)
 {
   char time[TIME_STR_LEN];
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s ", time);
-
+  printf("%s [INFO] %s@%s:%d ", time, file, func, line);
   va_list args;
   va_start(args, str);
   vprintf(str, args);
@@ -58,14 +58,16 @@ pprint_info(const char *str, ...)
   _pprint_unlock(stdout);
 }
 
-void __attribute__((__format__(__printf__, 1, 0)))
-pprint_warn(const char *str, ...)
+void __attribute__((__format__(__printf__, 4, 0)))
+_pprint_warn(const char *file, const char *func, const int line,
+    const char *str, ...)
 {
   char time[TIME_STR_LEN];
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s \x1b[93m", time);
+  printf("%s [WARN] %s@%s:%d \x1b[93m", time, file, func, line);
+
   va_list args;
   va_start(args, str);
   vprintf(str, args);
@@ -74,14 +76,15 @@ pprint_warn(const char *str, ...)
   _pprint_unlock(stdout);
 }
 
-void __attribute__((__format__(__printf__, 1, 0)))
-pprint_error(const char *str, ...)
+void __attribute__((__format__(__printf__, 4, 0)))
+_pprint_error(const char *file, const char *func, const int line,
+    const char *str, ...)
 {
   char time[TIME_STR_LEN];
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s \x1b[91m", time);
+  printf("%s [ERR ] %s@%s:%d \x1b[91m", time, file, func, line);
 
   va_list args;
   va_start(args, str);
