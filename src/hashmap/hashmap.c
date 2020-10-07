@@ -17,7 +17,7 @@ sdbm(char *str)
 }
 
 static void
-_map_list_add(struct _map_list **list, size_t ori_key, void *value)
+_map_list_add(struct _map_list **list, size_t ori_key, void *value, char *key)
 {
 
   struct _map_list *val = calloc(1, sizeof(struct _map_list));
@@ -25,6 +25,7 @@ _map_list_add(struct _map_list **list, size_t ori_key, void *value)
   *list = val;
   val->key = ori_key;
   val->value = value;
+  val->orgkey = key;
 }
 
 status_t
@@ -73,7 +74,7 @@ hashmap_put(char *key, void *value, struct hashmap *map)
   uint64_t bin = hash % map->num_bins;
 
   struct _map_list **ll = &(map->bins[bin]);
-  _map_list_add(ll, hash, value);
+  _map_list_add(ll, hash, value, key);
 }
 
 void *

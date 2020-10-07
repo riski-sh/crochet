@@ -1,5 +1,7 @@
 #include "oanda.h"
 
+static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
+
 /*
 static size_t
 _oanda_timetots(char *str)
@@ -68,9 +70,35 @@ exchanges_oanda_init(char *key)
 {
 
   // create a reusable record for openssl read
-  (void) key;
   struct tls_session *master_session = NULL;
-  tls_session_new(OANDA_API_ROOT, "443", &master_session);
+  if (tls_session_new(OANDA_API_ROOT, "443", &master_session) != STATUS_OK) {
+    pprint_error("%s", "|");
+    exit(1);
+  }
+
+  struct http11request *request = NULL;
+  if (http11request_new(master_session, &request) != STATUS_OK) {
+    pprint_error("%s", "|");
+    exit(1);
+  }
+
+  request->stub = strdup(V3_ACCOUNTS_FMT);
+  if (request->stub == NULL) {
+    // TODO
+  }
+
+  char *authtoken = malloc(strlen("Bearer ") + strlen(key) + 1);
+  memcpy(authtoken, "Bearer \x0", 8);
+  strcat(authtoken, key);
+
+  hashmap_put("Authorization", authtoken, request->headers);
+  // hashmap_put("Accept-Datetime-Format", "UNIX", request->headers);
+  hashmap_put("User-Agent", "crochet", request->headers);
+  hashmap_put("Content-Type", "application/json", request->headers);
+  hashmap_put("Accept", "*/*", request->headers);
+
+  char *response = NULL;
+  http11request_push(request, &response);
 
   /*
   char *response = NULL;

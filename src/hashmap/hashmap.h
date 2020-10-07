@@ -34,6 +34,7 @@ struct hashmap {
  */
 struct _map_list {
   size_t key;
+  char *orgkey;
   void *value;
   struct _map_list *next;
 };

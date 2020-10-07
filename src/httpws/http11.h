@@ -6,8 +6,12 @@
 #include <hashmap/hashmap.h>
 #include <status.h>
 #include <pprint/pprint.h>
+#include <string.h>
 
 #include "session.h"
+
+#define MAX_HTTP_REQUEST_SIZE 8192
+#define MAX_SINGLE_HTTP_HEADER 2048
 
 /*
  * List of supported request types
@@ -48,13 +52,40 @@ struct http11request {
    * the value of cache will be sent instead.
    */
   bool dirty;
+
+  /*
+   * The endpoint to query. Example if you would like to get example.com/abc
+   * the session would create a session to example.com and the stub would
+   * point to /abc
+   */
+  char *stub;
+
+  /*
+   * The length of the cache
+   */
+  int cache_len;
+
+  /*
+   * The session to send this request on
+   */
+  struct tls_session *session;
 };
 
 /*
  * Creates a new http11request
  *
  * @param _ret allocated *ret and creates an empty get request by default
+ * @param session
  */
-status_t http11request_new(struct http11request **_ret);
+status_t http11request_new(struct tls_session *session,
+    struct http11request **_ret);
+
+/*
+ * Performs a request given an http11request
+ *
+ * @param req the request to perform
+ * @param _data the response
+ */
+status_t http11request_push(struct http11request *req, char **_data);
 
 #endif
