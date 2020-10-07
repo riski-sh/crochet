@@ -29,3 +29,5 @@ node_modules
 *.js
 config.h
 *.tsbuildinfo
+crochet.bin
+obj/
