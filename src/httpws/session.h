@@ -60,7 +60,6 @@ struct tls_session {
    * the port of this active session
    */
   char *port;
-
 };
 
 /*
@@ -71,8 +70,8 @@ struct tls_session {
  * @param _session a place to allocate and store the new session
  * @return a status code for failure/success
  */
-status_t tls_session_new(char *endpoint, char *port,
-    struct tls_session **_session);
+status_t tls_session_new(
+    char *endpoint, char *port, struct tls_session **_session);
 
 /*
  * Cleans up the httpwss session that was created using the httpwss_session_new

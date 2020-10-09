@@ -15,8 +15,9 @@ void
 exchange_put(char *name, struct security *sec)
 {
   if (!securities) {
-    pprint_error("%s", "must call exchange_init before adding exchange data "
-                 "(aborting)");
+    pprint_error("%s",
+        "must call exchange_init before adding exchange data "
+        "(aborting)");
     abort();
   }
   hashmap_put(name, sec, securities);

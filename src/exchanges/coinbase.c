@@ -319,7 +319,8 @@ _coinbase_start(void *id)
     }
     default: {
       pprint_error(
-          "%s@%s:%d im not supposed to get message type message_type=%s (aborting)",
+          "%s@%s:%d im not supposed to get message type message_type=%s
+(aborting)",
           __FILE_NAME__, __func__, __LINE__, msg_type);
       abort();
     }

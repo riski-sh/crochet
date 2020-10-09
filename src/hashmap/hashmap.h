@@ -2,9 +2,9 @@
 #define HASHMAP_H
 
 #include <pprint/pprint.h>
+#include <status.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <status.h>
 
 /*
  *  Hash map struct is public to allow for users to define

@@ -1,11 +1,11 @@
 #ifndef HTTP1_1_H
 #define HTTP1_1_H
 
-#include <stdlib.h>
-#include <stdbool.h>
 #include <hashmap/hashmap.h>
-#include <status.h>
 #include <pprint/pprint.h>
+#include <status.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "session.h"
@@ -77,8 +77,8 @@ struct http11request {
  * @param _ret allocated *ret and creates an empty get request by default
  * @param session
  */
-status_t http11request_new(struct tls_session *session,
-    struct http11request **_ret);
+status_t http11request_new(
+    struct tls_session *session, struct http11request **_ret);
 
 /*
  * Performs a request given an http11request

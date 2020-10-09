@@ -32,38 +32,39 @@
  * Prints out a log message under the level info
  * @param str A constant string to print
  */
-void _pprint_info(const char *file, const char *func, const int line,
-    const char *str, ...);
+void _pprint_info(
+    const char *file, const char *func, const int line, const char *str, ...);
 
 /*
  * Prints out a log message under the level warning
  * @param str A constant string to print
  */
-void _pprint_warn(const char *file, const char *func, const int line,
-    const char *str, ...);
+void _pprint_warn(
+    const char *file, const char *func, const int line, const char *str, ...);
 
 /*
  * Prints out a log message under the level error
  * @param str A constant string to print
  */
-void _pprint_error(const char *file, const char *func, const int line,
-    const char *str, ...);
+void _pprint_error(
+    const char *file, const char *func, const int line, const char *str, ...);
 
-#define PPRINT_CHECK_ALLOC(PTR) do {\
-  if (!PTR) {\
-    pprint_error("%s@%s:%d %s == NULL *alloc failed", __FILE__, __func__,\
-        __LINE__, #PTR);\
-    abort();\
-  }\
-} while (0);
+#define PPRINT_CHECK_ALLOC(PTR)                                             \
+  do {                                                                      \
+    if (!PTR) {                                                             \
+      pprint_error("%s@%s:%d %s == NULL *alloc failed", __FILE__, __func__, \
+          __LINE__, #PTR);                                                  \
+      abort();                                                              \
+    }                                                                       \
+  } while (0);
 
-#define pprint_info(FMT, ...) _pprint_info(__FILE__, __func__, __LINE__, FMT, \
-  __VA_ARGS__);
+#define pprint_info(FMT, ...) \
+  _pprint_info(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__);
 
-#define pprint_warn(FMT, ...) _pprint_warn(__FILE__, __func__, __LINE__, FMT, \
-  __VA_ARGS__);
+#define pprint_warn(FMT, ...) \
+  _pprint_warn(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__);
 
-#define pprint_error(FMT, ...) _pprint_error(__FILE__, __func__, __LINE__, FMT, \
-  __VA_ARGS__);
+#define pprint_error(FMT, ...) \
+  _pprint_error(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__);
 
 #endif

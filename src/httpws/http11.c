@@ -1,10 +1,11 @@
 #include <stdlib.h>
+
 #include "http11.h"
 
-#define STR_APPEND_STR(VAR, IDX, DATA)\
-  do {\
-    memcpy(&((VAR)[IDX]), DATA, strlen(DATA));\
-    IDX += strlen(DATA);\
+#define STR_APPEND_STR(VAR, IDX, DATA)         \
+  do {                                         \
+    memcpy(&((VAR)[IDX]), DATA, strlen(DATA)); \
+    IDX += strlen(DATA);                       \
   } while (0)
 
 status_t
@@ -14,8 +15,9 @@ http11request_new(struct tls_session *session, struct http11request **_ret)
    * Make sure that the pointer is not allocated ie set to null
    */
   if (*_ret != NULL) {
-    pprint_info("%s", "will not allocate a pointer that doesn't have a value "
-                      "of null");
+    pprint_info("%s",
+        "will not allocate a pointer that doesn't have a value "
+        "of null");
     return STATUS_EXPECTED_NULL;
   }
 
@@ -104,7 +106,7 @@ _http11request_read(struct tls_session *session, char *data)
         pprint_error("expected 1 byte got SSL error %d", ret);
         abort();
       }
-    } while (header[headeridx-1] != '\n');
+    } while (header[headeridx - 1] != '\n');
 
     header[headeridx] = '\x0';
 
@@ -118,8 +120,7 @@ _http11request_read(struct tls_session *session, char *data)
       if (strncmp("Content-Length: ", header, 16) == 0) {
         content_length = strtod(&(header[16]), NULL);
         found_content_length = true;
-      }
-      else if (strncmp("Transfer-Encoding: ", header, 19)) {
+      } else if (strncmp("Transfer-Encoding: ", header, 19)) {
         found_content_length = true;
       }
     }
@@ -135,7 +136,7 @@ _http11request_read(struct tls_session *session, char *data)
         found_connection_data = true;
       }
     }
-    (void) found_connection_data;
+    (void)found_connection_data;
 
   } while ((header[0] != '\r' && header[1] != '\n'));
 
@@ -165,9 +166,9 @@ _http11request_read(struct tls_session *session, char *data)
      */
   }
 
-  (void) content_length;
-  (void) isclosed;
-  (void) data;
+  (void)content_length;
+  (void)isclosed;
+  (void)data;
 }
 
 static void
@@ -196,7 +197,7 @@ _http11request_cache(struct http11request *req)
     while (bin) {
       STR_APPEND_STR(req->cache, cache_idx, bin->orgkey);
       STR_APPEND_STR(req->cache, cache_idx, ": ");
-      STR_APPEND_STR(req->cache, cache_idx, (char*)bin->value);
+      STR_APPEND_STR(req->cache, cache_idx, (char *)bin->value);
       STR_APPEND_STR(req->cache, cache_idx, "\r\n");
       bin = bin->next;
     }
@@ -220,11 +221,12 @@ http11request_push(struct http11request *req, char **_data)
   }
 
   /*
-   * Data must be a non null pointer and it is assumed to have an allocation of MAX_HTTP_REQUEST_SIZE
+   * Data must be a non null pointer and it is assumed to have an allocation of
+   * MAX_HTTP_REQUEST_SIZE
    */
   // if (*_data == NULL) {
-  //   pprint_error("%s", "data must be a non null value and is assumed to be allocated to MAX_HTTP_REQUEST_SIZE");
-  //   return STATUS_UNKNOWN_ERROR;
+  //   pprint_error("%s", "data must be a non null value and is assumed to be
+  //   allocated to MAX_HTTP_REQUEST_SIZE"); return STATUS_UNKNOWN_ERROR;
   // }
 
   /*
@@ -232,7 +234,8 @@ http11request_push(struct http11request *req, char **_data)
    */
   if (req->dirty) {
     _http11request_cache(req);
-    pprint_warn("\n"
+    pprint_warn(
+        "\n"
         "==================================== cached ====================================\n"
         "%s"
         "================================================================================",

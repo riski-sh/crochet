@@ -2,8 +2,7 @@
 #include "status.h"
 
 status_t
-tls_session_new(char *endpoint, char *port,
-    struct tls_session **_session)
+tls_session_new(char *endpoint, char *port, struct tls_session **_session)
 {
 
   if (*_session != NULL) {

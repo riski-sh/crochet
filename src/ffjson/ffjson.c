@@ -92,8 +92,7 @@ static __json_object
 _parse_object(char *str, size_t *idx, __json_object cached)
 {
   if (str[*idx] != '{') {
-    pprint_error("expected { got %c (aborting)", __FILE_NAME__,
-        str[*idx]);
+    pprint_error("expected { got %c (aborting)", __FILE_NAME__, str[*idx]);
 
     pprint_info("%s", &str[(*idx)]);
     abort();
@@ -295,9 +294,9 @@ _parse_value(char *str, size_t *idx)
     (*idx) += 4;
     return val;
   } else {
-    pprint_error(
-        "expected object|array|string|true|false|null|number in json"
-        "%s %lu (aborting)", &(str[*idx]), *idx);
+    pprint_error("expected object|array|string|true|false|null|number in json"
+                 "%s %lu (aborting)",
+        &(str[*idx]), *idx);
     abort();
   }
 }
@@ -328,7 +327,8 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
   if (!tree ||
       (tree->t != JSON_TYPE_TRUE && tree->t != JSON_TYPE_FALSE &&
           tree->t != JSON_TYPE_NULL && tree->data == NULL)) {
-    pprint_error("%s", "the json received is not the same and therefore cannot be cache parsed (aborting)");
+    pprint_error("%s",
+        "the json received is not the same and therefore cannot be cache parsed (aborting)");
     abort();
   }
 
@@ -405,8 +405,7 @@ json_get_bool(__json_value val)
   } else if (val->t == JSON_TYPE_FALSE) {
     return false;
   } else {
-    pprint_error(
-        "expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
+    pprint_error("expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
         JSON_TYPE_STR[val->t]);
     abort();
   }
