@@ -15,7 +15,9 @@
  * Starts an oanda exchange feed
  *
  * @param key the key needed to connect to oanda
+ * the type of this key is void to fit the prototype
+ * of a pthread
  */
-void exchanges_oanda_init(char *key);
+void *exchanges_oanda_init(void *key);
 
 #endif

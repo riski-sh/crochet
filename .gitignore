@@ -31,3 +31,5 @@ config.h
 *.tsbuildinfo
 crochet.bin
 obj/
+cert.pem
+key.pem

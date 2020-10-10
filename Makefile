@@ -1,5 +1,5 @@
 CC?=gcc
-CFLAGS?=-Os -g -march=native $(shell pkgconf --cflags openssl)
+CFLAGS?=-Os -g -m64 $(shell pkgconf --cflags openssl) -lpthread
 LFLAGS?=$(shell pkgconf --libs openssl)
 WFLAGS?=-Wall -Wextra -Wpedantic -Werror
 FFLAGS?=-fasynchronous-unwind-tables -fexceptions

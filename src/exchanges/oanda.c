@@ -3,7 +3,6 @@
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
 static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
 
-
 static size_t
 _oanda_timetots(char *str)
 {
@@ -66,8 +65,8 @@ _oanda_gen_currency_list(char *response, int *num_instruments)
   return currency_list;
 }
 
-void
-exchanges_oanda_init(char *key)
+void *
+exchanges_oanda_init(void *key)
 {
 
   // create a reusable record for openssl read
@@ -138,7 +137,6 @@ exchanges_oanda_init(char *key)
   free(response);
   response = NULL;
 
-
   request->stub = instrument_update_full;
   request->dirty = true;
 
@@ -148,11 +146,7 @@ exchanges_oanda_init(char *key)
   struct timespec start_time;
   struct timespec end_time;
 
-#if defined(__FreeBSD__)
-  clock_gettime(CLOCK_REALTIME_PRECISE, &start_time);
-#else
   clock_gettime(CLOCK_REALTIME, &start_time);
-#endif
 
   __json_value _response_root = NULL;
 
@@ -216,11 +210,7 @@ exchanges_oanda_init(char *key)
 
     num_messages += 1;
 
-#if defined(__FreeBSD__)
-    clock_gettime(CLOCK_REALTIME_PRECISE, &end_time);
-#else
     clock_gettime(CLOCK_REALTIME, &end_time);
-#endif
 
     if (end_time.tv_sec - start_time.tv_sec >=
         (int)OANDA_PRINT_NTERVAL_SECONDS) {
@@ -230,13 +220,9 @@ exchanges_oanda_init(char *key)
 
       num_messages = 0;
       num_valid_updates = 0;
-#if defined(__FreeBSD__)
-      clock_gettime(CLOCK_REALTIME_PRECISE, &start_time);
-      clock_gettime(CLOCK_REALTIME_PRECISE, &end_time);
-#else
+
       clock_gettime(CLOCK_REALTIME, &start_time);
       clock_gettime(CLOCK_REALTIME, &end_time);
-#endif
     }
   }
 
@@ -247,4 +233,7 @@ exchanges_oanda_init(char *key)
   free(instrument_update_end);
   free(id);
   tls_session_free(&master_session);
+
+  pprint_info("%s", "finished oanda cleanup");
+  return NULL;
 }

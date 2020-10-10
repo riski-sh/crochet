@@ -154,7 +154,6 @@ tls_session_reconnect(struct tls_session *session)
   SSL_CTX_free(ctx);
   freeaddrinfo(info);
 
-
   return STATUS_OK;
 }
 

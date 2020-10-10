@@ -59,8 +59,8 @@ _http11request_parse_content_length(SSL *ssl, char **data, int content_length)
   *data = realloc(*data, (sizeof(char) * content_length) + 1);
 
   if (*data == NULL) {
-    pprint_error("unable to allocate %d bytes for HTTP/1.1 response",
-        content_length);
+    pprint_error(
+        "unable to allocate %d bytes for HTTP/1.1 response", content_length);
     return STATUS_ALLOC_ERR;
   }
 
@@ -99,9 +99,9 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
         exit(1);
       }
       chunkidx += 1;
-    } while ((chunk_len[chunkidx-1] != '\n'));
+    } while ((chunk_len[chunkidx - 1] != '\n'));
 
-    chunk_len[chunkidx-2] = '\x0';
+    chunk_len[chunkidx - 2] = '\x0';
     chunk_size = strtol(chunk_len, NULL, 16);
 
     if (chunk_size != 0) {
@@ -298,7 +298,6 @@ _http11request_cache(struct http11request *req)
   (req->cache)[cache_idx] = '\x0';
 
   req->cache_len = strlen(req->cache);
-
 }
 
 status_t

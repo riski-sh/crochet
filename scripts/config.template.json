@@ -6,5 +6,9 @@
   "coinbase": {
     "key": "your_api_key",
     "online": false
+  },
+  "server": {
+    "cert": "cert.pem",
+    "key": "key.pem"
   }
 }
