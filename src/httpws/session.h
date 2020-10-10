@@ -32,6 +32,11 @@
 #include <errno.h>
 
 /*
+ * closing the socket
+ */
+#include <unistd.h>
+
+/*
  * The current length of the pre encoded key needed for web socket
  * communication.
  */
@@ -81,5 +86,13 @@ status_t tls_session_new(
  * httpwss_session_new
  */
 status_t tls_session_free(struct tls_session **session);
+
+/*
+ * If the connection is closed and you would like to reconnect the same way the
+ * initial connection call this function.
+ *
+ * @param session the session to reconnect to
+ */
+status_t tls_session_reconnect(struct tls_session *session);
 
 #endif

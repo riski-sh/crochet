@@ -49,6 +49,91 @@ http11request_new(struct tls_session *session, struct http11request **_ret)
   return STATUS_OK;
 }
 
+static status_t
+_http11request_parse_content_length(SSL *ssl, char **data, int content_length)
+{
+
+  /*
+   * Allocate exact amount since we know how much is coming
+   */
+  *data = realloc(*data, (sizeof(char) * content_length) + 1);
+
+  if (*data == NULL) {
+    pprint_error("unable to allocate %d bytes for HTTP/1.1 response",
+        content_length);
+    return STATUS_ALLOC_ERR;
+  }
+
+  int read = SSL_read(ssl, *data, content_length);
+  if (read != content_length) {
+    pprint_error("unable to read %d bytes openssl returned %d instead",
+        content_length, read);
+    exit(1);
+  }
+  (*data)[content_length] = '\x0';
+  pprint_info("[DEBUG] read %s", *data);
+
+  return STATUS_OK;
+}
+
+static status_t
+_http11request_parse_chuncked(SSL *ssl, char **data)
+{
+
+  bool realloc_data = (*data == NULL);
+
+  char chunk_len[MAX_CHUNK_LENGTH];
+  long chunk_size = 0;
+  int chunkidx = 0;
+
+  int total_allocated = 0;
+  int data_read = 0;
+  int total_read = 0;
+
+  do {
+    chunkidx = 0;
+    do {
+      int ret = SSL_read(ssl, &(chunk_len)[chunkidx], 1);
+      if (ret != 1) {
+        pprint_error("unable to read 1 bytes openssl returned %d instead", ret);
+        exit(1);
+      }
+      chunkidx += 1;
+    } while ((chunk_len[chunkidx-1] != '\n'));
+
+    chunk_len[chunkidx-2] = '\x0';
+    chunk_size = strtol(chunk_len, NULL, 16);
+
+    if (chunk_size != 0) {
+      total_allocated += chunk_size;
+
+      if (realloc_data) {
+        (*data) = realloc(*data, total_allocated + 1);
+      }
+
+      long toread = chunk_size;
+
+      while (toread != 0) {
+        int ret = SSL_read(ssl, &((*data)[total_read]), toread);
+        if (ret < 0) {
+          pprint_error("unable to read %ldd bytes openssl returned %d instead",
+              chunk_size, ret);
+        }
+        toread -= ret;
+        data_read += ret;
+        total_read += ret;
+      }
+      SSL_read(ssl, chunk_len, 2);
+
+      memset(chunk_len, '\x0', chunkidx);
+    }
+  } while (chunk_size != 0);
+
+  SSL_read(ssl, chunk_len, 2);
+
+  return STATUS_OK;
+}
+
 static void
 _http11request_read(struct tls_session *session, char **data)
 {
@@ -78,7 +163,7 @@ _http11request_read(struct tls_session *session, char **data)
   /*
    * Set to true if the server has sent a Connect: Close
    */
-  // bool isclosed = false;
+  bool isclosed = false;
   bool found_connection_data = false;
 
   /*
@@ -129,12 +214,12 @@ _http11request_read(struct tls_session *session, char **data)
        */
       if (strncmp("Connection: close", header, 17) == 0) {
         found_connection_data = true;
-        // isclosed = true;
+        pprint_warn("%s", "connection is closing...");
+        isclosed = true;
       } else if (strncmp("Connection: keep-alive", header, 22) == 0) {
         found_connection_data = true;
       }
     }
-    (void)found_connection_data;
 
   } while ((header[0] != '\r' && header[1] != '\n'));
 
@@ -158,25 +243,21 @@ _http11request_read(struct tls_session *session, char **data)
     /*
      * Parse the chuncked response
      */
-    pprint_info("%s", "parsing chuncked data...");
-    exit(1);
+    _http11request_parse_chuncked(ssl, data);
   } else {
     /*
      * Parse the response as a content length
      */
-    /*
-     * Allocate the data
-     */
-    *data = realloc(*data, (sizeof(char) * content_length) + 1);
+    _http11request_parse_content_length(ssl, data, content_length);
+  }
 
-    int read = SSL_read(ssl, *data, content_length);
-    if (read != content_length) {
-      pprint_error("unable to read %d bytes openssl returned %d instead",
-          content_length, read);
-      exit(1);
-    }
-    (*data)[content_length] = '\x0';
-    pprint_info("[DEBUG] read %s", *data);
+  /*
+   * if the connection was set to close then we should re establish the
+   * connection for seamless polling
+   */
+  if (isclosed) {
+    pprint_warn("%s", "reestablishing connection...");
+    tls_session_reconnect(session);
   }
 }
 
@@ -185,6 +266,7 @@ _http11request_cache(struct http11request *req)
 {
 
   if (req->cache == NULL) {
+    pprint_info("%s", "allocating");
     req->cache = malloc(MAX_HTTP_REQUEST_SIZE);
   }
 
@@ -212,9 +294,11 @@ _http11request_cache(struct http11request *req)
     }
   }
 
-  STR_APPEND_STR(req->cache, cache_idx, "\r\n\x0");
+  STR_APPEND_STR(req->cache, cache_idx, "\r\n");
+  (req->cache)[cache_idx] = '\x0';
 
   req->cache_len = strlen(req->cache);
+
 }
 
 status_t
@@ -250,7 +334,6 @@ http11request_push(struct http11request *req, char **_data)
    * Send the data to the remote host
    */
   int ret = SSL_write(req->session->ssl, req->cache, req->cache_len);
-  pprint_info("[DEBUG] sent %d bytes", ret);
   if (ret != req->cache_len) {
     /*
      * We didn't send all the data something whent wrong

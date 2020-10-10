@@ -3,7 +3,7 @@
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
 static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
 
-/*
+
 static size_t
 _oanda_timetots(char *str)
 {
@@ -11,7 +11,7 @@ _oanda_timetots(char *str)
   val *= 1000000000;
   return (size_t)val;
 }
-*/
+
 static char *
 _oanda_first_id(char *response)
 {
@@ -94,7 +94,7 @@ exchanges_oanda_init(char *key)
   strcat(authtoken, key);
 
   hashmap_put("Authorization", authtoken, request->headers);
-  // hashmap_put("Accept-Datetime-Format", "UNIX", request->headers);
+  hashmap_put("Accept-DateTime-Format", "UNIX", request->headers);
   hashmap_put("User-Agent", "crochet", request->headers);
   hashmap_put("Content-Type", "application/json", request->headers);
   hashmap_put("Accept", "*/*", request->headers);
@@ -103,7 +103,9 @@ exchanges_oanda_init(char *key)
   http11request_push(request, &response);
 
   char *id = _oanda_first_id(response);
+
   free(response);
+  response = NULL;
 
   pprint_info("using oanda account id %s", id);
 
@@ -136,10 +138,9 @@ exchanges_oanda_init(char *key)
   free(response);
   response = NULL;
 
-  /*
-  char *poll_request_cached =
-      http_get_request_generate(master_session, instrument_update_full);
-  int poll_request_cached_size = (int)strlen(poll_request_cached);
+
+  request->stub = instrument_update_full;
+  request->dirty = true;
 
   int num_messages = 0;
   int num_valid_updates = 0;
@@ -156,13 +157,14 @@ exchanges_oanda_init(char *key)
   __json_value _response_root = NULL;
 
   response = NULL;
-  size_t allocated = 0;
-  while (globals_continue(NULL)) {
-    http_get_request_cached(master_session, poll_request_cached,
-        poll_request_cached_size, &response, &allocated);
 
+  pprint_info("%s", "starting oanda main loop...");
+  while (globals_continue(NULL)) {
+    http11request_push(request, &response);
+
+    /*
     if (response == NULL) {
-      pprint_warn("oanda: cloudflare disconnected reconnecting...");
+      pprint_warn("%s", "oanda: cloudflare disconnected reconnecting...");
       httpwss_session_free(master_session);
       master_session = httpwss_session_new(OANDA_API_ROOT, "443");
       master_session->hashauth = true;
@@ -171,6 +173,7 @@ exchanges_oanda_init(char *key)
       allocated = 0;
       continue;
     }
+    */
 
     if (_response_root == NULL) {
       _response_root = json_parse(response);
@@ -237,15 +240,11 @@ exchanges_oanda_init(char *key)
     }
   }
 
-  pprint_info("cleaning up exchange oanda...");
+  pprint_info("%s", "cleaning up exchange oanda...");
   free(response);
   json_free(_response_root);
   free(instrument_update_full);
   free(instrument_update_end);
-  free(poll_request_cached);
   free(id);
-  httpwss_session_free(master_session);
-  */
-
   tls_session_free(&master_session);
 }

@@ -12,6 +12,7 @@
 
 #define MAX_HTTP_REQUEST_SIZE 8192
 #define MAX_SINGLE_HTTP_HEADER 2048
+#define MAX_CHUNK_LENGTH 13
 
 /*
  * List of supported request types
