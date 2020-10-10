@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include "http11.h"
 
 #define STR_APPEND_STR(VAR, IDX, DATA)         \
@@ -52,7 +50,7 @@ http11request_new(struct tls_session *session, struct http11request **_ret)
 }
 
 static void
-_http11request_read(struct tls_session *session, char *data)
+_http11request_read(struct tls_session *session, char **data)
 {
   /*
    * Read through the headers
@@ -80,7 +78,7 @@ _http11request_read(struct tls_session *session, char *data)
   /*
    * Set to true if the server has sent a Connect: Close
    */
-  bool isclosed = false;
+  // bool isclosed = false;
   bool found_connection_data = false;
 
   /*
@@ -120,7 +118,7 @@ _http11request_read(struct tls_session *session, char *data)
       if (strncmp("Content-Length: ", header, 16) == 0) {
         content_length = strtod(&(header[16]), NULL);
         found_content_length = true;
-      } else if (strncmp("Transfer-Encoding: ", header, 19)) {
+      } else if (strncmp("Transfer-Encoding: ", header, 19) == 0) {
         found_content_length = true;
       }
     }
@@ -131,7 +129,7 @@ _http11request_read(struct tls_session *session, char *data)
        */
       if (strncmp("Connection: close", header, 17) == 0) {
         found_connection_data = true;
-        isclosed = true;
+        // isclosed = true;
       } else if (strncmp("Connection: keep-alive", header, 22) == 0) {
         found_connection_data = true;
       }
@@ -160,15 +158,26 @@ _http11request_read(struct tls_session *session, char *data)
     /*
      * Parse the chuncked response
      */
+    pprint_info("%s", "parsing chuncked data...");
+    exit(1);
   } else {
     /*
      * Parse the response as a content length
      */
-  }
+    /*
+     * Allocate the data
+     */
+    *data = realloc(*data, (sizeof(char) * content_length) + 1);
 
-  (void)content_length;
-  (void)isclosed;
-  (void)data;
+    int read = SSL_read(ssl, *data, content_length);
+    if (read != content_length) {
+      pprint_error("unable to read %d bytes openssl returned %d instead",
+          content_length, read);
+      exit(1);
+    }
+    (*data)[content_length] = '\x0';
+    pprint_info("[DEBUG] read %s", *data);
+  }
 }
 
 static void
@@ -224,22 +233,16 @@ http11request_push(struct http11request *req, char **_data)
    * Data must be a non null pointer and it is assumed to have an allocation of
    * MAX_HTTP_REQUEST_SIZE
    */
-  // if (*_data == NULL) {
-  //   pprint_error("%s", "data must be a non null value and is assumed to be
-  //   allocated to MAX_HTTP_REQUEST_SIZE"); return STATUS_UNKNOWN_ERROR;
-  // }
+  if (*_data == NULL) {
+    pprint_warn("allocation guarenteed for response to %s", req->stub);
+  }
 
   /*
    * If this is dirty cache the request and remove the old cache
    */
   if (req->dirty) {
     _http11request_cache(req);
-    pprint_warn(
-        "\n"
-        "==================================== cached ====================================\n"
-        "%s"
-        "================================================================================",
-        req->cache);
+    pprint_warn("generating cached http request\n=>\n%s<=", req->cache);
     req->dirty = false;
   }
 
@@ -260,7 +263,7 @@ http11request_push(struct http11request *req, char **_data)
    * Read the response
    */
   // TODO
-  _http11request_read(req->session, *_data);
+  _http11request_read(req->session, _data);
 
   return STATUS_OK;
 }

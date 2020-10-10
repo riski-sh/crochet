@@ -1,6 +1,7 @@
 #include "oanda.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
+static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
 
 /*
 static size_t
@@ -10,7 +11,7 @@ _oanda_timetots(char *str)
   val *= 1000000000;
   return (size_t)val;
 }
-
+*/
 static char *
 _oanda_first_id(char *response)
 {
@@ -64,7 +65,7 @@ _oanda_gen_currency_list(char *response, int *num_instruments)
   json_free(_root);
   return currency_list;
 }
-*/
+
 void
 exchanges_oanda_init(char *key)
 {
@@ -84,7 +85,8 @@ exchanges_oanda_init(char *key)
 
   request->stub = strdup(V3_ACCOUNTS_FMT);
   if (request->stub == NULL) {
-    // TODO
+    pprint_error("%s", "unable to duplicate stub");
+    exit(1);
   }
 
   char *authtoken = malloc(strlen("Bearer ") + strlen(key) + 1);
@@ -100,21 +102,20 @@ exchanges_oanda_init(char *key)
   char *response = NULL;
   http11request_push(request, &response);
 
-  /*
-  char *response = NULL;
-  http_get_request(master_session, "/v3/accounts", &response);
-
   char *id = _oanda_first_id(response);
   free(response);
 
+  pprint_info("using oanda account id %s", id);
+
   int get_instrument_size = 0;
-  get_instrument_size =
-      snprintf(NULL, 0, "/v3/accounts/%s/instruments", id) + 1;
+  get_instrument_size = snprintf(NULL, 0, V3_ACCOUNT_INSTRUMENTS, id) + 1;
 
   char *get_instrument_str = malloc((size_t)get_instrument_size * sizeof(char));
   sprintf(get_instrument_str, "/v3/accounts/%s/instruments", id);
+  request->stub = get_instrument_str;
 
-  http_get_request(master_session, get_instrument_str, &response);
+  request->dirty = true;
+  http11request_push(request, &response);
   free(get_instrument_str);
 
   int number_monitored = 0;
@@ -135,6 +136,7 @@ exchanges_oanda_init(char *key)
   free(response);
   response = NULL;
 
+  /*
   char *poll_request_cached =
       http_get_request_generate(master_session, instrument_update_full);
   int poll_request_cached_size = (int)strlen(poll_request_cached);
