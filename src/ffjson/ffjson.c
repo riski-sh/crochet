@@ -1,14 +1,27 @@
 #include "ffjson.h"
 
-char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
-  "JSON_TYPE_NUMBER", "JSON_TYPE_STRING", "JSON_TYPE_TRUE", "JSON_TYPE_FALSE",
-  "JSON_TYPE_NULL" };
+/* a mapping of the json enum type to its string equivelent */
+char *JSON_TYPE_STR[JSON_TYPE_NUM] = {
+  "JSON_TYPE_OBJECT",
+  "JSON_TYPE_ARRAY",
+  "JSON_TYPE_NUMBER",
+  "JSON_TYPE_STRING",
+  "JSON_TYPE_TRUE",
+  "JSON_TYPE_FALSE",
+  "JSON_TYPE_NULL"
+};
 
-// fwd declaration of the few functions needed to be recursive in the
-// processing
+/* parse value is recursive and needs to have a forward declaration */
 static __json_value _parse_value(char *str, size_t *idx);
 
-__always_inline static void
+/**
+ * Parses whitespace characters that are valid in JSON
+ *
+ * @param str a pointer to the entire string that is being processed
+ * @param idx the index of where to start, idx gets incremented and stops
+ * incrementing when str[idx] is no longer a whitespace character
+ */
+static void
 _parse_whitespace(char *str, size_t *idx)
 {
   while (str[*idx] == ' ' || str[*idx] == '\n' || str[*idx] == '\t' ||
@@ -17,13 +30,36 @@ _parse_whitespace(char *str, size_t *idx)
   }
 }
 
+/**
+ * Positions the idx pointer to the beginning of the value after the value
+ * seperator.
+ *
+ * @param str a pointer  to the entire string that is being processed
+ * @param idx the index of where to start, idx gets incrementd and stops
+ * at the beginning of the value
+ *
+ * @return true if the value seperator (,) was found false if there is no
+ * value seperator
+ */
 static bool
 _parse_value_seperator(char *str, size_t *idx)
 {
+
+  /* parse the whitespace before the value */
   _parse_whitespace(str, idx);
+
+  /*
+   * determine if the value seperator denoted by a , exists after the
+   * whitespace
+   */
   if (str[*idx] == ',') {
+
+    /* move past the comma */
     (*idx) += 1;
+
+    /* continue skipping the whitespace until no more whitespace */
     _parse_whitespace(str, idx);
+
     return true;
   }
   return false;
@@ -33,33 +69,41 @@ static __json_string
 _parse_string(char *str, size_t *idx)
 {
 
+  /* a string must begin with a " no matter what so make sure we start at it */
   if (str[*idx] != '"') {
-    pprint_error(
-        "expected \" but got %c while parsing a string (aborting)", str[*idx]);
+    pprint_error("expected \" but got %c while parsing a string (aborting)",
+        str[*idx]);
     abort();
   }
-  // only gets called if str[*idx]
-  // is a quote no need to compare
+
+  /* skip past the " since it isn't part of the string value */
   (*idx) += 1;
 
+  /* mark the beginning on the string */
   char *str_begining = &(str[*idx]);
 
-  // loop through all the characters in the string
-  // while (_valid_character(str, idx))
-  //  ;
+  /*
+   * loop through all the characters until an unescped " comes to
+   * mark the end of the string
+   */
   while (str[*idx] != (char)'"' && str[(*idx) - 1] != (char)'\\') {
     (*idx) += 1;
   }
 
-  // we only get here if we have reached the end of the string
-  // therefore str[*idx] must equal " and str[*idx - 1] is not
-  // equal to a back slash
-
-  // Since this is a valid string some trickery will be here to avoid
-  // creating a new string. Simply turn the ending " into a null character
-  // and return a pointer to the beginning of the string.
+  /*
+   * we only get here if we have reached the end of the string
+   * therefore str[*idx] must equal " and str[*idx - 1] is not
+   * equal to a back slash
+   * Since this is a valid string some trickery will be here to avoid
+   * creating a new string. Simply turn the ending " into a null character
+   * and return a pointer to the beginning of the string.
+   */
   str[*idx] = '\x0';
+
+  /* increment one step past the null pointer that was just set */
   (*idx) += 1;
+
+  /* return the in place string to save on lots of mallocs */
   return str_begining;
 }
 
