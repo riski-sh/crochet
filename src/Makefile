@@ -1,5 +1,5 @@
 main.bin : exchanges.a ffjson.a finmath.a globals.a hashmap.a \
-	httpws.a orderbooks.a pprint.a security.a
+	httpws.a orderbooks.a pprint.a security.a io.a
 	$(CC) $(CFLAGS) $(WFLAGS) $(FFLAGS) $(IFLAGS) $(LFLAGS) \
 		-o $(OBJDIR)/../crochet.bin \
 		main.c \
@@ -11,7 +11,8 @@ main.bin : exchanges.a ffjson.a finmath.a globals.a hashmap.a \
 		$(OBJDIR)/httpws/httpws.a \
 		$(OBJDIR)/orderbooks/orderbooks.a \
 		$(OBJDIR)/pprint/pprint.a \
-		$(OBJDIR)/security/security.a
+		$(OBJDIR)/security/security.a \
+		$(OBJDIR)/io/io.a
 
 exchanges.a :
 	@$(MAKE) -C exchanges
@@ -39,3 +40,6 @@ pprint.a :
 
 security.a :
 	@$(MAKE) -C security
+
+io.a :
+	@$(MAKE) -C io

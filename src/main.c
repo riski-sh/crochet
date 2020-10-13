@@ -6,7 +6,6 @@
 
 #include <exchanges/exhangesall.h>
 #include <globals/globals.h>
-#include <httpws/server.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -16,6 +15,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
+#include <io/web.h>
 
 static __json_value
 _load_config(char *file, char **raw)
@@ -111,25 +111,8 @@ main(int argc, char **argv)
     }
   }
 
-  pthread_t server_mainloop = pthread_self();
-
-  pprint_info("%s", "starting server...");
-  __json_object _server = json_get_object(hashmap_get("server", config));
-  if (_server != NULL) {
-    __json_string cert = json_get_string(hashmap_get("cert", _server));
-    __json_string key = json_get_string(hashmap_get("key", _server));
-
-    pprint_info("using cert located at %s", cert);
-    pprint_info("using key located at %s", key);
-
-    struct server_config cfg;
-    cfg.cert = cert;
-    cfg.key = key;
-
-    if (pthread_create(&server_mainloop, NULL, &server_serv, &cfg)) {
-      fprintf(stderr, "Error creating thread\n");
-    }
-  }
+  pprint_info("%s", "starting webserver...");
+  web_init();
 
   if (oanda_mainloop != pthread_self()) {
     pthread_join(oanda_mainloop, NULL);
@@ -137,8 +120,6 @@ main(int argc, char **argv)
   }
 
   pprint_info("%s", "cleaning up main...");
-  pthread_kill(server_mainloop, SIGINT);
-  pprint_info("%s", "killed server");
 
   free(_config_raw);
   json_free(_config_root);
