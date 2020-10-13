@@ -1,7 +1,7 @@
 main.bin : exchanges.a ffjson.a finmath.a globals.a hashmap.a \
 	httpws.a orderbooks.a pprint.a security.a io.a
 	$(CC) $(CFLAGS) $(WFLAGS) $(FFLAGS) $(IFLAGS) $(LFLAGS) \
-		-o $(OBJDIR)/../crochet.bin \
+		-o $(OBJDIR)/crochet.bin \
 		main.c \
 		$(OBJDIR)/exchanges/exchanges.a \
 		$(OBJDIR)/ffjson/ffjson.a \
