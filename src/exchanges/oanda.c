@@ -1,3 +1,6 @@
+#include <X11/X.h>
+#include <X11/Xlib.h>
+
 #include "oanda.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
@@ -224,9 +227,20 @@ exchanges_oanda_init(void *key)
       clock_gettime(CLOCK_REALTIME, &start_time);
       clock_gettime(CLOCK_REALTIME, &end_time);
     }
+
+    Display *dis = NULL;
+    Window w;
+    client_getdisplay(&dis);
+    client_getwindow(&w);
+
+    XEvent e;
+    e.type = Expose;
+
+    XSendEvent(dis, w, false, NoEventMask, &e);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");
+
   free(response);
   json_free(_response_root);
   free(instrument_update_full);

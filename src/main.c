@@ -4,6 +4,7 @@
  * (C) washcloth et al.
  */
 
+#include <client/client.h>
 #include <exchanges/exhangesall.h>
 #include <globals/globals.h>
 #include <openssl/crypto.h>
@@ -15,7 +16,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
-#include <io/web.h>
 
 static __json_value
 _load_config(char *file, char **raw)
@@ -111,8 +111,8 @@ main(int argc, char **argv)
     }
   }
 
-  pprint_info("%s", "starting webserver...");
-  web_init();
+  pprint_info("%s", "starting client gui");
+  client_start();
 
   if (oanda_mainloop != pthread_self()) {
     pthread_join(oanda_mainloop, NULL);

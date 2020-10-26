@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define QUOTE "\""
+
 typedef struct hashmap *__json_object;
 typedef struct json_array *__json_array;
 typedef double *__json_number;
@@ -26,7 +28,6 @@ enum JSON_TYPE {
   JSON_TYPE_TRUE = 4, // expect NULL
   JSON_TYPE_FALSE = 5, // expect NULL
   JSON_TYPE_NULL = 6, // expect NULL
-
   JSON_TYPE_NUM = 7 // not a json type just counts the number
                     // of json types
 };

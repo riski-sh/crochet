@@ -2,6 +2,7 @@
 #define CHART_H
 
 #include <pprint/pprint.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -43,10 +44,6 @@ typedef enum { CHART_REGION = 0, CHART_LINE = 0 } chart_object_t;
  */
 struct chart_object {
   chart_object_t object_type;
-
-  // voluntary padding to align value
-  char _p1[4];
-
   void *value;
 };
 
@@ -77,6 +74,11 @@ struct chart {
    * Number of candles used in the buffer
    */
   size_t num_candles;
+
+  /*
+   * The candle index of the current candle
+   */
+  size_t cur_candle_idx;
 
   /*
    * A list of candles by default the 1 minute

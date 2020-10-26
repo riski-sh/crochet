@@ -138,5 +138,7 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   size_t minutes_since_sunday =
       (timestamp - beginning_of_week) / NANOSECONDS_IN_MINUTE;
 
+  cht->cur_candle_idx = minutes_since_sunday;
+
   _chart_update_candle(cht, bid, minutes_since_sunday);
 }

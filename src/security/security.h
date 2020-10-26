@@ -1,6 +1,7 @@
 #ifndef SECURITY_H
 #define SECURITY_H
 
+#include <ffjson/ffjson.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

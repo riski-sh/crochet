@@ -1,6 +1,6 @@
 CC?=gcc
-CFLAGS?=-Os -g -m64 $(shell pkgconf --cflags openssl) -lpthread
-LFLAGS?=$(shell pkgconf --libs openssl)
+CFLAGS?=-O2 -g -m64 $(shell pkgconf --cflags openssl) $(shell pkgconf --cflags x11)
+LFLAGS?=$(shell pkgconf --libs openssl) $(shell pkgconf --libs x11) -lpthread
 WFLAGS?=-Wall -Wextra -Wpedantic -Werror
 FFLAGS?=-fasynchronous-unwind-tables -fexceptions
 IFLAGS?=-I$(shell pwd)/src

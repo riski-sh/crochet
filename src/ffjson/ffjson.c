@@ -1,15 +1,9 @@
 #include "ffjson.h"
 
 /* a mapping of the json enum type to its string equivelent */
-char *JSON_TYPE_STR[JSON_TYPE_NUM] = {
-  "JSON_TYPE_OBJECT",
-  "JSON_TYPE_ARRAY",
-  "JSON_TYPE_NUMBER",
-  "JSON_TYPE_STRING",
-  "JSON_TYPE_TRUE",
-  "JSON_TYPE_FALSE",
-  "JSON_TYPE_NULL"
-};
+char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
+  "JSON_TYPE_NUMBER", "JSON_TYPE_STRING", "JSON_TYPE_TRUE", "JSON_TYPE_FALSE",
+  "JSON_TYPE_NULL" };
 
 /* parse value is recursive and needs to have a forward declaration */
 static __json_value _parse_value(char *str, size_t *idx);
@@ -71,8 +65,8 @@ _parse_string(char *str, size_t *idx)
 
   /* a string must begin with a " no matter what so make sure we start at it */
   if (str[*idx] != '"') {
-    pprint_error("expected \" but got %c while parsing a string (aborting)",
-        str[*idx]);
+    pprint_error(
+        "expected \" but got %c while parsing a string (aborting)", str[*idx]);
     abort();
   }
 
