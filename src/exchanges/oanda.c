@@ -27,6 +27,11 @@ _oanda_first_id(char *response)
   return id;
 }
 
+static void
+_oanda_load_candles(struct security *sec)
+{
+}
+
 static char *
 _oanda_gen_currency_list(char *response, int *num_instruments)
 {

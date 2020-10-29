@@ -1,7 +1,4 @@
-#include <X11/Xlib.h>
-
 #include "client.h"
-#include "finmath/linear_equation.h"
 
 /* Display to display to */
 static Display *dis;
@@ -24,6 +21,18 @@ XFontStruct *font_info;
 
 /* the security that is being display */
 struct security *sec = NULL;
+
+/* the double buffer */
+Pixmap double_buffer = 0;
+
+/* last recorded window size */
+int width = 0;
+int height = 0;
+
+XColor upward;
+XColor downward;
+XColor background;
+
 
 static void
 _client_init()
@@ -67,6 +76,20 @@ _client_init()
   font_info = XLoadQueryFont(
       dis, "-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1");
   XSetFont(dis, gc, font_info->fid);
+
+  Colormap colormap = XDefaultColormap(dis, screen);
+
+  char green[] = "#628E36";
+  XParseColor(dis, colormap, green, &upward);
+  XAllocColor(dis, colormap, &upward);
+
+  char red[] = "#f44336";
+  XParseColor(dis, colormap, red, &downward);
+  XAllocColor(dis, colormap, &downward);
+
+  char dark[] = "#1F1B24";
+  XParseColor(dis, colormap, dark, &background);
+  XAllocColor(dis, colormap, &background);
 
   /* clear the window and bring it to the top */
   XClearWindow(dis, win);
@@ -115,18 +138,29 @@ _redraw()
   static const int pow10[7] = { 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0,
     1000000.0 };
 
-  // pprint_warn("%s", "redrawing...");
-
-  /* clear the window */
-  XClearWindow(dis, win);
-
-  /* set the color to white and a solid fill for drawing */
-  XSetForeground(dis, gc, WhitePixel(dis, screen));
-  XSetFillStyle(dis, gc, FillSolid);
-
   XWindowAttributes xwa;
   XGetWindowAttributes(dis, win, &xwa);
 
+  if (xwa.width != width || xwa.height != height) {
+    if (double_buffer == 0) {
+      double_buffer = XCreatePixmap(dis, win, xwa.width, xwa.height, xwa.depth);
+      printf("creating new dbuff\n");
+    } else {
+      printf("creating new dbuff\n");
+      XFreePixmap(dis, double_buffer);
+      double_buffer = XCreatePixmap(dis, win, xwa.width, xwa.height, xwa.depth);
+    }
+  }
+
+  width = xwa.width;
+  height = xwa.height;
+
+  /* set the color to white and a solid fill for drawing */
+  XSetForeground(dis, gc, background.pixel);
+  XSetFillStyle(dis, gc, FillSolid);
+  XFillRectangle(dis, double_buffer, gc, 0,0, xwa.width, xwa.height);
+
+  /* set the color to white and a solid fill for drawing */
   XSetForeground(dis, gc, WhitePixel(dis, screen));
   XSetFillStyle(dis, gc, FillSolid);
 
@@ -134,25 +168,12 @@ _redraw()
 
   XSetForeground(dis, gc, WhitePixel(dis, screen));
   XDrawString(
-      dis, win, gc, 0, xwa.height - font_info->descent, command, command_idx);
-
-  Colormap colormap = XDefaultColormap(dis, screen);
-
-  XColor upward;
-  XColor downward;
-
-  char green[] = "#628E36";
-  XParseColor(dis, colormap, green, &upward);
-  XAllocColor(dis, colormap, &upward);
-
-  char red[] = "#A60E16";
-  XParseColor(dis, colormap, red, &downward);
-  XAllocColor(dis, colormap, &downward);
+      dis, double_buffer, gc, 0, xwa.height - font_info->descent, command, command_idx);
 
   if (sec) {
     XSetForeground(dis, gc, WhitePixel(dis, screen));
     XDrawString(
-        dis, win, gc, 0, font_info->ascent, sec->name, strlen(sec->name));
+        dis, double_buffer, gc, 0, font_info->ascent, sec->name, strlen(sec->name));
 
     char data[256] = { 0 };
     sprintf(data, "| BID: %.*f | ASK: %.*f | TS: %lu", sec->display_precision,
@@ -161,17 +182,16 @@ _redraw()
         (double)sec->best_ask / pow10[sec->display_precision],
         sec->last_update);
 
-    XDrawString(dis, win, gc,
+    XDrawString(dis, double_buffer, gc,
         (strlen(sec->name) + 1) * font_info->per_char->width, font_info->ascent,
         data, strlen(data));
 
     int yaxis_offset = font_info->per_char->width * 10;
-    XDrawLine(dis, win, gc, 0, font_height, xwa.width, font_height);
-    XDrawLine(dis, win, gc, xwa.width - yaxis_offset, font_height,
+    XDrawLine(dis, double_buffer, gc, 0, font_height, xwa.width, font_height);
+    XDrawLine(dis, double_buffer, gc, xwa.width - yaxis_offset, font_height,
         xwa.width - yaxis_offset, xwa.height - font_height);
 
     uint32_t num_candles = (uint32_t)floor((xwa.width - yaxis_offset) / 7.0);
-    pprint_info("num_candles: %d", num_candles);
 
     struct chart *cht = sec->chart;
     uint32_t min_value = 1215752190;
@@ -208,7 +228,7 @@ _redraw()
       char level[20] = { 0 };
       sprintf(level, "-%.*f", sec->display_precision,
           (double)i / pow10[sec->display_precision]);
-      XDrawString(dis, win, gc,
+      XDrawString(dis, double_buffer, gc,
           xwa.width - yaxis_offset + font_info->per_char->width,
           linear_equation_eval(price_to_pixel, i) + font_info->descent, level,
           strlen(level));
@@ -219,7 +239,7 @@ _redraw()
         XSetForeground(dis, gc, WhitePixel(dis, screen));
         XSetFillStyle(dis, gc, FillSolid);
 
-        XDrawLine(dis, win, gc, ((i - start_idx - 1) * 7) + 2,
+        XDrawLine(dis, double_buffer, gc, ((i - start_idx - 1) * 7) + 2,
             linear_equation_eval(price_to_pixel, cht->candles[i].high),
             ((i - start_idx - 1) * 7) + 2,
             linear_equation_eval(price_to_pixel, cht->candles[i].low) - 1);
@@ -233,7 +253,7 @@ _redraw()
           int64_t candle_height =
               linear_equation_eval(price_to_pixel, cht->candles[i].close) -
               linear_equation_eval(price_to_pixel, cht->candles[i].open);
-          XFillRectangle(dis, win, gc, (i - start_idx - 1) * 7,
+          XFillRectangle(dis, double_buffer, gc, (i - start_idx - 1) * 7,
               linear_equation_eval(price_to_pixel, cht->candles[i].open), 5,
               candle_height);
         }
@@ -244,7 +264,7 @@ _redraw()
           int64_t candle_height =
               linear_equation_eval(price_to_pixel, cht->candles[i].open) -
               linear_equation_eval(price_to_pixel, cht->candles[i].close);
-          XFillRectangle(dis, win, gc, (i - start_idx - 1) * 7,
+          XFillRectangle(dis, double_buffer, gc, (i - start_idx - 1) * 7,
               linear_equation_eval(price_to_pixel, cht->candles[i].close), 5,
               candle_height);
         }
@@ -253,6 +273,9 @@ _redraw()
 
     linear_equation_free(&price_to_pixel);
   }
+
+  XCopyArea(dis, double_buffer, win, gc, 0, 0, xwa.width, xwa.height, 0, 0);
+  XFlush(dis);
 }
 
 int
@@ -270,11 +293,12 @@ client_start()
    */
   while (!finished_displaying) {
 
-    while (XPending(dis)) {
+      while (XPending(dis)) {
       /*
        * Block until next event
        */
       XNextEvent(dis, &event);
+
       switch (event.type) {
       case Expose:
         _redraw();
@@ -288,13 +312,10 @@ client_start()
       case ButtonPress:
         printf("You pressed a button at (%i,%i) %d\n", event.xbutton.x,
             event.xbutton.y, event.xbutton.button);
-        _redraw();
         break;
       case ConfigureNotify:
-        _redraw();
         break;
       default:
-        _redraw();
         break;
       }
     }
