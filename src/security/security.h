@@ -70,5 +70,18 @@ struct security *security_new(
  */
 bool security_update(
     struct security *sec, size_t timestamp, char *best_bid, char *best_ask);
+/*
+ * Updates a security given the historical values
+ *
+ * @param sec the security to update
+ * @param timestamp the timestamp of the start of the candle
+ * @param o the opening of the candle
+ * @param h the high of the candle
+ * @param l the low of the candle
+ * @param c the close of the candle
+ */
+bool security_update_historical(
+    struct security *sec, size_t timestamp, char *o, char *h, char *l, char *c,
+    uint32_t volume);
 
 #endif

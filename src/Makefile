@@ -12,7 +12,7 @@ main.bin : exchanges.a ffjson.a finmath.a globals.a hashmap.a \
 		$(OBJDIR)/pprint/pprint.a \
 		$(OBJDIR)/security/security.a \
 		$(OBJDIR)/client/client.a \
-		$(OBJDIR)/finmath/finmath.a
+		$(OBJDIR)/finmath/finmath.a \
 
 exchanges.a :
 	@$(MAKE) -C exchanges
@@ -41,5 +41,5 @@ pprint.a :
 security.a :
 	@$(MAKE) -C security
 
-client.a : finmath.a
+client.a :
 	@$(MAKE) -C client

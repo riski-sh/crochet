@@ -1,3 +1,4 @@
+#include <string.h>
 #include "chart.h"
 
 /*
@@ -116,6 +117,19 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
    */
   (void)ask;
 
+  size_t minutes_since_sunday = chart_tstoidx(timestamp);
+  if (minutes_since_sunday < cht->cur_candle_idx) {
+    pprint_info("%s", "resetting chart");
+    chart_reset(cht);
+  }
+
+  cht->cur_candle_idx = minutes_since_sunday;
+  _chart_update_candle(cht, bid, minutes_since_sunday);
+}
+
+size_t
+chart_tstoidx(size_t timestamp)
+{
   /*
    * Get the current day.
    */
@@ -137,8 +151,15 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
       beginning_of_day - (positive_sunday_offset * NANOSECONDS_IN_DAY);
   size_t minutes_since_sunday =
       (timestamp - beginning_of_week) / NANOSECONDS_IN_MINUTE;
+  return minutes_since_sunday;
+}
 
-  cht->cur_candle_idx = minutes_since_sunday;
+void
+chart_reset(struct chart *cht)
+{
+  cht->cur_candle_idx = 0;
+  memset(cht->candles, 0, sizeof(struct candle) * cht->num_candles);
 
-  _chart_update_candle(cht, bid, minutes_since_sunday);
+  // TODO reset chart objects
+
 }

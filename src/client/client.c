@@ -29,10 +29,16 @@ Pixmap double_buffer = 0;
 int width = 0;
 int height = 0;
 
+/* colors */
 XColor upward;
 XColor downward;
 XColor background;
+XColor foreground;
 
+/* mutex lock the draw functions for single threaded drawing */
+pthread_mutex_t draw_mutex;
+
+bool finished_displaying = false;
 
 static void
 _client_init()
@@ -73,8 +79,7 @@ _client_init()
   /* setup input for exposure button and keypress */
   XSelectInput(dis, win, ExposureMask | ButtonPressMask | KeyPressMask);
 
-  font_info = XLoadQueryFont(
-      dis, "-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1");
+  font_info = XLoadQueryFont(dis, "fixed");
   XSetFont(dis, gc, font_info->fid);
 
   Colormap colormap = XDefaultColormap(dis, screen);
@@ -90,6 +95,10 @@ _client_init()
   char dark[] = "#1F1B24";
   XParseColor(dis, colormap, dark, &background);
   XAllocColor(dis, colormap, &background);
+
+  char fg[] = "#F5DEB3";
+  XParseColor(dis, colormap, fg, &foreground);
+  XAllocColor(dis, colormap, &foreground);
 
   /* clear the window and bring it to the top */
   XClearWindow(dis, win);
@@ -134,19 +143,22 @@ _process_keypress(XEvent event)
 static void
 _redraw()
 {
-
+  pthread_mutex_lock(&draw_mutex);
   static const int pow10[7] = { 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0,
     1000000.0 };
 
   XWindowAttributes xwa;
   XGetWindowAttributes(dis, win, &xwa);
 
+  if (xwa.width < 480 || xwa.height < 240) {
+    pthread_mutex_unlock(&draw_mutex);
+    return;
+  }
+
   if (xwa.width != width || xwa.height != height) {
     if (double_buffer == 0) {
       double_buffer = XCreatePixmap(dis, win, xwa.width, xwa.height, xwa.depth);
-      printf("creating new dbuff\n");
     } else {
-      printf("creating new dbuff\n");
       XFreePixmap(dis, double_buffer);
       double_buffer = XCreatePixmap(dis, win, xwa.width, xwa.height, xwa.depth);
     }
@@ -158,22 +170,22 @@ _redraw()
   /* set the color to white and a solid fill for drawing */
   XSetForeground(dis, gc, background.pixel);
   XSetFillStyle(dis, gc, FillSolid);
-  XFillRectangle(dis, double_buffer, gc, 0,0, xwa.width, xwa.height);
+  XFillRectangle(dis, double_buffer, gc, 0, 0, xwa.width, xwa.height);
 
   /* set the color to white and a solid fill for drawing */
-  XSetForeground(dis, gc, WhitePixel(dis, screen));
+  XSetForeground(dis, gc, foreground.pixel);
   XSetFillStyle(dis, gc, FillSolid);
 
   int font_height = font_info->ascent + font_info->descent;
 
-  XSetForeground(dis, gc, WhitePixel(dis, screen));
-  XDrawString(
-      dis, double_buffer, gc, 0, xwa.height - font_info->descent, command, command_idx);
+  XSetForeground(dis, gc, foreground.pixel);
+  XDrawString(dis, double_buffer, gc, 0, xwa.height - font_info->descent,
+      command, command_idx);
 
   if (sec) {
-    XSetForeground(dis, gc, WhitePixel(dis, screen));
-    XDrawString(
-        dis, double_buffer, gc, 0, font_info->ascent, sec->name, strlen(sec->name));
+    XSetForeground(dis, gc, foreground.pixel);
+    XDrawString(dis, double_buffer, gc, 0, font_info->ascent, sec->name,
+        strlen(sec->name));
 
     char data[256] = { 0 };
     sprintf(data, "| BID: %.*f | ASK: %.*f | TS: %lu", sec->display_precision,
@@ -213,18 +225,15 @@ _redraw()
       }
     }
 
-    /*
-    struct linear_equation *pixel_to_price = NULL;
-    pixel_to_price = linear_equation_new(font_height + (font_info->ascent*2),
-    max_value, xwa.height-font_height-font_info->descent, min_value);
-    */
-
     struct linear_equation *price_to_pixel = NULL;
     price_to_pixel =
         linear_equation_new(max_value, font_height + font_info->ascent,
             min_value, xwa.height - font_height - (font_info->ascent));
 
-    for (uint32_t i = min_value; i <= max_value; i += 1) {
+    /* display at max 25 ticks */
+    uint32_t offset = (max_value - min_value) / 25;
+
+    for (uint32_t i = min_value; i <= max_value; i += offset) {
       char level[20] = { 0 };
       sprintf(level, "-%.*f", sec->display_precision,
           (double)i / pow10[sec->display_precision]);
@@ -236,7 +245,7 @@ _redraw()
 
     for (uint32_t i = start_idx + 1; i <= cht->cur_candle_idx; ++i) {
       if (cht->candles[i].high != cht->candles[i].low) {
-        XSetForeground(dis, gc, WhitePixel(dis, screen));
+        XSetForeground(dis, gc, foreground.pixel);
         XSetFillStyle(dis, gc, FillSolid);
 
         XDrawLine(dis, double_buffer, gc, ((i - start_idx - 1) * 7) + 2,
@@ -276,24 +285,28 @@ _redraw()
 
   XCopyArea(dis, double_buffer, win, gc, 0, 0, xwa.width, xwa.height, 0, 0);
   XFlush(dis);
+  pthread_mutex_unlock(&draw_mutex);
 }
 
 int
 client_start()
 {
 
+  /* tell X11 that there are multiple threads to this program */
+  XInitThreads();
+
+  /* setup the drawing window, color scheme etc... */
   _client_init();
 
-  XEvent event; /* the XEvent declaration !!! */
-
-  bool finished_displaying = false;
+  /* declare an XEvent */
+  XEvent event;
 
   /*
    * Loop through each event at a time
    */
-  while (!finished_displaying) {
+  while (globals_continue(NULL)) {
 
-      while (XPending(dis)) {
+    while (XPending(dis)) {
       /*
        * Block until next event
        */
@@ -310,8 +323,6 @@ client_start()
         _redraw();
         break;
       case ButtonPress:
-        printf("You pressed a button at (%i,%i) %d\n", event.xbutton.x,
-            event.xbutton.y, event.xbutton.button);
         break;
       case ConfigureNotify:
         break;
@@ -321,9 +332,13 @@ client_start()
     }
   }
 
+  finished_displaying = true;
+
+  pthread_mutex_lock(&draw_mutex);
   XFreeGC(dis, gc);
   XDestroyWindow(dis, win);
   XCloseDisplay(dis);
+  pthread_mutex_unlock(&draw_mutex);
 
   return 0;
 }
@@ -331,11 +346,15 @@ client_start()
 int
 client_getdisplay(Display **display)
 {
-  if (dis) {
-    *display = dis;
-    return true;
+  if (!finished_displaying && globals_continue(NULL)) {
+    if (dis) {
+      *display = dis;
+      return true;
+    } else {
+      *display = NULL;
+      return false;
+    }
   } else {
-    *display = NULL;
     return false;
   }
 }
@@ -343,6 +362,18 @@ client_getdisplay(Display **display)
 int
 client_getwindow(Window *window)
 {
-  *window = win;
-  return true;
+  if (!finished_displaying && globals_continue(NULL)) {
+    *window = win;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void
+client_redraw()
+{
+  if (!finished_displaying) {
+    _redraw();
+  }
 }

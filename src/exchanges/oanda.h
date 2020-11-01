@@ -8,6 +8,7 @@
 #include <httpws/httpws.h>
 #include <pprint/pprint.h>
 #include <security/security.h>
+#include <security/chart.h>
 
 #define OANDA_API_ROOT "api-fxpractice.oanda.com"
 

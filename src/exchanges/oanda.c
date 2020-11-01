@@ -1,6 +1,3 @@
-#include <X11/X.h>
-#include <X11/Xlib.h>
-
 #include "oanda.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
@@ -28,12 +25,56 @@ _oanda_first_id(char *response)
 }
 
 static void
-_oanda_load_candles(struct security *sec)
+_oanda_load_historical(struct http11request *request, struct security *sec)
 {
+  request->dirty = true;
+
+  char stub[120] = { '\x0' };
+  sprintf(stub, "/v3/instruments/%s/candles?count=1440&price=B&granularity=M1",
+      sec->name);
+
+  request->stub = stub;
+  char *response = NULL;
+  http11request_push(request, &response);
+
+  __json_value _root = json_parse(response);
+  __json_object _robj = json_get_object(_root);
+  __json_array _candles = json_get_array(hashmap_get("candles", _robj));
+
+  /*
+   * loop through all historical candles and add them to the current
+   * chart
+   */
+  while (_candles) {
+    __json_object _candle = json_get_object(_candles->val);
+    __json_string _timestamp = json_get_string(hashmap_get("time", _candle));
+    __json_object _bids = json_get_object(hashmap_get("bid", _candle));
+
+    __json_string o, h, l, c = NULL;
+    __json_number volume;
+    o = json_get_string(hashmap_get("o", _bids));
+    h = json_get_string(hashmap_get("h", _bids));
+    l = json_get_string(hashmap_get("l", _bids));
+    c = json_get_string(hashmap_get("c", _bids));
+    volume = json_get_number(hashmap_get("volume", _candle));
+
+    size_t latest_timestamp = _oanda_timetots(_timestamp);
+    if (!security_update_historical(sec, latest_timestamp, o, h, l, c, (uint32_t) *volume)) {
+      pprint_error(
+          "unable to push historical candle ts=%lu o=%s h=%s l=%s c=%s",
+          latest_timestamp, o, h, l, c);
+      exit(1);
+    }
+    _candles = _candles->nxt;
+  }
+
+  json_free(_root);
+  free(response);
 }
 
 static char *
-_oanda_gen_currency_list(char *response, int *num_instruments)
+_oanda_gen_currency_list(
+    struct http11request *request, char *response, int *num_instruments)
 {
   __json_value _root = json_parse(response);
   __json_object _instruments = json_get_object(_root);
@@ -54,6 +95,9 @@ _oanda_gen_currency_list(char *response, int *num_instruments)
 
     struct security *sec = security_new(name, pip_location, display_precision);
     exchange_put(name, sec);
+
+    /* load the past 24 hours worth of candles */
+    _oanda_load_historical(request, sec);
 
     (*num_instruments) += 1;
 
@@ -108,6 +152,7 @@ exchanges_oanda_init(void *key)
 
   char *response = NULL;
   http11request_push(request, &response);
+  free(request->stub);
 
   char *id = _oanda_first_id(response);
 
@@ -129,7 +174,7 @@ exchanges_oanda_init(void *key)
 
   int number_monitored = 0;
   char *instrument_update_end =
-      _oanda_gen_currency_list(response, &number_monitored);
+      _oanda_gen_currency_list(request, response, &number_monitored);
 
   pprint_info("oanda: loaded %d symbols", number_monitored);
 
@@ -163,19 +208,6 @@ exchanges_oanda_init(void *key)
   pprint_info("%s", "starting oanda main loop...");
   while (globals_continue(NULL)) {
     http11request_push(request, &response);
-
-    /*
-    if (response == NULL) {
-      pprint_warn("%s", "oanda: cloudflare disconnected reconnecting...");
-      httpwss_session_free(master_session);
-      master_session = httpwss_session_new(OANDA_API_ROOT, "443");
-      master_session->hashauth = true;
-      master_session->authkey = key;
-      response = NULL;
-      allocated = 0;
-      continue;
-    }
-    */
 
     if (_response_root == NULL) {
       _response_root = json_parse(response);
@@ -232,16 +264,7 @@ exchanges_oanda_init(void *key)
       clock_gettime(CLOCK_REALTIME, &start_time);
       clock_gettime(CLOCK_REALTIME, &end_time);
     }
-
-    Display *dis = NULL;
-    Window w;
-    client_getdisplay(&dis);
-    client_getwindow(&w);
-
-    XEvent e;
-    e.type = Expose;
-
-    XSendEvent(dis, w, false, NoEventMask, &e);
+    client_redraw();
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");

@@ -118,18 +118,39 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
         if (ret < 0) {
           pprint_error("unable to read %ldd bytes openssl returned %d instead",
               chunk_size, ret);
+          exit(1);
         }
         toread -= ret;
         data_read += ret;
         total_read += ret;
       }
-      SSL_read(ssl, chunk_len, 2);
 
+      int chunkending = 2;
+      while (chunkending != 0) {
+        int ret = SSL_read(ssl, chunk_len, chunkending);
+        if (ret < 0) {
+          pprint_error("unable to read %ldd bytes openssl returned %d instead",
+              chunkending, ret);
+          exit(1);
+        }
+        chunkending -= ret;
+      }
       memset(chunk_len, '\x0', chunkidx);
     }
   } while (chunk_size != 0);
 
-  SSL_read(ssl, chunk_len, 2);
+  int chunkending = 2;
+  while (chunkending != 0) {
+    int ret = SSL_read(ssl, chunk_len, chunkending);
+    if (ret < 0) {
+      pprint_error("unable to read %ldd bytes openssl returned %d instead",
+          chunkending, ret);
+      exit(1);
+    }
+    chunkending -= ret;
+  }
+
+  (*data)[total_read] = '\x0';
 
   return STATUS_OK;
 }
@@ -325,7 +346,7 @@ http11request_push(struct http11request *req, char **_data)
    */
   if (req->dirty) {
     _http11request_cache(req);
-    pprint_warn("generating cached http request\n=>\n%s<=", req->cache);
+    // pprint_warn("generating cached http request\n=>\n%s<=", req->cache);
     req->dirty = false;
   }
 

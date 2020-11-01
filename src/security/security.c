@@ -41,3 +41,38 @@ security_update(
 
   return true;
 }
+
+bool
+security_update_historical(
+    struct security *sec, size_t timestamp, char *o, char *h, char *l, char *c,
+    uint32_t volume)
+{
+
+  static const int pow10[7] = { 1, 10, 100, 1000, 10000, 100000, 1000000 };
+
+  double open, high, low, close;
+  open = strtod(o, NULL);
+  high = strtod(h, NULL);
+  low = strtod(l, NULL);
+  close = strtod(c, NULL);
+
+  uint32_t open_fixed, high_fixed, low_fixed, close_fixed;
+  open_fixed = (uint32_t)(open * pow10[sec->display_precision]);
+  high_fixed = (uint32_t)(high * pow10[sec->display_precision]);
+  low_fixed = (uint32_t)(low * pow10[sec->display_precision]);
+  close_fixed = (uint32_t)(close * pow10[sec->display_precision]);
+
+  size_t cndidx = chart_tstoidx(timestamp);
+
+  sec->chart->candles[cndidx].open = open_fixed;
+  sec->chart->candles[cndidx].high = high_fixed;
+  sec->chart->candles[cndidx].low = low_fixed;
+  sec->chart->candles[cndidx].close = close_fixed;
+  sec->chart->candles[cndidx].volume = volume;
+
+  sec->chart->cur_candle_idx = cndidx;
+  sec->best_bid = close_fixed;
+  sec->best_ask = close_fixed;
+  sec->last_update = timestamp;
+  return true;
+}

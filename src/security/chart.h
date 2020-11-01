@@ -12,7 +12,6 @@
  * Represents a candle in the chart
  */
 struct candle {
-
   /*
    *    |   <---- high
    *    |
@@ -26,7 +25,6 @@ struct candle {
    *    |   <---- low
    *
    */
-
   uint32_t open;
   uint32_t high;
   uint32_t low;
@@ -105,5 +103,15 @@ struct chart *chart_new(void);
  */
 void chart_update(
     struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp);
+
+/*
+ * Converts timestamp to offset where 0 is 0 minutes since sunday.
+ */
+size_t chart_tstoidx(size_t timestamp);
+
+/*
+ * Reset the entire chart
+ */
+void chart_reset(struct chart *cht);
 
 #endif
