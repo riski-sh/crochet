@@ -211,6 +211,10 @@ exchanges_oanda_init(void *key)
   response = NULL;
   pprint_info("%s", "starting oanda main loop...");
 
+  struct timespec speed_monitor_start;
+  clock_gettime(CLOCK_REALTIME, &speed_monitor_start);
+  struct timespec speed_monitor_end;
+
   while (globals_continue(NULL)) {
     clock_gettime(CLOCK_REALTIME, &start_time);
 
@@ -263,9 +267,25 @@ exchanges_oanda_init(void *key)
 
     size_t duration = (result.tv_sec * 1000000000) + result.tv_nsec;
     int slowdown = 33333333 - duration;
+
     if (slowdown > 0) {
       usleep(duration / 1000);
       pprint_warn("%s", "oanda: enforcing software rate limiting");
+    }
+
+    clock_gettime(CLOCK_REALTIME, &speed_monitor_end);
+    if (speed_monitor_end.tv_sec - speed_monitor_start.tv_sec >=
+        (int) OANDA_PRINT_NTERVAL_SECONDS) {
+
+      if (num_messages > 30) {
+        pprint_error("oanda: %lu / 30 requests, please slow me down", num_messages);
+      } else {
+        pprint_info("oanda: %lu / 30 requests", num_messages);
+      }
+
+      clock_gettime(CLOCK_REALTIME, &speed_monitor_start);
+      clock_gettime(CLOCK_REALTIME, &speed_monitor_end);
+      num_messages = 0;
     }
 
     client_redraw();
