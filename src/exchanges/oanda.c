@@ -261,18 +261,6 @@ exchanges_oanda_init(void *key)
 
     num_messages += 1;
 
-    clock_gettime(CLOCK_REALTIME, &end_time);
-    result.tv_sec = end_time.tv_sec - start_time.tv_sec;
-    result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
-
-    size_t duration = (result.tv_sec * 1000000000) + result.tv_nsec;
-    int slowdown = 33333333 - duration;
-
-    if (slowdown > 0) {
-      usleep(duration / 1000);
-      pprint_warn("%s", "oanda: enforcing software rate limiting");
-    }
-
     clock_gettime(CLOCK_REALTIME, &speed_monitor_end);
     if (speed_monitor_end.tv_sec - speed_monitor_start.tv_sec >=
         (int) OANDA_PRINT_NTERVAL_SECONDS) {
@@ -289,6 +277,18 @@ exchanges_oanda_init(void *key)
     }
 
     client_redraw();
+
+    clock_gettime(CLOCK_REALTIME, &end_time);
+    result.tv_sec = end_time.tv_sec - start_time.tv_sec;
+    result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
+
+    size_t duration = (result.tv_sec * 1000000000) + result.tv_nsec;
+    int slowdown = 33333333 - duration;
+
+    if (slowdown > 0) {
+      usleep(duration / 1000);
+    }
+
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");
