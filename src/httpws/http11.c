@@ -64,15 +64,16 @@ _http11request_parse_content_length(SSL *ssl, char **data, int content_length)
     return STATUS_ALLOC_ERR;
   }
 
-  int read = SSL_read(ssl, *data, content_length);
-  if (read != content_length) {
-    pprint_error("unable to read %d bytes openssl returned %d instead",
-        content_length, read);
-    exit(1);
+  int total_read = 0;
+  while (total_read != content_length) {
+  int read = SSL_read(ssl, &((*data)[total_read]), content_length - total_read);
+    if (read < 0) {
+      pprint_error("unable to read %d bytes openssl returned %d instead",
+          content_length, read);
+      exit(1);
+    }
+    total_read += read;
   }
-  (*data)[content_length] = '\x0';
-  pprint_info("[DEBUG] read %s", *data);
-
   return STATUS_OK;
 }
 
@@ -248,8 +249,8 @@ _http11request_read(struct tls_session *session, char **data)
    * Check and make sure the connection data type header was found
    */
   if (!found_connection_data) {
-    pprint_error("%s", "unable to find Connection header in HTTP response");
-    abort();
+    // pprint_error("%s", "unable to find Connection header in HTTP response");
+    // abort();
   }
 
   /*

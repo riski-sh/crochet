@@ -1,4 +1,5 @@
 #include "oanda.h"
+#include "security/chart.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
 static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
@@ -29,9 +30,15 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
 {
   request->dirty = true;
 
+  /* get the current timestamp */
+  struct timespec tv;
+  clock_gettime(CLOCK_REALTIME, &tv);
+  size_t ts = time(NULL) * 1000000000;
+  size_t backfill = chart_tstoidx(ts);
+
   char stub[120] = { '\x0' };
-  sprintf(stub, "/v3/instruments/%s/candles?count=1440&price=B&granularity=M1",
-      sec->name);
+  sprintf(stub, "/v3/instruments/%s/candles?count=%lu&price=B&granularity=M1",
+      sec->name, backfill);
 
   request->stub = stub;
   char *response = NULL;
@@ -63,7 +70,6 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
       pprint_error(
           "unable to push historical candle ts=%lu o=%s h=%s l=%s c=%s",
           latest_timestamp, o, h, l, c);
-      exit(1);
     }
     _candles = _candles->nxt;
   }

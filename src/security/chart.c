@@ -151,7 +151,9 @@ chart_tstoidx(size_t timestamp)
       beginning_of_day - (positive_sunday_offset * NANOSECONDS_IN_DAY);
   size_t minutes_since_sunday =
       (timestamp - beginning_of_week) / NANOSECONDS_IN_MINUTE;
-  return minutes_since_sunday;
+
+  // market opens at 5PM sunday EST time
+  return minutes_since_sunday - 1320;
 }
 
 void
@@ -159,7 +161,5 @@ chart_reset(struct chart *cht)
 {
   cht->cur_candle_idx = 0;
   memset(cht->candles, 0, sizeof(struct candle) * cht->num_candles);
-
   // TODO reset chart objects
-
 }

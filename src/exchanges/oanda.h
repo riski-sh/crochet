@@ -10,7 +10,7 @@
 #include <security/security.h>
 #include <security/chart.h>
 
-#define OANDA_API_ROOT "api-fxpractice.oanda.com"
+#define OANDA_API_ROOT "api-fxtrade.oanda.com"
 
 #define OANDA_PRINT_NTERVAL_SECONDS 5.0
 /*

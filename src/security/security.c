@@ -64,6 +64,11 @@ security_update_historical(
 
   size_t cndidx = chart_tstoidx(timestamp);
 
+  if (cndidx > CHART_MINUTES_IN_WEEK) {
+    pprint_error("malformed data in historical security impossible index %lu", cndidx);
+    return false;
+  }
+
   sec->chart->candles[cndidx].open = open_fixed;
   sec->chart->candles[cndidx].high = high_fixed;
   sec->chart->candles[cndidx].low = low_fixed;

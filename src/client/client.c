@@ -1,3 +1,4 @@
+#include <X11/Xlib.h>
 #include "client.h"
 
 /* Display to display to */
@@ -65,7 +66,7 @@ _client_init()
   xch.res_class = "dialog";
   xch.res_name = "riski";
   XSetClassHint(dis, win, &xch);
-  XSetStandardProperties(dis, win, "Crochet", NULL, None, NULL, 0, NULL);
+  XSetStandardProperties(dis, win, "Feed", NULL, None, NULL, 0, NULL);
 
   /* create a graphics context to draw on */
   gc = XCreateGC(dis, win, 0, 0);
@@ -225,15 +226,32 @@ _redraw()
       }
     }
 
+
+    uint32_t spread = sec->best_ask - sec->best_bid;
+    if (spread != 0) {
+      max_value += (spread - (max_value % spread));
+      min_value -= (max_value % spread);
+      min_value -= (max_value - min_value) % spread;
+    }
+
     struct linear_equation *price_to_pixel = NULL;
     price_to_pixel =
         linear_equation_new(max_value, font_height + font_info->ascent,
             min_value, xwa.height - font_height - (font_info->ascent));
+    struct linear_equation *pixel_to_price = NULL;
+    pixel_to_price = linear_equation_new(font_height + font_info->ascent, max_value,
+          xwa.height - font_height - (font_info->ascent), min_value);
+
+    int64_t pips = (linear_equation_eval(pixel_to_price, 0)) -
+      linear_equation_eval(pixel_to_price, font_height + font_info->ascent);
 
     /* display at max 25 ticks */
-    uint32_t offset = (max_value - min_value) / 25;
+    // uint32_t offset = (max_value - min_value) % (sec->best_ask - sec->best_bid);
+    // if (offset < (uint32_t) (font_info->ascent)) {
+    //  offset =(uint32_t) (2*font_info->ascent);
+    //}
 
-    for (uint32_t i = min_value; i <= max_value; i += offset) {
+    for (uint32_t i = min_value; i <= max_value; i += pips) {
       char level[20] = { 0 };
       sprintf(level, "-%.*f", sec->display_precision,
           (double)i / pow10[sec->display_precision]);
@@ -242,6 +260,36 @@ _redraw()
           linear_equation_eval(price_to_pixel, i) + font_info->descent, level,
           strlen(level));
     }
+
+    XSetForeground(dis, gc, foreground.pixel);
+    XSetFillStyle(dis, gc, FillSolid);
+    XFillRectangle(dis, double_buffer, gc, xwa.width-yaxis_offset,
+        linear_equation_eval(price_to_pixel, sec->best_bid) - font_info->ascent + 3,
+        yaxis_offset, font_info->per_char->descent + (2*font_info->per_char->ascent) - 6);
+
+    XSetForeground(dis, gc, foreground.pixel);
+    XFillRectangle(dis, double_buffer, gc, xwa.width-yaxis_offset,
+        linear_equation_eval(price_to_pixel, sec->best_ask) - font_info->ascent + 3,
+        yaxis_offset, font_info->per_char->descent + (2*font_info->per_char->ascent) - 6);
+
+    XSetForeground(dis, gc, background.pixel);
+    XSetFillStyle(dis, gc, FillSolid);
+    char level[20] = { 0 };
+    sprintf(level, "- %.*f", sec->display_precision,
+        (double)sec->best_ask / pow10[sec->display_precision]);
+    XDrawString(dis, double_buffer, gc,
+        xwa.width - yaxis_offset,
+        linear_equation_eval(price_to_pixel, sec->best_ask) + font_info->descent, level,
+        strlen(level));
+    sprintf(level, "- %.*f", sec->display_precision,
+        (double)sec->best_bid / pow10[sec->display_precision]);
+    XSetForeground(dis, gc, background.pixel);
+    XSetFillStyle(dis, gc, FillSolid);
+    XDrawString(dis, double_buffer, gc,
+        xwa.width - yaxis_offset,
+        linear_equation_eval(price_to_pixel, sec->best_bid) + font_info->descent, level,
+        strlen(level));
+
 
     for (uint32_t i = start_idx + 1; i <= cht->cur_candle_idx; ++i) {
       if (cht->candles[i].high != cht->candles[i].low) {
