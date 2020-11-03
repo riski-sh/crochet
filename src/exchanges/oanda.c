@@ -282,11 +282,11 @@ exchanges_oanda_init(void *key)
     result.tv_sec = end_time.tv_sec - start_time.tv_sec;
     result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
 
-    size_t duration = (result.tv_sec * 1000000000) + result.tv_nsec;
-    int slowdown = 33333333 - duration;
+    size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
+    int slowdown = (33333333 - duration);
 
     if (slowdown > 0) {
-      usleep(duration / 1000);
+      usleep(duration / 1000000);
     }
 
   }
