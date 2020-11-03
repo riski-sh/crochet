@@ -204,15 +204,16 @@ exchanges_oanda_init(void *key)
 
   struct timespec start_time;
   struct timespec end_time;
-
-  clock_gettime(CLOCK_REALTIME, &start_time);
+  struct timespec result;
 
   __json_value _response_root = NULL;
 
   response = NULL;
-
   pprint_info("%s", "starting oanda main loop...");
+
   while (globals_continue(NULL)) {
+    clock_gettime(CLOCK_REALTIME, &start_time);
+
     http11request_push(request, &response);
 
     if (_response_root == NULL) {
@@ -257,19 +258,16 @@ exchanges_oanda_init(void *key)
     num_messages += 1;
 
     clock_gettime(CLOCK_REALTIME, &end_time);
+    result.tv_sec = end_time.tv_sec - start_time.tv_sec;
+    result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
 
-    if (end_time.tv_sec - start_time.tv_sec >=
-        (int)OANDA_PRINT_NTERVAL_SECONDS) {
-
-      pprint_info("oanda: requests=%lu updates=%lu",
-          num_messages * number_monitored, num_valid_updates);
-
-      num_messages = 0;
-      num_valid_updates = 0;
-
-      clock_gettime(CLOCK_REALTIME, &start_time);
-      clock_gettime(CLOCK_REALTIME, &end_time);
+    size_t duration = (result.tv_sec * 1000000000) + result.tv_nsec;
+    int slowdown = 33333333 - duration;
+    if (slowdown > 0) {
+      usleep(duration / 1000);
+      pprint_warn("%s", "oanda: enforcing software rate limiting");
     }
+
     client_redraw();
   }
 
