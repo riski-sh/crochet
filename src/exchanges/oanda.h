@@ -7,8 +7,8 @@
 #include <globals/globals.h>
 #include <httpws/httpws.h>
 #include <pprint/pprint.h>
-#include <security/security.h>
 #include <security/chart.h>
+#include <security/security.h>
 
 #define OANDA_API_ROOT "api-fxtrade.oanda.com"
 

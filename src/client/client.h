@@ -6,12 +6,12 @@
 #include <X11/Xutil.h>
 #include <exchanges/exchanges.h>
 #include <finmath/linear_equation.h>
+#include <globals/globals.h>
 #include <math.h>
 #include <pprint/pprint.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <pthread.h>
-#include <globals/globals.h>
 
 int client_start();
 int client_getdisplay(Display **display);

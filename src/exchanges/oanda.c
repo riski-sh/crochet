@@ -1,4 +1,5 @@
 #include <string.h>
+
 #include "oanda.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
@@ -70,7 +71,8 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
     volume = json_get_number(hashmap_get("volume", _candle));
 
     size_t latest_timestamp = _oanda_timetots(_timestamp);
-    if (!security_update_historical(sec, latest_timestamp, o, h, l, c, (uint32_t) *volume)) {
+    if (!security_update_historical(
+            sec, latest_timestamp, o, h, l, c, (uint32_t)*volume)) {
       pprint_error(
           "unable to push historical candle ts=%lu o=%s h=%s l=%s c=%s",
           latest_timestamp, o, h, l, c);
@@ -271,8 +273,9 @@ exchanges_oanda_init(void *key)
     result.tv_sec = speed_monitor_end.tv_sec - speed_monitor_start.tv_sec;
     result.tv_nsec = speed_monitor_end.tv_nsec - speed_monitor_start.tv_nsec;
     size_t speed_duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
-    if (speed_duration >= (int) OANDA_PRINT_INTERVAL_SECONDS) {
-      num_messages = (num_messages / speed_duration) * OANDA_PRINT_INTERVAL_SECONDS;
+    if (speed_duration >= (int)OANDA_PRINT_INTERVAL_SECONDS) {
+      num_messages =
+          (num_messages / speed_duration) * OANDA_PRINT_INTERVAL_SECONDS;
       pprint_info("currently polling at %05.2f / %d r/s", num_messages, 30);
       clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
       num_messages = 0;
@@ -286,16 +289,19 @@ exchanges_oanda_init(void *key)
     size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
 
     int slowdown = (33333333 - duration);
-
     if (slowdown > 0) {
-      sleeper.tv_nsec = slowdown;
-      int ret = 0;
-      while ((ret = clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, &sleeper))
-         && ret != 0) {
-        pprint_error("%s", strerror(ret));
+      end_time.tv_nsec += slowdown;
+      if (end_time.tv_nsec >= 1000 * 1000 * 1000) {
+        end_time.tv_nsec -= 1000 * 1000 * 1000;
+        end_time.tv_sec++;
+      }
+      while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &end_time, NULL) ==
+              -1 &&
+          errno == EINTR) {
+        /* do nothing while being interrupted */
       }
     }
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");

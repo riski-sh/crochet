@@ -43,9 +43,8 @@ security_update(
 }
 
 bool
-security_update_historical(
-    struct security *sec, size_t timestamp, char *o, char *h, char *l, char *c,
-    uint32_t volume)
+security_update_historical(struct security *sec, size_t timestamp, char *o,
+    char *h, char *l, char *c, uint32_t volume)
 {
 
   static const int pow10[7] = { 1, 10, 100, 1000, 10000, 100000, 1000000 };
@@ -65,7 +64,8 @@ security_update_historical(
   size_t cndidx = chart_tstoidx(timestamp);
 
   if (cndidx > CHART_MINUTES_IN_WEEK) {
-    pprint_error("malformed data in historical security impossible index %lu", cndidx);
+    pprint_error(
+        "malformed data in historical security impossible index %lu", cndidx);
     return false;
   }
 

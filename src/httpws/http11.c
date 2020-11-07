@@ -66,7 +66,8 @@ _http11request_parse_content_length(SSL *ssl, char **data, int content_length)
 
   int total_read = 0;
   while (total_read != content_length) {
-  int read = SSL_read(ssl, &((*data)[total_read]), content_length - total_read);
+    int read =
+        SSL_read(ssl, &((*data)[total_read]), content_length - total_read);
     if (read < 0) {
       pprint_error("unable to read %d bytes openssl returned %d instead",
           content_length, read);

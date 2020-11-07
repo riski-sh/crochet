@@ -80,8 +80,7 @@ bool security_update(
  * @param l the low of the candle
  * @param c the close of the candle
  */
-bool security_update_historical(
-    struct security *sec, size_t timestamp, char *o, char *h, char *l, char *c,
-    uint32_t volume);
+bool security_update_historical(struct security *sec, size_t timestamp, char *o,
+    char *h, char *l, char *c, uint32_t volume);
 
 #endif
