@@ -264,37 +264,26 @@ exchanges_oanda_init(void *key)
       _prices = _prices->nxt;
     }
 
-    /* increase the number of messages */
     num_messages += 1;
 
-    /* compute the elapsed time since the last report */
+    clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
     result.tv_sec = speed_monitor_end.tv_sec - speed_monitor_start.tv_sec;
     result.tv_nsec = speed_monitor_end.tv_nsec - speed_monitor_start.tv_nsec;
     size_t speed_duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
-
-    /* report the number of messages sent in a given interval */
     if (speed_duration >= (int) OANDA_PRINT_INTERVAL_SECONDS) {
-      num_messages = (num_messages / speed_duration)*OANDA_PRINT_INTERVAL_SECONDS;
-      pprint_info("oanda: %f / 30 requests", num_messages);
-
-      /* reset the clocks */
+      num_messages = (num_messages / speed_duration) * OANDA_PRINT_INTERVAL_SECONDS;
+      pprint_info("currently polling at %05.2f / %d r/s", num_messages, 30);
       clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
-      clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
-
-      /* reset the message counter */
       num_messages = 0;
     }
 
     client_redraw();
 
-    /*
-     * understand how much time was spent and if needed rate limit ourself
-     * so we don't get disconnected
-     */
     clock_gettime(CLOCK_MONOTONIC_RAW, &end_time);
     result.tv_sec = end_time.tv_sec - start_time.tv_sec;
     result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
     size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
+
     int slowdown = (33333333 - duration);
 
     if (slowdown > 0) {
