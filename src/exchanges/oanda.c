@@ -221,7 +221,7 @@ exchanges_oanda_init(void *key)
 
   struct timespec sleeper;
 
-  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start_time);
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   while (globals_continue(NULL)) {
     http11request_push(request, &response);
 
@@ -288,9 +288,9 @@ exchanges_oanda_init(void *key)
 
     if (slowdown > 0) {
       sleeper.tv_nsec = slowdown;
-      while (clock_nanosleep(CLOCK_THREAD_CPUTIME_ID, 0, &sleeper, &sleeper));
+      while (clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, &sleeper));
     }
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start_time);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");
