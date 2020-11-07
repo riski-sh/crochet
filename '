@@ -288,7 +288,7 @@ exchanges_oanda_init(void *key)
 
     if (slowdown > 0) {
       sleeper.tv_nsec = slowdown;
-      while (clock_nanosleep(CLOCK_THREAD_CPUTIME_ID, 0, &sleeper, &sleeper));
+      clock_nanosleep(CLOCK_THREAD_CPUTIME_ID, 0, &sleeper, &sleeper);
     }
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start_time);
   }
