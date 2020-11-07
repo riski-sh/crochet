@@ -1,3 +1,4 @@
+#include <string.h>
 #include "oanda.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
@@ -288,7 +289,9 @@ exchanges_oanda_init(void *key)
 
     if (slowdown > 0) {
       sleeper.tv_nsec = slowdown;
-      while (clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, &sleeper));
+      while (clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, &sleeper) != 0) {
+        pprint_error("%s", strerror(errno));
+      }
     }
     clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   }
