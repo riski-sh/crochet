@@ -12,7 +12,7 @@
 
 #define OANDA_API_ROOT "api-fxtrade.oanda.com"
 
-#define OANDA_PRINT_NTERVAL_SECONDS 1.0
+#define OANDA_PRINT_INTERVAL_SECONDS 1e9
 
 /*
  * Starts an oanda exchange feed

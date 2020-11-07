@@ -158,6 +158,7 @@ exchanges_oanda_init(void *key)
   hashmap_put("User-Agent", "crochet", request->headers);
   hashmap_put("Content-Type", "application/json", request->headers);
   hashmap_put("Accept", "*/*", request->headers);
+  hashmap_put("Connection", "Keep-Alive", request->headers);
 
   char *response = NULL;
   http11request_push(request, &response);
@@ -202,7 +203,7 @@ exchanges_oanda_init(void *key)
   request->stub = instrument_update_full;
   request->dirty = true;
 
-  int num_messages = 0;
+  double num_messages = 0;
   int num_valid_updates = 0;
 
   struct timespec start_time;
@@ -220,9 +221,8 @@ exchanges_oanda_init(void *key)
 
   struct timespec sleeper;
 
+  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start_time);
   while (globals_continue(NULL)) {
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-
     http11request_push(request, &response);
 
     if (_response_root == NULL) {
@@ -264,37 +264,44 @@ exchanges_oanda_init(void *key)
       _prices = _prices->nxt;
     }
 
+    /* increase the number of messages */
     num_messages += 1;
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
-    if (speed_monitor_end.tv_sec - speed_monitor_start.tv_sec >=
-        (int) OANDA_PRINT_NTERVAL_SECONDS) {
+    /* compute the elapsed time since the last report */
+    result.tv_sec = speed_monitor_end.tv_sec - speed_monitor_start.tv_sec;
+    result.tv_nsec = speed_monitor_end.tv_nsec - speed_monitor_start.tv_nsec;
+    size_t speed_duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
 
-      if (num_messages > 30) {
-        pprint_error("oanda: %lu / 30 requests, please slow me down", num_messages);
-      } else {
-        pprint_info("oanda: %lu / 30 requests", num_messages);
-      }
+    /* report the number of messages sent in a given interval */
+    if (speed_duration >= (int) OANDA_PRINT_INTERVAL_SECONDS) {
+      num_messages = (num_messages / speed_duration)*OANDA_PRINT_INTERVAL_SECONDS;
+      pprint_info("oanda: %f / 30 requests", num_messages);
 
+      /* reset the clocks */
       clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
       clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
+
+      /* reset the message counter */
       num_messages = 0;
     }
 
     client_redraw();
 
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &end_time);
+    /*
+     * understand how much time was spent and if needed rate limit ourself
+     * so we don't get disconnected
+     */
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end_time);
     result.tv_sec = end_time.tv_sec - start_time.tv_sec;
     result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
-
     size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
-
     int slowdown = (33333333 - duration);
 
     if (slowdown > 0) {
       sleeper.tv_nsec = slowdown;
-      clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, NULL);
+      clock_nanosleep(CLOCK_THREAD_CPUTIME_ID, 0, &sleeper, NULL);
     }
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start_time);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");

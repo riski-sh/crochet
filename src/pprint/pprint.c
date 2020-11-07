@@ -31,7 +31,7 @@ _pprint_time(char (*time)[TIME_STR_LEN])
 {
   struct timespec current_time;
 
-  clock_gettime(CLOCK_REALTIME, &current_time);
+  clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
 
   sprintf(*time, "[\x1b[92m%lu.%09lu\x1b[0m]", current_time.tv_sec,
       current_time.tv_nsec);
