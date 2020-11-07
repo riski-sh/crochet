@@ -1,5 +1,4 @@
 #include "oanda.h"
-#include "security/chart.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
 static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
@@ -35,6 +34,10 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   clock_gettime(CLOCK_REALTIME, &tv);
   size_t ts = time(NULL) * 1000000000;
   size_t backfill = chart_tstoidx(ts);
+
+  if (backfill > 5000) {
+    backfill = 5000;
+  }
 
   char stub[120] = { '\x0' };
   sprintf(stub, "/v3/instruments/%s/candles?count=%lu&price=B&granularity=M1",
@@ -215,8 +218,10 @@ exchanges_oanda_init(void *key)
   clock_gettime(CLOCK_REALTIME, &speed_monitor_start);
   struct timespec speed_monitor_end;
 
+  struct timespec sleeper;
+
   while (globals_continue(NULL)) {
-    clock_gettime(CLOCK_REALTIME, &start_time);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
     http11request_push(request, &response);
 
@@ -261,7 +266,7 @@ exchanges_oanda_init(void *key)
 
     num_messages += 1;
 
-    clock_gettime(CLOCK_REALTIME, &speed_monitor_end);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
     if (speed_monitor_end.tv_sec - speed_monitor_start.tv_sec >=
         (int) OANDA_PRINT_NTERVAL_SECONDS) {
 
@@ -278,17 +283,20 @@ exchanges_oanda_init(void *key)
 
     client_redraw();
 
-    clock_gettime(CLOCK_REALTIME, &end_time);
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &end_time);
     result.tv_sec = end_time.tv_sec - start_time.tv_sec;
     result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
 
     size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
+
     int slowdown = (33333333 - duration);
 
     if (slowdown > 0) {
-      usleep(duration / 1000000);
+      sleeper.tv_nsec = slowdown;
+      clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, NULL);
     }
 
+    printf("slowdown: %d\n", slowdown);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");
