@@ -222,8 +222,6 @@ exchanges_oanda_init(void *key)
   clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
   struct timespec speed_monitor_end;
 
-  struct timespec sleeper;
-
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   while (globals_continue(NULL)) {
     http11request_push(request, &response);
