@@ -215,7 +215,7 @@ exchanges_oanda_init(void *key)
   pprint_info("%s", "starting oanda main loop...");
 
   struct timespec speed_monitor_start;
-  clock_gettime(CLOCK_REALTIME, &speed_monitor_start);
+  clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
   struct timespec speed_monitor_end;
 
   struct timespec sleeper;
@@ -276,8 +276,8 @@ exchanges_oanda_init(void *key)
         pprint_info("oanda: %lu / 30 requests", num_messages);
       }
 
-      clock_gettime(CLOCK_REALTIME, &speed_monitor_start);
-      clock_gettime(CLOCK_REALTIME, &speed_monitor_end);
+      clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
+      clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
       num_messages = 0;
     }
 
@@ -295,8 +295,6 @@ exchanges_oanda_init(void *key)
       sleeper.tv_nsec = slowdown;
       clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, NULL);
     }
-
-    printf("slowdown: %d\n", slowdown);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");
