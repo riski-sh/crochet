@@ -289,8 +289,10 @@ exchanges_oanda_init(void *key)
 
     if (slowdown > 0) {
       sleeper.tv_nsec = slowdown;
-      while (clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, &sleeper) != 0) {
-        pprint_error("%s", strerror(errno));
+      int ret = 0;
+      while ((ret = clock_nanosleep(CLOCK_MONOTONIC_RAW, 0, &sleeper, &sleeper))
+         && ret != 0) {
+        pprint_error("%s", strerror(ret));
       }
     }
     clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
