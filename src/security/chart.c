@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include "chart.h"
 
 /*
@@ -123,6 +121,8 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
     pprint_info("%s", "resetting chart");
     chart_reset(cht);
   }
+
+  // bool perform_analysis = minutes_since_sunday > cht->cur_candle_idx;
 
   cht->cur_candle_idx = minutes_since_sunday;
   _chart_update_candle(cht, bid, minutes_since_sunday);

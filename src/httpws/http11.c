@@ -336,14 +336,6 @@ http11request_push(struct http11request *req, char **_data)
   }
 
   /*
-   * Data must be a non null pointer and it is assumed to have an allocation of
-   * MAX_HTTP_REQUEST_SIZE
-   */
-  if (*_data == NULL) {
-    pprint_warn("allocation guarenteed for response to %s", req->stub);
-  }
-
-  /*
    * If this is dirty cache the request and remove the old cache
    */
   if (req->dirty) {

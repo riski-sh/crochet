@@ -29,6 +29,7 @@ _oanda_first_id(char *response)
 static void
 _oanda_load_historical(struct http11request *request, struct security *sec)
 {
+
   request->dirty = true;
 
   /* get the current timestamp */
@@ -88,6 +89,9 @@ static char *
 _oanda_gen_currency_list(
     struct http11request *request, char *response, int *num_instruments)
 {
+
+  pprint_info("%s", "configuring tradeable oanda symbols...");
+
   __json_value _root = json_parse(response);
   __json_object _instruments = json_get_object(_root);
   __json_array instruments =
@@ -108,7 +112,8 @@ _oanda_gen_currency_list(
     struct security *sec = security_new(name, pip_location, display_precision);
     exchange_put(name, sec);
 
-    /* load the past 24 hours worth of candles */
+    /* load at max the last 5000 minutes of historical data */
+    pprint_info("loading historial info for %s...", name);
     _oanda_load_historical(request, sec);
 
     (*num_instruments) += 1;
@@ -124,8 +129,10 @@ _oanda_gen_currency_list(
     instruments = instruments->nxt;
   }
   currency_list[total_len - 1] = '\x0';
-
   json_free(_root);
+
+  pprint_info("%s", "finished loading historical symbols");
+
   return currency_list;
 }
 
@@ -172,7 +179,7 @@ exchanges_oanda_init(void *key)
   free(response);
   response = NULL;
 
-  pprint_info("using oanda account id %s", id);
+  pprint_info("%s", "using oanda account id [REDACTED]");
 
   int get_instrument_size = 0;
   get_instrument_size = snprintf(NULL, 0, V3_ACCOUNT_INSTRUMENTS, id) + 1;

@@ -205,17 +205,20 @@ _redraw()
     XDrawLine(dis, double_buffer, gc, xwa.width - yaxis_offset, font_height,
         xwa.width - yaxis_offset, xwa.height - font_height);
 
-    uint32_t num_candles = (uint32_t)floor((xwa.width - yaxis_offset) / 7.0);
+    uint32_t num_candles = (uint32_t)floor(
+        (xwa.width - yaxis_offset) / font_info->per_char->width);
 
     struct chart *cht = sec->chart;
     uint32_t min_value = 1215752190;
     uint32_t max_value = 0;
     size_t start_idx = 0;
 
+    /* determine number of candles based on drawing width */
     if (cht->cur_candle_idx >= num_candles) {
       start_idx = cht->cur_candle_idx - num_candles;
     }
 
+    /* find min and max of viewable candles */
     for (uint32_t i = start_idx; i <= cht->cur_candle_idx; ++i) {
       if (cht->candles[i].volume != 0) {
         if (cht->candles[i].high > max_value) {
@@ -299,9 +302,12 @@ _redraw()
         XSetForeground(dis, gc, foreground.pixel);
         XSetFillStyle(dis, gc, FillSolid);
 
-        XDrawLine(dis, double_buffer, gc, ((i - start_idx - 1) * 7) + 2,
+        XDrawLine(dis, double_buffer, gc,
+            ((i - start_idx - 1) * (font_info->per_char->width) +
+                (font_info->per_char->width / 2)),
             linear_equation_eval(price_to_pixel, cht->candles[i].high),
-            ((i - start_idx - 1) * 7) + 2,
+            ((i - start_idx - 1) * (font_info->per_char->width) +
+                (font_info->per_char->width / 2)),
             linear_equation_eval(price_to_pixel, cht->candles[i].low) - 1);
       }
 
@@ -313,20 +319,58 @@ _redraw()
           int64_t candle_height =
               linear_equation_eval(price_to_pixel, cht->candles[i].close) -
               linear_equation_eval(price_to_pixel, cht->candles[i].open);
-          XFillRectangle(dis, double_buffer, gc, (i - start_idx - 1) * 7,
-              linear_equation_eval(price_to_pixel, cht->candles[i].open), 5,
-              candle_height);
-        }
-        if (cht->candles[i].open < cht->candles[i].close) {
+          XFillRectangle(dis, double_buffer, gc,
+              (i - start_idx - 1) * (font_info->per_char->width),
+              linear_equation_eval(price_to_pixel, cht->candles[i].open),
+              (font_info->per_char->width), candle_height);
+        } else if (cht->candles[i].open < cht->candles[i].close) {
           XSetForeground(dis, gc, upward.pixel);
           XSetFillStyle(dis, gc, FillSolid);
 
           int64_t candle_height =
               linear_equation_eval(price_to_pixel, cht->candles[i].open) -
               linear_equation_eval(price_to_pixel, cht->candles[i].close);
-          XFillRectangle(dis, double_buffer, gc, (i - start_idx - 1) * 7,
-              linear_equation_eval(price_to_pixel, cht->candles[i].close), 5,
-              candle_height);
+          XFillRectangle(dis, double_buffer, gc,
+              (i - start_idx - 1) * (font_info->per_char->width),
+              linear_equation_eval(price_to_pixel, cht->candles[i].close),
+              (font_info->per_char->width), candle_height);
+        } else if (cht->candles[i].open == cht->candles[i].close) {
+          XSetForeground(dis, gc, foreground.pixel);
+          XSetFillStyle(dis, gc, FillSolid);
+          XDrawLine(dis, double_buffer, gc,
+              (i - start_idx - 1) * (font_info->per_char->width),
+              linear_equation_eval(price_to_pixel, cht->candles[i].close),
+              ((i - start_idx - 1) * (font_info->per_char->width)) +
+                  (font_info->per_char->width),
+              linear_equation_eval(price_to_pixel, cht->candles[i].close));
+        }
+
+        struct chart_object *analysis_iter = cht->candles[i].analysis_list;
+
+        int draw_height = 0;
+
+        while (analysis_iter) {
+
+          switch (analysis_iter->object_type) {
+          case CHART_OBJECT_TEXT: {
+            struct chart_object_t_text *analysis_object = analysis_iter->value;
+            XSetForeground(dis, gc, foreground.pixel);
+            XSetFillStyle(dis, gc, FillSolid);
+            XDrawString(dis, double_buffer, gc,
+                (i - start_idx - 1) * (font_info->per_char->width),
+                linear_equation_eval(price_to_pixel, cht->candles[i].low) +
+                    (font_info->per_char->ascent +
+                        font_info->per_char->descent + 5 +
+                        (draw_height *
+                            (font_info->per_char->ascent +
+                                font_info->per_char->descent))),
+                &(analysis_object->TEXT), 1);
+            draw_height += 1;
+            break;
+          }
+          }
+
+          analysis_iter = analysis_iter->next;
         }
       }
     }

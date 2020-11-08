@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "pprint.h"
 
 #define TIME_STR_LEN 35
@@ -33,8 +35,9 @@ _pprint_time(char (*time)[TIME_STR_LEN])
 
   clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
 
-  sprintf(*time, "[\x1b[92m%lu.%09lu\x1b[0m]", current_time.tv_sec,
-      current_time.tv_nsec);
+  sprintf(*time, "%lu",
+      ((uint64_t)current_time.tv_sec * (uint64_t)1e9) +
+          (uint64_t)current_time.tv_nsec);
 }
 
 void __attribute__((__format__(__printf__, 4, 0))) _pprint_info(
@@ -44,7 +47,7 @@ void __attribute__((__format__(__printf__, 4, 0))) _pprint_info(
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s [INFO] %s@%s:%d ", time, file, func, line);
+  printf("%s INFO %s@%s:%d ", time, file, func, line);
   va_list args;
   va_start(args, str);
   vprintf(str, args);
@@ -60,7 +63,7 @@ void __attribute__((__format__(__printf__, 4, 0))) _pprint_warn(
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s [WARN] %s@%s:%d \x1b[93m", time, file, func, line);
+  printf("%s WARN %s@%s:%d \x1b[93m", time, file, func, line);
 
   va_list args;
   va_start(args, str);
@@ -77,7 +80,7 @@ void __attribute__((__format__(__printf__, 4, 0))) _pprint_error(
   _pprint_time(&time);
 
   _pprint_lock(stdout);
-  printf("%s [ERR ] %s@%s:%d \x1b[91m", time, file, func, line);
+  printf("%s ERRO %s@%s:%d \x1b[91m", time, file, func, line);
 
   va_list args;
   va_start(args, str);

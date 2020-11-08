@@ -79,5 +79,16 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
   sec->best_bid = close_fixed;
   sec->best_ask = close_fixed;
   sec->last_update = timestamp;
+
+  analysis_check_white_marubuzu(sec->chart->candles, cndidx);
+  analysis_check_black_marubuzu(sec->chart->candles, cndidx);
+  analysis_check_ll_dragonfly_doji(sec->chart->candles, cndidx);
+  analysis_check_dragonfly_doji(sec->chart->candles, cndidx);
+  analysis_check_gravestone_doji(sec->chart->candles, cndidx);
+  analysis_check_four_price_doji(sec->chart->candles, cndidx);
+  analysis_check_hanging_man(sec->chart->candles, cndidx);
+  analysis_check_shooting_star(sec->chart->candles, cndidx);
+  analysis_check_spinning_top(sec->chart->candles, cndidx);
+
   return true;
 }

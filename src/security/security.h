@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "analysis.h"
 #include "chart.h"
 
 /*

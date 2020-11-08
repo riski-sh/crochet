@@ -3,10 +3,43 @@
 
 #include <pprint/pprint.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-#define CHART_MINUTES_IN_WEEK 10080
+#ifndef SECURITY_ANALYSIS_H
+#include "analysis.h"
+#else
+/*
+ * Every type of chart object that can be drawn.
+ */
+typedef enum { CHART_OBJECT_TEXT = 0 } chart_object_t;
+
+typedef enum {
+  WHITE_MARUBUZU = 0,
+  BLACK_MARUBUZU = 1,
+  LONG_LEGGED_DRAGON_FLY_DOJI = 2,
+  DRAGON_FLY_DOJI = 3,
+  GRAVESTONE_DOJI = 4,
+  FOUR_PRICE_DOJI = 5,
+  HANGING_MAN = 6,
+  SHOOTING_STAR = 7,
+  SPINNING_TOP = 8
+} analysis_shortname_t;
+
+/*
+ * Represents a generic object that gets displayed on the chart
+ */
+struct chart_object {
+  chart_object_t object_type;
+  analysis_shortname_t shortname;
+  void *value;
+  struct chart_object *next;
+};
+
+struct chart_object_t_text {
+  char TEXT;
+};
 
 /*
  * Represents a candle in the chart
@@ -30,38 +63,13 @@ struct candle {
   uint32_t low;
   uint32_t close;
   uint32_t volume;
+
+  struct chart_object *analysis_list;
 };
 
-/*
- * Every type of chart object that can be drawn.
- */
-typedef enum { CHART_REGION = 0, CHART_LINE = 0 } chart_object_t;
+#endif
 
-/*
- * Represents a generic object that gets displayed on the chart
- */
-struct chart_object {
-  chart_object_t object_type;
-  void *value;
-};
-
-/*
- * A shaded region on the chart. The shaded region on the chart will be drawn
- * over the encompassing candles. This region has opacity to allow for the
- * candles to still be seen.
- */
-struct chart_region {
-  /*
-   * The starting candle index of the box
-   */
-  size_t startidx;
-
-  /*
-   * The ending candle index of the box
-   */
-  size_t endidx;
-};
-
+#define CHART_MINUTES_IN_WEEK 10080
 /*
  * Represents a chart and all the elements needed for analysis to draw
  * correctly and informative information on the chart
