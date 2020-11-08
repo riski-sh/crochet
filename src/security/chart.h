@@ -117,6 +117,7 @@ size_t chart_tstoidx(size_t timestamp);
  */
 void chart_reset(struct chart *cht);
 
-void chart_create_object_text(struct candle *cnd, char c, analysis_shortname_t shortname);
+void chart_create_object_text(
+    struct candle *cnd, char c, analysis_shortname_t shortname);
 
 #endif
