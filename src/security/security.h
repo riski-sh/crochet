@@ -6,8 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef SECURITY_ANALYSIS_H
 #include "analysis.h"
+#endif
+
+#ifndef CHART_H
 #include "chart.h"
+#endif
 
 /*
  * A security object a security is also defined as "instrument" or "stock"

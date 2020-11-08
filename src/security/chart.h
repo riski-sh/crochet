@@ -7,9 +7,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#ifndef SECURITY_ANALYSIS_H
-#include "analysis.h"
-#else
 /*
  * Every type of chart object that can be drawn.
  */
@@ -67,8 +64,6 @@ struct candle {
   struct chart_object *analysis_list;
 };
 
-#endif
-
 #define CHART_MINUTES_IN_WEEK 10080
 /*
  * Represents a chart and all the elements needed for analysis to draw
@@ -121,5 +116,7 @@ size_t chart_tstoidx(size_t timestamp);
  * Reset the entire chart
  */
 void chart_reset(struct chart *cht);
+
+void chart_create_object_text(struct candle *cnd, char c, analysis_shortname_t shortname);
 
 #endif

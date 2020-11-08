@@ -350,7 +350,6 @@ _redraw()
         int draw_height = 0;
 
         while (analysis_iter) {
-
           switch (analysis_iter->object_type) {
           case CHART_OBJECT_TEXT: {
             struct chart_object_t_text *analysis_object = analysis_iter->value;
@@ -369,7 +368,6 @@ _redraw()
             break;
           }
           }
-
           analysis_iter = analysis_iter->next;
         }
       }

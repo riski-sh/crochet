@@ -3,46 +3,6 @@
 
 #ifndef CHART_H
 #include "chart.h"
-#else
-/*
- * Every type of chart object that can be drawn.
- */
-typedef enum { CHART_OBJECT_TEXT = 0 } chart_object_t;
-
-/*
- * Represents a generic object that gets displayed on the chart
- */
-struct chart_object {
-  chart_object_t object_type;
-  void *value;
-  struct chart_object *next;
-};
-
-/*
- * Represents a candle in the chart
- */
-struct candle {
-  /*
-   *    |   <---- high
-   *    |
-   *  ----- <---- open or close
-   *  |   |
-   *  |   |
-   *  |   |
-   *  |   |
-   *  ----- <---- close or open
-   *    |
-   *    |   <---- low
-   *
-   */
-  uint32_t open;
-  uint32_t high;
-  uint32_t low;
-  uint32_t close;
-  uint32_t volume;
-
-  struct chart_object *analysis_list;
-};
 #endif
 
 /*
