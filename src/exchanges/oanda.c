@@ -226,6 +226,8 @@ exchanges_oanda_init(void *key)
   response = NULL;
   pprint_info("%s", "starting oanda main loop...");
 
+  sleep(1);
+
   struct timespec speed_monitor_start;
   clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
   struct timespec speed_monitor_end;
