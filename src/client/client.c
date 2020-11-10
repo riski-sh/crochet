@@ -1,5 +1,3 @@
-#include <X11/Xlib.h>
-
 #include "client.h"
 
 /* Display to display to */
@@ -30,6 +28,10 @@ Pixmap double_buffer = 0;
 /* last recorded window size */
 int width = 0;
 int height = 0;
+
+/* last recorded x and y location of the mouse */
+int mouse_x;
+int mouse_y;
 
 /* color for data that is bullish */
 XColor upward;
@@ -124,7 +126,8 @@ _process_keypress(XEvent event)
       command[command_idx] = '\x0';
       return false;
     }
-    /* use pressed back space */
+
+    /* user pressed back space */
     if (command[command_idx] == 0x08) {
       command[command_idx] = '\x0';
       command_idx -= 1;
@@ -139,8 +142,6 @@ _process_keypress(XEvent event)
       }
       command_idx = 0;
       return false;
-    } else if (command[command_idx] == 'q') {
-      return true;
     } else {
       command_idx += 1;
     }
@@ -251,6 +252,10 @@ _redraw()
     struct linear_equation *pixel_to_price = NULL;
     pixel_to_price = linear_equation_new(
         font_height, max_value, xwa.height - font_height, min_value);
+
+    XSetForeground(dis, gc, foreground.pixel);
+    XSetFillStyle(dis, gc, FillSolid);
+
 
     /* understand how many pips our font height takes up */
     int64_t pips = (linear_equation_eval(pixel_to_price, font_height)) -

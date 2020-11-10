@@ -107,6 +107,22 @@ _tstodow(size_t timestamp)
 }
 
 void
+chart_runanalysis(struct chart *cht, size_t cndidx)
+{
+  if (cndidx >= 1) {
+    analysis_check_white_marubuzu(cht->candles, cndidx);
+    analysis_check_black_marubuzu(cht->candles, cndidx);
+    analysis_check_ll_dragonfly_doji(cht->candles, cndidx);
+    analysis_check_dragonfly_doji(cht->candles, cndidx);
+    analysis_check_gravestone_doji(cht->candles, cndidx);
+    analysis_check_four_price_doji(cht->candles, cndidx);
+    analysis_check_hanging_man(cht->candles, cndidx);
+    analysis_check_shooting_star(cht->candles, cndidx);
+    analysis_check_spinning_top(cht->candles, cndidx);
+  }
+}
+
+void
 chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
 {
 
@@ -117,12 +133,15 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   (void)ask;
 
   size_t minutes_since_sunday = chart_tstoidx(timestamp);
+
+  if (minutes_since_sunday > cht->cur_candle_idx) {
+    chart_runanalysis(cht, minutes_since_sunday);
+  }
+
   if (minutes_since_sunday < cht->cur_candle_idx) {
     pprint_info("%s", "resetting chart");
     chart_reset(cht);
   }
-
-  // bool perform_analysis = minutes_since_sunday > cht->cur_candle_idx;
 
   cht->cur_candle_idx = minutes_since_sunday;
   _chart_update_candle(cht, bid, minutes_since_sunday);

@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "globals/globals.h"
 #include "oanda.h"
 
 static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
@@ -58,7 +59,7 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
    * loop through all historical candles and add them to the current
    * chart
    */
-  while (_candles) {
+  while (_candles && globals_continue(NULL)) {
     __json_object _candle = json_get_object(_candles->val);
     __json_string _timestamp = json_get_string(hashmap_get("time", _candle));
     __json_object _bids = json_get_object(hashmap_get("bid", _candle));
@@ -101,7 +102,7 @@ _oanda_gen_currency_list(
   currency_list[0] = '\x0';
   size_t total_len = 0;
 
-  while (instruments) {
+  while (instruments && globals_continue(NULL)) {
     __json_object instrument = json_get_object(instruments->val);
     char *name = json_get_string(hashmap_get("name", instrument));
     int pip_location =
