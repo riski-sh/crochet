@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
+#include "ffjson/ffjson.h"
 
 static __json_value
 _load_config(char *file, char **raw)
@@ -111,8 +112,13 @@ main(int argc, char **argv)
     }
   }
 
-  pprint_info("%s", "starting client gui");
-  client_start();
+  __json_bool client = json_get_bool(hashmap_get("client", config));
+  if (client) {
+    pprint_info("%s", "starting client gui");
+    client_start();
+  } else {
+    pprint_warn("%s", "skipping gui, specified server in config");
+  }
 
   if (oanda_mainloop != pthread_self()) {
     pthread_join(oanda_mainloop, NULL);

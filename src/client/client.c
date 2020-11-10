@@ -48,11 +48,14 @@ XColor foreground;
 /* mutex lock the draw functions for single threaded drawing */
 pthread_mutex_t draw_mutex;
 
-bool finished_displaying = false;
+bool finished_displaying = true;
 
 static void
 _client_init()
 {
+
+  /* enable draw updates */
+  finished_displaying = false;
 
   /* Open up the display set by the DISPLAY environmental variable */
   dis = XOpenDisplay(NULL);

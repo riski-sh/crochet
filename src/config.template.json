@@ -1,4 +1,5 @@
 {
+  "client": false,
   "oanda": {
     "key": "your_api_key",
     "online": false
