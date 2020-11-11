@@ -218,7 +218,6 @@ exchanges_oanda_init(void *key)
   int num_valid_updates = 0;
 
   struct timespec start_time;
-  struct timespec end_time;
   struct timespec result;
 
   __json_value _response_root = NULL;
@@ -229,7 +228,7 @@ exchanges_oanda_init(void *key)
   sleep(1);
 
   struct timespec speed_monitor_start;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
+  clock_gettime(CLOCK_MONOTONIC, &speed_monitor_start);
   struct timespec speed_monitor_end;
 
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
@@ -291,26 +290,15 @@ exchanges_oanda_init(void *key)
 
     client_redraw();
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end_time);
-    result.tv_sec = end_time.tv_sec - start_time.tv_sec;
-    result.tv_nsec = end_time.tv_nsec - start_time.tv_nsec;
-    size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
+    uint64_t start_nanoseconds = start_time.tv_sec * (uint64_t)1000000000L + start_time.tv_nsec;
+    uint64_t end_nanoseconds = start_nanoseconds;
+    do {
+      struct timespec cur_time;
+      clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
+      end_nanoseconds = cur_time.tv_sec * (uint64_t)1000000000L + cur_time.tv_nsec;
+    } while (end_nanoseconds - start_nanoseconds <= (uint64_t)3.3e7);
 
-    int slowdown = (33333333 - duration);
-
-    if (slowdown > 0) {
-      end_time.tv_nsec += slowdown;
-      if (end_time.tv_nsec >= 1000 * 1000 * 1000) {
-        end_time.tv_nsec -= 1000 * 1000 * 1000;
-        end_time.tv_sec++;
-      }
-      while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &end_time, NULL) ==
-              -1 &&
-          errno == EINTR) {
-        /* do nothing while being interrupted */
-      }
-    }
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");
