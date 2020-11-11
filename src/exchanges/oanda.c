@@ -297,6 +297,7 @@ exchanges_oanda_init(void *key)
     size_t duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
 
     int slowdown = (33333333 - duration);
+
     if (slowdown > 0) {
       end_time.tv_nsec += slowdown;
       if (end_time.tv_nsec >= 1000 * 1000 * 1000) {
