@@ -16,7 +16,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
-#include "ffjson/ffjson.h"
+#include <ffjson/ffjson.h>
 
 static __json_value
 _load_config(char *file, char **raw)

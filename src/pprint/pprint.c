@@ -1,5 +1,3 @@
-#include <stdint.h>
-
 #include "pprint.h"
 
 #define TIME_STR_LEN 35
@@ -33,7 +31,7 @@ _pprint_time(char (*time)[TIME_STR_LEN])
 {
   struct timespec current_time;
 
-  clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
+  clock_gettime(CLOCK_REALTIME, &current_time);
 
   sprintf(*time, "%lu",
       ((uint64_t)current_time.tv_sec * (uint64_t)1e9) +

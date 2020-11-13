@@ -1,24 +1,59 @@
-CC?=gcc
-CFLAGS?=-O2 -g -march=native $(shell pkgconf --cflags openssl) $(shell pkgconf --cflags x11)
-LFLAGS?=$(shell pkgconf --libs openssl) $(shell pkgconf --libs x11) -lpthread
-WFLAGS?=-Wall -Wextra -Wpedantic -Werror -Wno-undef
-FFLAGS?=-fasynchronous-unwind-tables -fexceptions
-IFLAGS?=-I$(shell pwd)/src
-OBJDIR=$(shell pwd)/obj
+CC=gcc
+CFLAGS=-Wall -Wextra -Wpedantic -Wformat -Wformat-security -Wstrict-overflow -Werror
+CFLAGS+=-fstack-protector-strong
+CLFAGS+=-O2 -D_FORTIFY_SOURCE=2 -g
 
-export CC
-export CFLAGS
-export LFLAGS
-export WFLAGS
-export FFLAGS
-export IFLAGS
-export OBJDIR
+IFLAGS=-I$(shell pwd)/src
+IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
+IFLAGS+=$(shell pkgconf --cflags x11 | xargs)
+IFLAGS:=$(sort $(IFLAGS)) -lpthread
 
-all: objdir src/
-	@$(MAKE) -C src/
+LFLAGS=$(shell pkgconf --libs openssl | xargs)
+LFLAGS+=$(shell pkgconf --libs x11 | xargs)
+LFLAGS:=$(sort $(LFLAGS))
 
-objdir:
-	mkdir -p obj
+OBJDIR:=$(shell pwd)/obj
 
-clean: objdir
-	rm -rf $(OBJDIR)
+STRUCTURE=$(shell find src/ -type d)
+
+%.o : %.c %.h
+	@mkdir -p $(OBJDIR)/$(shell dirname $*)
+	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $(OBJDIR)/$@
+
+.client: src/client/client.o
+
+.exchanges: src/exchanges/exchanges.o \
+						src/exchanges/coinbase.o 	\
+						src/exchanges/oanda.o
+
+.ffjson: src/ffjson/ffjson.o
+
+.finmath: src/finmath/base_conversion.o \
+					src/finmath/linear_equation.o
+
+.globals: src/globals/globals.o
+
+.hashmap: src/hashmap/hashmap.o
+
+.httpws: src/httpws/base64.o 	\
+				 src/httpws/http11.o	\
+				 src/httpws/session.o \
+				 src/httpws/wss.o
+
+.orderbooks: src/orderbooks/book.o \
+						 src/orderbooks/coinbase.o
+
+.pprint: src/pprint/pprint.o
+
+.security: src/security/analysis.o	\
+					 src/security/chart.o			\
+					 src/security/security.o
+
+.PHONY: all
+all : .client .exchanges .ffjson .finmath .globals .hashmap .httpws \
+			.orderbooks .pprint .security
+	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c -o crochet.bin
+
+.PHONY: clean
+clean :
+	rm -rf obj

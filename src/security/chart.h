@@ -10,7 +10,7 @@
 /*
  * Every type of chart object that can be drawn.
  */
-typedef enum { CHART_OBJECT_TEXT = 0 } chart_object_t;
+typedef enum { CHART_OBJECT_TEXT = 0} chart_object_t;
 
 typedef enum {
   WHITE_MARUBUZU = 0,
@@ -21,7 +21,9 @@ typedef enum {
   FOUR_PRICE_DOJI = 5,
   HANGING_MAN = 6,
   SHOOTING_STAR = 7,
-  SPINNING_TOP = 8
+  SPINNING_TOP = 8,
+  SUPPORT_LINE = 9,
+  RESISTANCE_LINE = 10
 } analysis_shortname_t;
 
 /*
@@ -36,6 +38,11 @@ struct chart_object {
 
 struct chart_object_t_text {
   char TEXT;
+};
+
+struct chart_object_t_line {
+  size_t start;
+  size_t end;
 };
 
 /*

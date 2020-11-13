@@ -359,7 +359,6 @@ http11request_push(struct http11request *req, char **_data)
   /*
    * Read the response
    */
-  // TODO
   _http11request_read(req->session, _data);
 
   return STATUS_OK;

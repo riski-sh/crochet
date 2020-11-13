@@ -106,6 +106,11 @@ _tstodow(size_t timestamp)
   return (dow_t)days_since_epoch % 7;
 }
 
+struct analysis_meta {
+  struct chart *cht;
+  size_t cndidx;
+};
+
 void
 chart_runanalysis(struct chart *cht, size_t cndidx)
 {
