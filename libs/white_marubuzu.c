@@ -7,7 +7,7 @@ analysis_check_white_marubuzu(struct candle *cnds, size_t indx)
       cnds[indx - 1].close == cnds[indx - 1].high &&
       cnds[indx - 1].open != cnds[indx - 1].close) {
 
-    chart_create_object_text(&(cnds[indx - 1]), 'M', WHITE_MARUBUZU);
+    chart_create_object_text(&(cnds[indx - 1]), 'M', __func__);
   }
 }
 

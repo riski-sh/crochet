@@ -18,13 +18,13 @@ chart_object_new()
 void
 chart_create_object_line(
     struct candle *cnd, size_t start_idx, size_t start_price,
-    size_t end_idx, size_t end_price, analysis_shortname_t shortname)
+    size_t end_idx, size_t end_price, const char *function_name)
 {
   /* create a generic object */
   struct chart_object *obj = chart_object_new();
 
   /* set the shortname */
-  obj->shortname = shortname;
+  obj->name = function_name;
 
   /* set the type of the containing object */
   obj->object_type = CHART_OBJECT_LINE;
@@ -56,13 +56,13 @@ chart_create_object_line(
 
 void
 chart_create_object_text(
-    struct candle *cnd, char c, analysis_shortname_t shortname)
+    struct candle *cnd, char c, const char *function_name)
 {
   /* create a generic object */
   struct chart_object *obj = chart_object_new();
 
   /* set the shortname to understand who created this analysis */
-  obj->shortname = shortname;
+  obj->name = function_name;
 
   /* we will add this analysis the beginning of the linked list */
   obj->next = cnd->analysis_list;

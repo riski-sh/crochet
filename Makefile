@@ -49,13 +49,21 @@ STRUCTURE=$(shell find src/ -type d)
 					 src/security/chart.o			\
 					 src/security/security.o
 
+%.so : %.c
+	@mkdir -p $(OBJDIR)/libs
+	$(CC) -shared $(CFLAGS) $(IFLAGS) src/api.c $< -o $(OBJDIR)/$@
+
+.libs : libs/black_marubuzu.so \
+				libs/spinning_top.so \
+				libs/white_marubuzu.so
+
 .PHONY: all
 all : .client .exchanges .ffjson .finmath .globals .hashmap .httpws \
-			.orderbooks .pprint .security
+			.orderbooks .pprint .security .libs
 	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c src/api.c -o crochet.bin
-	$(CC) -shared $(CFLAGS) $(IFLAGS) $(LFLAGS) libs/marubuzu.c src/api.c -o libs/marubuzu.so
+
+libs : .libs
 
 .PHONY: clean
 clean :
-	rm -rf obj
-	rm -rf libs/*.so
+	rm -rf obj/src/

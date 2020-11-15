@@ -4,40 +4,6 @@ static struct vtable **tables = NULL;
 static size_t num_vtables = 0;
 
 void
-analysis_check_spinning_top(struct candle *cnds, size_t indx)
-{
-  uint32_t x, y, z;
-
-  if (cnds[indx - 1].open < cnds[indx - 1].close) {
-    /* calculate x,y,z for candles who was bullish */
-
-    /* close > open therefore high - close > 0 */
-    x = cnds[indx - 1].high - cnds[indx - 1].close;
-    y = cnds[indx - 1].close - cnds[indx - 1].open;
-    z = cnds[indx - 1].open - cnds[indx - 1].low;
-
-    uint32_t s = (x > z) ? x - z : z - x;
-
-    if (x > 0 && z > 0 && y > 0 && x + z > y && s <= 2) {
-      chart_create_object_text(&(cnds[indx - 1]), 'T', SPINNING_TOP);
-    }
-  } else if (cnds[indx - 1].close < cnds[indx - 1].open) {
-    /* calculate x,y,z for candles who was bullish */
-
-    /* close > open therefore high - close > 0 */
-    x = cnds[indx - 1].high - cnds[indx - 1].open;
-    y = cnds[indx - 1].open - cnds[indx - 1].close;
-    z = cnds[indx - 1].close - cnds[indx - 1].low;
-
-    uint32_t s = (x > z) ? x - z : z - x;
-
-    if (x > 0 && z > 0 && y > 0 && x + z > y && s <= 2) {
-      chart_create_object_text(&(cnds[indx - 1]), 'T', SPINNING_TOP);
-    }
-  }
-}
-
-void
 analysis_check_shooting_star(struct candle *cnds, size_t indx)
 {
   uint32_t x, y, z;
@@ -51,7 +17,7 @@ analysis_check_shooting_star(struct candle *cnds, size_t indx)
     x = cnds[indx - 1].open - cnds[indx - 1].low;
 
     if (x < z && z > 2 * x && y < z) {
-      chart_create_object_text(&(cnds[indx - 1]), 'S', SHOOTING_STAR);
+      chart_create_object_text(&(cnds[indx - 1]), 'S', __func__);
     }
   } else if (cnds[indx - 1].close < cnds[indx - 1].open) {
     /* calculate x,y,z for candles who was bullish */
@@ -62,7 +28,7 @@ analysis_check_shooting_star(struct candle *cnds, size_t indx)
     x = cnds[indx - 1].close - cnds[indx - 1].low;
 
     if (x < z && z > 2 * x && y < z) {
-      chart_create_object_text(&(cnds[indx - 1]), 'S', SHOOTING_STAR);
+      chart_create_object_text(&(cnds[indx - 1]), 'S', __func__);
     }
   }
 }
@@ -81,7 +47,7 @@ analysis_check_hanging_man(struct candle *cnds, size_t indx)
     z = cnds[indx - 1].open - cnds[indx - 1].low;
 
     if (x < z && z > 2 * x && y < z) {
-      chart_create_object_text(&(cnds[indx - 1]), 'H', SHOOTING_STAR);
+      chart_create_object_text(&(cnds[indx - 1]), 'H', __func__);
     }
   } else if (cnds[indx - 1].close < cnds[indx - 1].open) {
     /* calculate x,y,z for candles who was bullish */
@@ -92,7 +58,7 @@ analysis_check_hanging_man(struct candle *cnds, size_t indx)
     z = cnds[indx - 1].close - cnds[indx - 1].low;
 
     if (x < z && z > 2 * x && y < z) {
-      chart_create_object_text(&(cnds[indx - 1]), 'H', SHOOTING_STAR);
+      chart_create_object_text(&(cnds[indx - 1]), 'H', __func__);
     }
   }
 }
@@ -104,7 +70,7 @@ analysis_check_four_price_doji(struct candle *cnds, size_t indx)
   if (cnds[indx - 1].open == cnds[indx - 1].close &&
       cnds[indx - 1].close == cnds[indx - 1].low &&
       cnds[indx - 1].close == cnds[indx - 1].high) {
-    chart_create_object_text(&(cnds[indx - 1]), 'D', FOUR_PRICE_DOJI);
+    chart_create_object_text(&(cnds[indx - 1]), 'D', __func__);
   }
 }
 
@@ -121,7 +87,7 @@ analysis_check_gravestone_doji(struct candle *cnds, size_t indx)
   if (cnds[indx - 1].open == cnds[indx - 1].close &&
       cnds[indx - 1].close == cnds[indx - 1].low) {
 
-    chart_create_object_text(&(cnds[indx - 1]), 'D', GRAVESTONE_DOJI);
+    chart_create_object_text(&(cnds[indx - 1]), 'D', __func__);
   }
 }
 
@@ -138,7 +104,7 @@ analysis_check_dragonfly_doji(struct candle *cnds, size_t indx)
   if (cnds[indx - 1].open == cnds[indx - 1].close &&
       cnds[indx - 1].close == cnds[indx - 1].high) {
 
-    chart_create_object_text(&(cnds[indx - 1]), 'D', DRAGON_FLY_DOJI);
+    chart_create_object_text(&(cnds[indx - 1]), 'D', __func__);
   }
 }
 
@@ -157,29 +123,7 @@ analysis_check_ll_dragonfly_doji(struct candle *cnds, size_t indx)
       cnds[indx - 1].close != cnds[indx - 1].low) {
 
     chart_create_object_text(
-        &(cnds[indx - 1]), 'D', LONG_LEGGED_DRAGON_FLY_DOJI);
-  }
-}
-
-void
-analysis_check_black_marubuzu(struct candle *cnds, size_t indx)
-{
-  if (cnds[indx - 1].open == cnds[indx - 1].high &&
-      cnds[indx - 1].close == cnds[indx - 1].low &&
-      cnds[indx - 1].open != cnds[indx - 1].close) {
-
-    chart_create_object_text(&(cnds[indx - 1]), 'M', BLACK_MARUBUZU);
-  }
-}
-
-void
-analysis_check_white_marubuzu(struct candle *cnds, size_t indx)
-{
-  if (cnds[indx - 1].open == cnds[indx - 1].low &&
-      cnds[indx - 1].close == cnds[indx - 1].high &&
-      cnds[indx - 1].open != cnds[indx - 1].close) {
-
-    chart_create_object_text(&(cnds[indx - 1]), 'M', WHITE_MARUBUZU);
+        &(cnds[indx - 1]), 'D', __func__);
   }
 }
 
@@ -230,7 +174,7 @@ analysis_resistance_line(struct candle *cnds, size_t indx)
 
   if (end_price != 0 && confirmations >= 3) {
     chart_create_object_line(&(cnds[start_idx]), start_idx, start_price,
-        end_idx, end_price, RESISTANCE_LINE);
+        end_idx, end_price, __func__);
   }
 }
 
