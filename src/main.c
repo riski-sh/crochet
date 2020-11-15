@@ -6,17 +6,18 @@
 
 #include <client/client.h>
 #include <exchanges/exhangesall.h>
+#include <ffjson/ffjson.h>
 #include <globals/globals.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <orderbooks/book.h>
+#include <security/analysis.h>
 #include <pprint/pprint.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
-#include <ffjson/ffjson.h>
 
 static __json_value
 _load_config(char *file, char **raw)
@@ -80,6 +81,9 @@ main(int argc, char **argv)
     pprint_error("%s", "no configuration file specified");
     return 1;
   }
+
+  pprint_info("%s", "loading analysis");
+  analysis_init();
 
   pprint_info("%s", "setting up openssl");
 

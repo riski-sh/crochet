@@ -45,6 +45,9 @@ XColor background;
 /* color for the foreground */
 XColor foreground;
 
+/* color orange */
+XColor orange;
+
 /* mutex lock the draw functions for single threaded drawing */
 pthread_mutex_t draw_mutex;
 
@@ -112,6 +115,10 @@ _client_init()
   char fg[] = "#F5DEB3";
   XParseColor(dis, colormap, fg, &foreground);
   XAllocColor(dis, colormap, &foreground);
+
+  char org[] = "#FF7F00";
+  XParseColor(dis, colormap, org, &orange);
+  XAllocColor(dis, colormap, &orange);
 
   /* clear the window and bring it to the top */
   XClearWindow(dis, win);
@@ -259,7 +266,6 @@ _redraw()
     XSetForeground(dis, gc, foreground.pixel);
     XSetFillStyle(dis, gc, FillSolid);
 
-
     /* understand how many pips our font height takes up */
     int64_t pips = (linear_equation_eval(pixel_to_price, font_height)) -
         linear_equation_eval(pixel_to_price, font_height * 2);
@@ -399,6 +405,19 @@ _redraw()
                     (font_height * draw_height),
                 &(analysis_object->TEXT), 1);
             draw_height += 1;
+            break;
+          }
+          case CHART_OBJECT_LINE: {
+            struct chart_object_t_line *analysis_object = analysis_iter->value;
+            XSetForeground(dis, gc, orange.pixel);
+            XSetFillStyle(dis, gc, FillSolid);
+            XDrawLine(dis, double_buffer, gc,
+                ((analysis_object->start - start_idx - 1) * (candle_width)) +
+                (font_info->per_char->width / 2),
+                linear_equation_eval(price_to_pixel, analysis_object->start_price),
+                (analysis_object->end - start_idx - 1) * (candle_width) +
+                (font_info->per_char->width / 2),
+                linear_equation_eval(price_to_pixel, analysis_object->end_price));
             break;
           }
           }

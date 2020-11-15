@@ -92,7 +92,7 @@ _oanda_gen_currency_list(
 {
 
   pprint_info("%s", "configuring tradeable oanda symbols...");
-
+  pprint_info("%s", response);
   __json_value _root = json_parse(response);
   __json_object _instruments = json_get_object(_root);
   __json_array instruments =
@@ -290,12 +290,14 @@ exchanges_oanda_init(void *key)
 
     client_redraw();
 
-    uint64_t start_nanoseconds = start_time.tv_sec * (uint64_t)1000000000L + start_time.tv_nsec;
+    uint64_t start_nanoseconds =
+        start_time.tv_sec * (uint64_t)1000000000L + start_time.tv_nsec;
     uint64_t end_nanoseconds = start_nanoseconds;
     do {
       struct timespec cur_time;
       clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
-      end_nanoseconds = cur_time.tv_sec * (uint64_t)1000000000L + cur_time.tv_nsec;
+      end_nanoseconds =
+          cur_time.tv_sec * (uint64_t)1000000000L + cur_time.tv_nsec;
     } while (end_nanoseconds - start_nanoseconds <= (uint64_t)3.3e7);
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);

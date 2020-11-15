@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 int client_start();
 int client_getdisplay(Display **display);

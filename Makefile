@@ -1,16 +1,16 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -Wpedantic -Wformat -Wformat-security -Wstrict-overflow -Werror
-CFLAGS+=-fstack-protector-strong
+CFLAGS+=-fstack-protector-strong -fPIC
 CLFAGS+=-O2 -D_FORTIFY_SOURCE=2 -g
 
 IFLAGS=-I$(shell pwd)/src
 IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
 IFLAGS+=$(shell pkgconf --cflags x11 | xargs)
-IFLAGS:=$(sort $(IFLAGS)) -lpthread
+IFLAGS:=$(sort $(IFLAGS))
 
 LFLAGS=$(shell pkgconf --libs openssl | xargs)
 LFLAGS+=$(shell pkgconf --libs x11 | xargs)
-LFLAGS:=$(sort $(LFLAGS))
+LFLAGS:=$(sort $(LFLAGS)) -lpthread -lm -ldl
 
 OBJDIR:=$(shell pwd)/obj
 
@@ -52,8 +52,10 @@ STRUCTURE=$(shell find src/ -type d)
 .PHONY: all
 all : .client .exchanges .ffjson .finmath .globals .hashmap .httpws \
 			.orderbooks .pprint .security
-	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c -o crochet.bin
+	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c src/api.c -o crochet.bin
+	$(CC) -shared $(CFLAGS) $(IFLAGS) $(LFLAGS) libs/marubuzu.c src/api.c -o libs/marubuzu.so
 
 .PHONY: clean
 clean :
 	rm -rf obj
+	rm -rf libs/*.so

@@ -1,4 +1,5 @@
 #include "chart.h"
+#include "security/analysis.h"
 
 /*
  * Represents a day of week from the start of the epoch
@@ -114,16 +115,8 @@ struct analysis_meta {
 void
 chart_runanalysis(struct chart *cht, size_t cndidx)
 {
-  if (cndidx >= 1) {
-    analysis_check_white_marubuzu(cht->candles, cndidx);
-    analysis_check_black_marubuzu(cht->candles, cndidx);
-    analysis_check_ll_dragonfly_doji(cht->candles, cndidx);
-    analysis_check_dragonfly_doji(cht->candles, cndidx);
-    analysis_check_gravestone_doji(cht->candles, cndidx);
-    analysis_check_four_price_doji(cht->candles, cndidx);
-    analysis_check_hanging_man(cht->candles, cndidx);
-    analysis_check_shooting_star(cht->candles, cndidx);
-    analysis_check_spinning_top(cht->candles, cndidx);
+  if (cndidx > 1) {
+    analysis_run(cht->candles, cndidx);
   }
 }
 

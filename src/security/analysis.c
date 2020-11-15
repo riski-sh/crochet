@@ -1,48 +1,7 @@
 #include "analysis.h"
 
-void
-chart_create_object_text(
-    struct candle *cnd, char c, analysis_shortname_t shortname)
-{
-  /* create a generic object */
-  struct chart_object *obj = NULL;
-  obj = malloc(sizeof(struct chart_object) * 1);
-
-  /* verify malloc allocted memory */
-  if (!obj) {
-    pprint_error(
-        "unable to allocate %lu bytes (aborting)", sizeof(struct chart_object));
-    exit(1);
-  }
-
-  /* set the shortname to understand who created this analysis */
-  obj->shortname = shortname;
-
-  /* we will add this analysis the beginning of the linked list */
-  obj->next = cnd->analysis_list;
-
-  /* define the object type to make sure readers cast the void* correctly */
-  obj->object_type = CHART_OBJECT_TEXT;
-
-  /* create a text object */
-  struct chart_object_t_text *type = NULL;
-  type = malloc(sizeof(struct chart_object_t_text) * 1);
-
-  /* verify malloc allocated memory */
-  if (!type) {
-    pprint_error("unable to allocate %lu bytes (aborting)",
-        sizeof(struct chart_object_t_text));
-  }
-
-  /* set the character to be displayed at the bottom of the candle */
-  type->TEXT = c;
-
-  /* point the generic object to the typed object */
-  obj->value = (void *)type;
-
-  /* make the newly created object the root of the list */
-  cnd->analysis_list = obj;
-}
+static struct vtable **tables = NULL;
+static size_t num_vtables = 0;
 
 void
 analysis_check_spinning_top(struct candle *cnds, size_t indx)
@@ -222,4 +181,88 @@ analysis_check_white_marubuzu(struct candle *cnds, size_t indx)
 
     chart_create_object_text(&(cnds[indx - 1]), 'M', WHITE_MARUBUZU);
   }
+}
+
+void
+analysis_resistance_line(struct candle *cnds, size_t indx)
+{
+  /* don't continue unless we have at least 4 candles */
+  if (indx < 3) {
+    return;
+  }
+
+  /* only find a support on a candle that is not a doji */
+  if (cnds[indx - 1].open == cnds[indx - 1].close) {
+    return;
+  }
+
+  size_t start_idx = indx - 1;
+  size_t start_price = 0;
+
+  size_t end_idx = 0;
+  size_t end_price = 0;
+
+  if (cnds[indx - 1].open > cnds[indx - 1].close) {
+    start_price = cnds[indx - 1].open;
+  } else {
+    start_price = cnds[indx - 1].close;
+  }
+
+  size_t confirmations = 1;
+  for (size_t idx = indx - 2; idx > 0; idx -= 1) {
+    if (cnds[idx].close > start_price) {
+      break;
+    }
+    if (cnds[idx].close == start_price) {
+      end_idx = idx;
+      end_price = cnds[idx].close;
+      confirmations += 1;
+      continue;
+    }
+    if (cnds[idx].high == start_price) {
+      end_idx = idx;
+      end_price = cnds[idx].high;
+      confirmations += 1;
+      continue;
+    }
+    break;
+  }
+
+  if (end_price != 0 && confirmations >= 3) {
+    chart_create_object_line(&(cnds[start_idx]), start_idx, start_price,
+        end_idx, end_price, RESISTANCE_LINE);
+  }
+}
+
+void
+analysis_run(struct candle* cnds, size_t indx)
+{
+  for (size_t i = 0; i < num_vtables; ++i) {
+    tables[i]->run(cnds, indx);
+  }
+}
+
+void
+analysis_init()
+{
+  dlopen (NULL, RTLD_NOW|RTLD_GLOBAL);
+  void *handle = dlopen("./libs/marubuzu.so", RTLD_LAZY);
+  if (!handle) {
+    pprint_error("%s", "unable to load ./libs/marubuzu.so (aborting)");
+    pprint_error("dlopen error: %s", dlerror());
+    exit(1);
+  }
+  pprint_info("%s", "loading libs/marubuzu.so...");
+
+  struct vtable *libclass = dlsym(handle, "exports");
+  if (!libclass) {
+    pprint_error("%s", "this library does not export a vtable (aborting)");
+    exit(1);
+  }
+
+  num_vtables += 1;
+  tables = realloc(tables, sizeof(struct vtable*) * num_vtables);
+  tables[num_vtables - 1] = libclass;
+
+  pprint_info("%s", "loading libs/marubuzu.so... vtable OK");
 }
