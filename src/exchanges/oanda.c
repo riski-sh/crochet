@@ -92,7 +92,6 @@ _oanda_gen_currency_list(
 {
 
   pprint_info("%s", "configuring tradeable oanda symbols...");
-  pprint_info("%s", response);
   __json_value _root = json_parse(response);
   __json_object _instruments = json_get_object(_root);
   __json_array instruments =

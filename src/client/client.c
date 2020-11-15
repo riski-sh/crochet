@@ -413,11 +413,13 @@ _redraw()
             XSetFillStyle(dis, gc, FillSolid);
             XDrawLine(dis, double_buffer, gc,
                 ((analysis_object->start - start_idx - 1) * (candle_width)) +
-                (font_info->per_char->width / 2),
-                linear_equation_eval(price_to_pixel, analysis_object->start_price),
+                    (font_info->per_char->width / 2),
+                linear_equation_eval(
+                    price_to_pixel, analysis_object->start_price),
                 (analysis_object->end - start_idx - 1) * (candle_width) +
-                (font_info->per_char->width / 2),
-                linear_equation_eval(price_to_pixel, analysis_object->end_price));
+                    (font_info->per_char->width / 2),
+                linear_equation_eval(
+                    price_to_pixel, analysis_object->end_price));
             break;
           }
           }

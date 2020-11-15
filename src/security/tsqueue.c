@@ -1,8 +1,8 @@
 #include "tsqueue.h"
 
 void
-tsqueue_add(struct tsqueue* queue, struct candles *cnds, size_t indx,
-    analysis_func run)
+tsqueue_add(
+    struct tsqueue *queue, struct candles *cnds, size_t indx, analysis_func run)
 {
   /* create an element first */
   struct tsqueue_element *element = NULL;
@@ -25,7 +25,7 @@ tsqueue_add(struct tsqueue* queue, struct candles *cnds, size_t indx,
 }
 
 struct tsqueue_element *
-tsqueue_pop(struct tsqueue* queue)
+tsqueue_pop(struct tsqueue *queue)
 {
   struct tsqueue_element *element = NULL;
   pthread_mutex_lock(&(queue->locked));

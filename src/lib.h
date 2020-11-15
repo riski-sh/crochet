@@ -2,8 +2,8 @@
 #define LIB_H
 
 #include <api.h>
-#include <finmath/linear_equation.h>
 #include <finmath/base_conversion.h>
+#include <finmath/linear_equation.h>
 
 struct vtable {
   analysis_func run;

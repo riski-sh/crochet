@@ -16,9 +16,9 @@ chart_object_new()
 }
 
 void
-chart_create_object_line(
-    struct candle *cnd, size_t start_idx, size_t start_price,
-    size_t end_idx, size_t end_price, const char *function_name)
+chart_create_object_line(struct candle *cnd, size_t start_idx,
+    size_t start_price, size_t end_idx, size_t end_price,
+    const char *function_name)
 {
   /* create a generic object */
   struct chart_object *obj = chart_object_new();
@@ -48,15 +48,14 @@ chart_create_object_line(
   type->end = end_idx;
   type->end_price = end_price;
 
-  obj->value = (void*) type;
+  obj->value = (void *)type;
 
   /* make the newly created object the root of the list */
   cnd->analysis_list = obj;
 }
 
 void
-chart_create_object_text(
-    struct candle *cnd, char c, const char *function_name)
+chart_create_object_text(struct candle *cnd, char c, const char *function_name)
 {
   /* create a generic object */
   struct chart_object *obj = chart_object_new();
@@ -90,4 +89,3 @@ chart_create_object_text(
   /* make the newly created object the root of the list */
   cnd->analysis_list = obj;
 }
-

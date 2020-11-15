@@ -1,14 +1,14 @@
 #ifndef CHART_H
 #define CHART_H
 
+#include <api.h>
 #include <pprint/pprint.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "analysis.h"
-#include <api.h>
 
+#include "analysis.h"
 
 /*
  * Creates a new chart

@@ -1,13 +1,13 @@
 #ifndef SECURITY_TSQUEUE_H
 #define SECURITY_TSQUEUE_H
 
-#include <pthread.h>
 #include <api.h>
 #include <pprint/pprint.h>
+#include <pthread.h>
 
 /* represents an element in the queue */
 struct tsqueue_element {
-  struct candles* cnds;
+  struct candles *cnds;
   size_t indx;
   analysis_func run;
   struct tsqueue_element *next;
@@ -30,7 +30,7 @@ struct tsqueue {
  * NEVER reference cnds[indx].
  * @param run the analysis to run
  */
-void tsqueue_add(struct tsqueue* queue, struct candles *cnds, size_t indx,
+void tsqueue_add(struct tsqueue *queue, struct candles *cnds, size_t indx,
     analysis_func run);
 
 /*
@@ -39,6 +39,6 @@ void tsqueue_add(struct tsqueue* queue, struct candles *cnds, size_t indx,
  * @param queue the queue to pop
  * @return the element in the queue. This element must be freed by the popper
  */
-struct tsqueue_element *tsqueue_pop(struct tsqueue* queue);
+struct tsqueue_element *tsqueue_pop(struct tsqueue *queue);
 
 #endif

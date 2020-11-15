@@ -12,9 +12,9 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <orderbooks/book.h>
-#include <security/analysis.h>
 #include <pprint/pprint.h>
 #include <pthread.h>
+#include <security/analysis.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
@@ -83,8 +83,7 @@ main(int argc, char **argv)
   }
 
   pprint_info("%s", "loading analysis");
-  analysis_init();
-
+  analysis_init("./obj/libs/");
   pprint_info("%s", "setting up openssl");
 
   SSL_load_error_strings();
