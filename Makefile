@@ -1,7 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -Wpedantic -Wformat -Wformat-security -Wstrict-overflow -Werror
-CFLAGS+=-fstack-protector-strong -fPIC
-CLFAGS+=-O2 -D_FORTIFY_SOURCE=2 -g
+CFLAGS+=-fstack-protector-strong -fPIC -O0 -g
 
 IFLAGS=-I$(shell pwd)/src
 IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
@@ -51,11 +50,19 @@ STRUCTURE=$(shell find src/ -type d)
 
 %.so : %.c
 	@mkdir -p $(OBJDIR)/libs
-	$(CC) -shared $(CFLAGS) $(IFLAGS) src/api.c $< -o $(OBJDIR)/$@
+	$(CC) -shared $(CFLAGS) $(IFLAGS) src/api.c src/finmath/linear_equation.c $< -o $(OBJDIR)/$@
 
 .libs : libs/black_marubuzu.so \
+				libs/dragonfly_doji.so \
+				libs/four_price_doji.so \
+				libs/gravestone_doji.so \
+				libs/hanging_man.so \
+				libs/long_legged_dragonfly_doji.so \
+				libs/shooting_star.so \
 				libs/spinning_top.so \
-				libs/white_marubuzu.so
+				libs/white_marubuzu.so \
+				libs/support_trend.so \
+				libs/resistance_trend.so
 
 .PHONY: all
 all : .client .exchanges .ffjson .finmath .globals .hashmap .httpws \
