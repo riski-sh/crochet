@@ -1,14 +1,12 @@
-CC=gcc
+CC?=clang
 CFLAGS=-Wall -Wextra -Wpedantic -Wformat -Wformat-security -Wstrict-overflow -Werror
 CFLAGS+=-fstack-protector-strong -fPIC -O0 -g
 
 IFLAGS=-I$(shell pwd)/src
 IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
-IFLAGS+=$(shell pkgconf --cflags x11 | xargs)
 IFLAGS:=$(sort $(IFLAGS))
 
 LFLAGS=$(shell pkgconf --libs openssl | xargs)
-LFLAGS+=$(shell pkgconf --libs x11 | xargs)
 LFLAGS:=$(sort $(LFLAGS)) -lpthread -lm -ldl
 
 OBJDIR:=$(shell pwd)/obj
@@ -65,7 +63,7 @@ STRUCTURE=$(shell find src/ -type d)
 				libs/resistance_trend.so
 
 .PHONY: all
-all : .client .exchanges .ffjson .finmath .globals .hashmap .httpws \
+all : .exchanges .ffjson .finmath .globals .hashmap .httpws \
 			.orderbooks .pprint .security .libs
 	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c src/api.c -o crochet.bin
 

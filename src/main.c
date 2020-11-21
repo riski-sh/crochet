@@ -4,7 +4,7 @@
  * (C) washcloth et al.
  */
 
-#include <client/client.h>
+// #include <client/client.h>
 #include <exchanges/exhangesall.h>
 #include <ffjson/ffjson.h>
 #include <globals/globals.h>
@@ -113,14 +113,6 @@ main(int argc, char **argv)
       pprint_info("%s", "starting coinbase feed");
       abort();
     }
-  }
-
-  __json_bool client = json_get_bool(hashmap_get("client", config));
-  if (client) {
-    pprint_info("%s", "starting client gui");
-    client_start();
-  } else {
-    pprint_warn("%s", "skipping gui, specified server in config");
   }
 
   if (oanda_mainloop != pthread_self()) {

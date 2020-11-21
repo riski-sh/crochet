@@ -2,12 +2,15 @@
 #define SECURITY_ANALYSIS_H
 
 #include <api.h>
+#include <lib.h>
 #include <dirent.h>
 #include <dlfcn.h>
-#include <lib.h>
-#include <linux/limits.h>
 #include <pprint/pprint.h>
 #include <stdbool.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 /*
  * Recursively searches through base_path for .so files and loads them into

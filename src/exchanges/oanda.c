@@ -230,7 +230,7 @@ exchanges_oanda_init(void *key)
   clock_gettime(CLOCK_MONOTONIC, &speed_monitor_start);
   struct timespec speed_monitor_end;
 
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  clock_gettime(CLOCK_MONOTONIC, &start_time);
   while (globals_continue(NULL)) {
     http11request_push(request, &response);
 
@@ -275,7 +275,7 @@ exchanges_oanda_init(void *key)
 
     num_messages += 1;
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_end);
+    clock_gettime(CLOCK_MONOTONIC, &speed_monitor_end);
     result.tv_sec = speed_monitor_end.tv_sec - speed_monitor_start.tv_sec;
     result.tv_nsec = speed_monitor_end.tv_nsec - speed_monitor_start.tv_nsec;
     size_t speed_duration = ((result.tv_sec * 1000000000) + result.tv_nsec);
@@ -283,23 +283,21 @@ exchanges_oanda_init(void *key)
       num_messages =
           (num_messages / speed_duration) * OANDA_PRINT_INTERVAL_SECONDS;
       pprint_info("currently polling at %05.2f / %d r/s", num_messages, 30);
-      clock_gettime(CLOCK_MONOTONIC_RAW, &speed_monitor_start);
+      clock_gettime(CLOCK_MONOTONIC, &speed_monitor_start);
       num_messages = 0;
     }
-
-    client_redraw();
 
     uint64_t start_nanoseconds =
         start_time.tv_sec * (uint64_t)1000000000L + start_time.tv_nsec;
     uint64_t end_nanoseconds = start_nanoseconds;
     do {
       struct timespec cur_time;
-      clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
+      clock_gettime(CLOCK_MONOTONIC, &cur_time);
       end_nanoseconds =
           cur_time.tv_sec * (uint64_t)1000000000L + cur_time.tv_nsec;
     } while (end_nanoseconds - start_nanoseconds <= (uint64_t)3.3e7);
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
   }
 
   pprint_info("%s", "cleaning up exchange oanda...");

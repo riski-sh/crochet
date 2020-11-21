@@ -1,7 +1,6 @@
 #ifndef EXCHANGES_OANDA_H
 #define EXCHANGES_OANDA_H
 
-#include <client/client.h>
 #include <exchanges/exchanges.h>
 #include <ffjson/ffjson.h>
 #include <globals/globals.h>
