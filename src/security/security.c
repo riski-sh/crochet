@@ -80,7 +80,7 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
   sec->best_ask = close_fixed;
   sec->last_update = timestamp;
 
-  chart_runanalysis(sec->chart, cndidx + 1);
+  // chart_runanalysis(sec->chart, cndidx + 1);
 
   return true;
 }
