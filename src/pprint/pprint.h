@@ -57,15 +57,15 @@ void _pprint_error(
           __LINE__, #PTR);                                                  \
       abort();                                                              \
     }                                                                       \
-  } while (0);
+  } while (0)
 
 #define pprint_info(FMT, ...) \
-  _pprint_info(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__);
+  _pprint_info(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__)
 
 #define pprint_warn(FMT, ...) \
-  _pprint_warn(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__);
+  _pprint_warn(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__)
 
 #define pprint_error(FMT, ...) \
-  _pprint_error(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__);
+  _pprint_error(__FILE__, __func__, __LINE__, FMT, __VA_ARGS__)
 
 #endif

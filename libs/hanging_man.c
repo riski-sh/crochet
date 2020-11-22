@@ -1,6 +1,6 @@
 #include <lib.h>
 
-void
+static void
 analysis_check_hanging_man(struct candle *cnds, size_t indx)
 {
   uint32_t x, y, z;

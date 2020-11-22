@@ -1,6 +1,6 @@
 #include <lib.h>
 
-void
+static void
 analysis_check_four_price_doji(struct candle *cnds, size_t indx)
 {
 

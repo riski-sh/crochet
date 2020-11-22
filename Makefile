@@ -1,6 +1,7 @@
 CC?=clang
-CFLAGS=-Wall -Wextra -Wpedantic -Wformat -Wformat-security -Wstrict-overflow -Werror
-CFLAGS+=-fstack-protector-strong -fPIC -O0 -g
+
+CFLAGS+=-Weverything -Werror -pedantic -isystem /usr/local/include -O2 -g
+CFLAGS+=-Wno-padded
 
 IFLAGS=-I$(shell pwd)/src
 IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
@@ -48,7 +49,7 @@ STRUCTURE=$(shell find src/ -type d)
 
 %.so : %.c
 	@mkdir -p $(OBJDIR)/libs
-	$(CC) -shared $(CFLAGS) $(IFLAGS) src/api.c src/finmath/linear_equation.c $< -o $(OBJDIR)/$@
+	$(CC) -shared $(CFLAGS) $(IFLAGS) -fPIC src/api.c src/finmath/linear_equation.c $< -o $(OBJDIR)/$@
 
 .libs : libs/black_marubuzu.so \
 				libs/dragonfly_doji.so \

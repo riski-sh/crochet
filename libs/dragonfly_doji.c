@@ -1,6 +1,6 @@
 #include <lib.h>
 
-void
+static void
 analysis_check_dragonfly_doji(struct candle *cnds, size_t indx)
 {
 

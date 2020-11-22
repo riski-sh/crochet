@@ -36,7 +36,7 @@ _load_config(char *file, char **raw)
   fseek(fp, 0, SEEK_SET);
 
   char *cfg = malloc(file_size + 1);
-  int ret = fread(cfg, sizeof(char), file_size, fp);
+  size_t ret = fread(cfg, sizeof(char), file_size, fp);
   if (ret > 0 && (size_t)ret != file_size) {
     pprint_error("unable to read entire config file? (aborting)", __LINE__);
     abort();

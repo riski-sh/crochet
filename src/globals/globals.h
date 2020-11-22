@@ -4,6 +4,10 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+extern pthread_mutex_t lock;
+extern bool is_safe;
+
+
 /*
  * A global infinite loop boolean
  */

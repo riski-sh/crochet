@@ -56,7 +56,7 @@ _http11request_parse_content_length(SSL *ssl, char **data, int content_length)
   /*
    * Allocate exact amount since we know how much is coming
    */
-  *data = realloc(*data, (sizeof(char) * content_length) + 1);
+  *data = realloc(*data, (sizeof(char) * (size_t) content_length) + 1);
 
   if (*data == NULL) {
     pprint_error(
@@ -110,13 +110,13 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
       total_allocated += chunk_size;
 
       if (realloc_data) {
-        (*data) = realloc(*data, total_allocated + 1);
+        (*data) = realloc(*data, (size_t) (total_allocated + 1));
       }
 
       long toread = chunk_size;
 
       while (toread != 0) {
-        int ret = SSL_read(ssl, &((*data)[total_read]), toread);
+        int ret = SSL_read(ssl, &((*data)[total_read]), (int) toread);
         if (ret < 0) {
           pprint_error("unable to read %ldd bytes openssl returned %d instead",
               chunk_size, ret);
@@ -137,7 +137,7 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
         }
         chunkending -= ret;
       }
-      memset(chunk_len, '\x0', chunkidx);
+      memset(chunk_len, '\x0', (size_t) chunkidx);
     }
   } while (chunk_size != 0);
 
@@ -224,7 +224,7 @@ _http11request_read(struct tls_session *session, char **data)
        * Try to read the content length or transfer encoding
        */
       if (strncmp("Content-Length: ", header, 16) == 0) {
-        content_length = strtod(&(header[16]), NULL);
+        content_length = (int) strtol(&(header[16]), NULL, 10);
         found_content_length = true;
       } else if (strncmp("Transfer-Encoding: ", header, 19) == 0) {
         found_content_length = true;
@@ -320,7 +320,7 @@ _http11request_cache(struct http11request *req)
   STR_APPEND_STR(req->cache, cache_idx, "\r\n");
   (req->cache)[cache_idx] = '\x0';
 
-  req->cache_len = strlen(req->cache);
+  req->cache_len = (int) strlen(req->cache);
 }
 
 status_t

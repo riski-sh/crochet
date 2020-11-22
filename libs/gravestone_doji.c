@@ -1,6 +1,6 @@
 #include <lib.h>
 
-void
+static void
 analysis_check_gravestone_doji(struct candle *cnds, size_t indx)
 {
 

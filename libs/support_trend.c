@@ -32,7 +32,7 @@ _valid_segment(struct candle *cnds, struct linear_equation *eq, int start, int e
 
 }
 
-void
+static void
 analysis_support_trend(struct candle *cnds, size_t indx)
 {
   if (indx < 3) {
@@ -43,19 +43,19 @@ analysis_support_trend(struct candle *cnds, size_t indx)
    * At least three confirmations must occure so at max we can segment
    * the entire dataset into three sections
    */
-  int maximum_segment = (indx - 1) / 3;
+  int maximum_segment = (int) ((indx - 1) / 3);
 
   /*
    * The last confirmed candle that will not change.
    */
-  int starting_index = (indx - 1);
-  int starting_price = _candle_working_value(cnds[starting_index]);
+  int starting_index = (int) ((indx - 1));
+  uint32_t starting_price = _candle_working_value(cnds[starting_index]);
 
   while (maximum_segment > 1)
   {
 
     int last_confirmed = starting_index;
-    int last_confirmed_price = _candle_working_value(cnds[last_confirmed]);
+    uint32_t last_confirmed_price = _candle_working_value(cnds[last_confirmed]);
 
     /*
      * Begin by assuming a line between the last_confirmed candle and
@@ -99,8 +99,8 @@ analysis_support_trend(struct candle *cnds, size_t indx)
       (void) starting_price;
       (void) last_confirmed_price;
       linear_equation_free(&eq);
-      chart_create_object_line(&(cnds[indx-1]), starting_index, starting_price,
-          last_confirmed, last_confirmed_price, __func__);
+      chart_create_object_line(&(cnds[indx-1]), (size_t) starting_index, starting_price,
+          (size_t) last_confirmed, last_confirmed_price, __func__);
       break;
     }
 

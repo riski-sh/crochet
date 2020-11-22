@@ -1,6 +1,6 @@
 #include <lib.h>
 
-void
+static void
 analysis_check_white_marubuzu(struct candle *cnds, size_t indx)
 {
   if (cnds[indx - 1].open == cnds[indx - 1].low &&

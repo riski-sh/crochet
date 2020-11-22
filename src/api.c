@@ -17,7 +17,7 @@ chart_object_new()
 
 void
 chart_create_object_line(struct candle *cnd, size_t start_idx,
-    size_t start_price, size_t end_idx, size_t end_price,
+    uint32_t start_price, size_t end_idx, uint32_t end_price,
     const char *function_name)
 {
   /* create a generic object */
