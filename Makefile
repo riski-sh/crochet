@@ -5,6 +5,7 @@ CFLAGS+=-Wno-padded
 
 IFLAGS=-I$(shell pwd)/src
 IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
+
 IFLAGS:=$(sort $(IFLAGS))
 
 LFLAGS=$(shell pkgconf --libs openssl | xargs)
@@ -17,8 +18,6 @@ STRUCTURE=$(shell find src/ -type d)
 %.o : %.c %.h
 	@mkdir -p $(OBJDIR)/$(shell dirname $*)
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $(OBJDIR)/$@
-
-.client: src/client/client.o
 
 .exchanges: src/exchanges/exchanges.o \
 						src/exchanges/coinbase.o 	\

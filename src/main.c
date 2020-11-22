@@ -1,10 +1,8 @@
 /*
  * Crochet
- * An open source crypto currency router and agregated feed broker.
  * (C) washcloth et al.
  */
 
-// #include <client/client.h>
 #include <exchanges/exhangesall.h>
 #include <ffjson/ffjson.h>
 #include <globals/globals.h>

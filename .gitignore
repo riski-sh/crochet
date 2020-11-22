@@ -35,3 +35,4 @@ cert.pem
 key.pem
 *.pid
 *.swp
+depends/*
