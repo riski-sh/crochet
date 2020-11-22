@@ -14,10 +14,10 @@ exchange_init()
 void
 exchange_put(char *name, struct security *sec)
 {
-  if (!securities) {
-    pprint_error("%s",
-        "must call exchange_init before adding exchange data "
-        "(aborting)");
+  if (!securities)
+  {
+    pprint_error("%s", "must call exchange_init before adding exchange data "
+                       "(aborting)");
     abort();
   }
   hashmap_put(name, sec, securities);
@@ -38,7 +38,7 @@ exchange_free()
     while (ll)
     {
       struct _map_list *nxt = ll->next;
-      security_free((struct security **) &(ll->value));
+      security_free((struct security **)&(ll->value));
       ll = nxt;
     }
   }

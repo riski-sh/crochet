@@ -22,7 +22,8 @@ _load_config(char *file, char **raw)
 {
   FILE *fp = fopen(file, "r");
 
-  if (!fp) {
+  if (!fp)
+  {
     pprint_error("unable to open config file at %s (aborting)", file);
     abort();
   }
@@ -35,7 +36,8 @@ _load_config(char *file, char **raw)
 
   char *cfg = malloc(file_size + 1);
   size_t ret = fread(cfg, sizeof(char), file_size, fp);
-  if (ret > 0 && (size_t)ret != file_size) {
+  if (ret > 0 && (size_t)ret != file_size)
+  {
     pprint_error("unable to read entire config file? (aborting)", __LINE__);
     abort();
   }
@@ -50,12 +52,15 @@ _load_config(char *file, char **raw)
 static void
 sig_handler(int sig)
 {
-  if (sig == SIGINT) {
+  if (sig == SIGINT)
+  {
     printf("\r");
     pprint_warn("%s", "<CTRL>+C SIGINT");
     bool disable = false;
     globals_continue(&disable);
-  } else {
+  }
+  else
+  {
     printf("\r");
     pprint_error("signal %d (aborting)", sig);
     abort();
@@ -72,10 +77,13 @@ main(int argc, char **argv)
   __json_value _config_root = NULL;
   __json_object config = NULL;
   char *_config_raw = NULL;
-  if (argc == 2) {
+  if (argc == 2)
+  {
     _config_root = _load_config(argv[1], &_config_raw);
     config = json_get_object(_config_root);
-  } else {
+  }
+  else
+  {
     pprint_error("%s", "no configuration file specified");
     return 1;
   }
@@ -91,13 +99,16 @@ main(int argc, char **argv)
   pthread_t oanda_mainloop = pthread_self();
 
   __json_object _oanda = json_get_object(hashmap_get("oanda", config));
-  if (_oanda != NULL) {
+  if (_oanda != NULL)
+  {
     __json_bool online = json_get_bool(hashmap_get("online", _oanda));
-    if (online) {
+    if (online)
+    {
       __json_string key = json_get_string(hashmap_get("key", _oanda));
       pprint_info("starting oanda feed with api key [REDACTED]", key);
 
-      if (pthread_create(&oanda_mainloop, NULL, &exchanges_oanda_init, key)) {
+      if (pthread_create(&oanda_mainloop, NULL, &exchanges_oanda_init, key))
+      {
         fprintf(stderr, "Error creating thread\n");
         return 1;
       }
@@ -105,15 +116,18 @@ main(int argc, char **argv)
   }
 
   __json_object _coinbase = json_get_object(hashmap_get("coinbase", config));
-  if (_coinbase != NULL) {
+  if (_coinbase != NULL)
+  {
     __json_bool online = json_get_bool(hashmap_get("online", _coinbase));
-    if (online) {
+    if (online)
+    {
       pprint_info("%s", "starting coinbase feed");
       abort();
     }
   }
 
-  if (oanda_mainloop != pthread_self()) {
+  if (oanda_mainloop != pthread_self())
+  {
     pthread_join(oanda_mainloop, NULL);
     pprint_info("%s", "joined oanda_mainloop");
   }

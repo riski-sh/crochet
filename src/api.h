@@ -8,23 +8,30 @@
 /*
  * Every type of chart object that can be drawn.
  */
-typedef enum { CHART_OBJECT_TEXT = 0, CHART_OBJECT_LINE = 1 } chart_object_t;
+typedef enum
+{
+  CHART_OBJECT_TEXT = 0,
+  CHART_OBJECT_LINE = 1
+} chart_object_t;
 
 /*
  * Represents a generic object that gets displayed on the chart
  */
-struct chart_object {
+struct chart_object
+{
   chart_object_t object_type;
   const char *name;
   void *value;
   struct chart_object *next;
 };
 
-struct chart_object_t_text {
+struct chart_object_t_text
+{
   char TEXT;
 };
 
-struct chart_object_t_line {
+struct chart_object_t_line
+{
   size_t start;
   uint32_t start_price;
 
@@ -35,7 +42,8 @@ struct chart_object_t_line {
 /*
  * Represents a candle in the chart
  */
-struct candle {
+struct candle
+{
   /*
    *    |   <---- high
    *    |
@@ -63,7 +71,8 @@ struct candle {
  * Represents a chart and all the elements needed for analysis to draw
  * correctly and informative information on the chart
  */
-struct chart {
+struct chart
+{
 
   /*
    * Number of candles used in the buffer
@@ -101,9 +110,10 @@ typedef void (*analysis_func)(struct candle *cnds, size_t indx);
  * @param function_name the function name that called this function given by
  * the __func__ macro
  */
-void chart_create_object_line(struct candle *cnd, size_t start_idx,
-    uint32_t start_price, size_t end_idx, uint32_t end_price,
-    const char *function_name);
+void
+chart_create_object_line(struct candle *cnd, size_t start_idx,
+                         uint32_t start_price, size_t end_idx,
+                         uint32_t end_price, const char *function_name);
 
 /*
  * Generates a character to draw under the chart
@@ -113,7 +123,7 @@ void chart_create_object_line(struct candle *cnd, size_t start_idx,
  * @param c the function name that called this function given by the __func__
  * macro.
  */
-void chart_create_object_text(
-    struct candle *cnd, char c, const char *function_name);
+void
+chart_create_object_text(struct candle *cnd, char c, const char *function_name);
 
 #endif

@@ -20,6 +20,7 @@
  * the type of this key is void to fit the prototype
  * of a pthread
  */
-void *exchanges_oanda_init(void *key);
+void *
+exchanges_oanda_init(void *key);
 
 #endif

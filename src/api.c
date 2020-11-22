@@ -7,9 +7,10 @@ chart_object_new()
   obj = malloc(sizeof(struct chart_object) * 1);
 
   /* verify malloc allocted memory */
-  if (!obj) {
-    pprint_error(
-        "unable to allocate %lu bytes (aborting)", sizeof(struct chart_object));
+  if (!obj)
+  {
+    pprint_error("unable to allocate %lu bytes (aborting)",
+                 sizeof(struct chart_object));
     exit(1);
   }
   return obj;
@@ -17,8 +18,8 @@ chart_object_new()
 
 void
 chart_create_object_line(struct candle *cnd, size_t start_idx,
-    uint32_t start_price, size_t end_idx, uint32_t end_price,
-    const char *function_name)
+                         uint32_t start_price, size_t end_idx,
+                         uint32_t end_price, const char *function_name)
 {
   /* create a generic object */
   struct chart_object *obj = chart_object_new();
@@ -36,9 +37,10 @@ chart_create_object_line(struct candle *cnd, size_t start_idx,
   type = malloc(sizeof(struct chart_object_t_line) * 1);
 
   /* verify memory is good */
-  if (!type) {
+  if (!type)
+  {
     pprint_error("unable to allocate %lu bytes (aborting)",
-        sizeof(struct chart_object_t_text));
+                 sizeof(struct chart_object_t_text));
     exit(1);
   }
 
@@ -74,9 +76,10 @@ chart_create_object_text(struct candle *cnd, char c, const char *function_name)
   type = malloc(sizeof(struct chart_object_t_text) * 1);
 
   /* verify malloc allocated memory */
-  if (!type) {
+  if (!type)
+  {
     pprint_error("unable to allocate %lu bytes (aborting)",
-        sizeof(struct chart_object_t_text));
+                 sizeof(struct chart_object_t_text));
     exit(1);
   }
 

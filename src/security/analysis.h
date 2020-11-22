@@ -2,9 +2,9 @@
 #define SECURITY_ANALYSIS_H
 
 #include <api.h>
-#include <lib.h>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <lib.h>
 #include <pprint/pprint.h>
 #include <stdbool.h>
 
@@ -18,7 +18,8 @@
  *
  * @param base_path the path to search for libs
  */
-void analysis_init(char *base_path);
+void
+analysis_init(char *base_path);
 
 /*
  * Runs all the analysis that are currently loaded
@@ -26,12 +27,13 @@ void analysis_init(char *base_path);
  * @param cnds the candle list to pass to the functions
  * @indx the index to pass to the candles
  */
-void analysis_run(struct candle *cnds, size_t indx);
-
+void
+analysis_run(struct candle *cnds, size_t indx);
 
 /*
  * Clears the loaded analysis table
  */
-void analysis_clear(void);
+void
+analysis_clear(void);
 
 #endif

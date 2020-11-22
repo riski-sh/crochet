@@ -6,11 +6,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef enum { RANGE_INCREASING = 0, RANGE_DECREASING = 1 } range_t;
+typedef enum
+{
+  RANGE_INCREASING = 0,
+  RANGE_DECREASING = 1
+} range_t;
 
-typedef enum { BOOK_BID = 0, BOOK_ASK = 1 } book_t;
+typedef enum
+{
+  BOOK_BID = 0,
+  BOOK_ASK = 1
+} book_t;
 
-struct generic_book {
+struct generic_book
+{
   struct generic_book *left;
   struct generic_book *right;
   struct generic_book *parent;
@@ -29,7 +38,8 @@ struct generic_book {
  * @param price the price to find or insert
  * @return the node that represents this price level
  */
-struct generic_book *book_query(struct generic_book **root, uint64_t price);
+struct generic_book *
+book_query(struct generic_book **root, uint64_t price);
 
 /*
  * A function that will be used to free the books contents
@@ -43,14 +53,16 @@ typedef void (*book_free_data)(void *_data);
  * @param price the price level to remove
  * @param free_func a function to call to free the data
  */
-void book_remove(
-    struct generic_book **root, uint64_t price, book_free_data free_func);
+void
+book_remove(struct generic_book **root, uint64_t price,
+            book_free_data free_func);
 
 /*
  * Frees an generic book and calls a book_free_data function to free
  * the generic data inside the node
  */
-void book_free(struct generic_book *node, book_free_data free_func);
+void
+book_free(struct generic_book *node, book_free_data free_func);
 
 /*
  * Not very useful but prints the nodes and there children to be used in
@@ -58,6 +70,7 @@ void book_free(struct generic_book *node, book_free_data free_func);
  *
  * @param node the root node in which to generate a dot file for
  */
-void book_print(struct generic_book *node);
+void
+book_print(struct generic_book *node);
 
 #endif

@@ -23,7 +23,8 @@
 
 #include "session.h"
 
-enum WSS_ERR {
+enum WSS_ERR
+{
   WSS_ERR_NONE = 0,
   WSS_ERR_GET_ADDR_INFO = 1,
   WSS_ERR_SOCKET_CREATION = 2,
@@ -43,12 +44,14 @@ enum WSS_ERR {
  * @param _session a structure owned by the caller that will get populated with
  * the appropriate values to read/write to the web socket connection.
  */
-enum WSS_ERR wss_client(
-    char *endpoint, char *path, char *port, struct tls_session **_session);
+enum WSS_ERR
+wss_client(char *endpoint, char *path, char *port,
+           struct tls_session **_session);
 
-enum WSS_ERR wss_send_text(
-    struct tls_session *session, unsigned char *text, size_t len);
+enum WSS_ERR
+wss_send_text(struct tls_session *session, unsigned char *text, size_t len);
 
-enum WSS_ERR wss_read_text(struct tls_session *session, char **value);
+enum WSS_ERR
+wss_read_text(struct tls_session *session, char **value);
 
 #endif

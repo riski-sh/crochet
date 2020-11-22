@@ -1,12 +1,14 @@
 #include "ffjson.h"
 
 /* a mapping of the json enum type to its string equivelent */
-char *JSON_TYPE_STR[JSON_TYPE_NUM] = { "JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
-  "JSON_TYPE_NUMBER", "JSON_TYPE_STRING", "JSON_TYPE_TRUE", "JSON_TYPE_FALSE",
-  "JSON_TYPE_NULL" };
+char *JSON_TYPE_STR[JSON_TYPE_NUM] = {"JSON_TYPE_OBJECT", "JSON_TYPE_ARRAY",
+                                      "JSON_TYPE_NUMBER", "JSON_TYPE_STRING",
+                                      "JSON_TYPE_TRUE",   "JSON_TYPE_FALSE",
+                                      "JSON_TYPE_NULL"};
 
 /* parse value is recursive and needs to have a forward declaration */
-static __json_value _parse_value(char *str, size_t *idx);
+static __json_value
+_parse_value(char *str, size_t *idx);
 
 /**
  * Parses whitespace characters that are valid in JSON
@@ -19,7 +21,8 @@ static void
 _parse_whitespace(char *str, size_t *idx)
 {
   while (str[*idx] == ' ' || str[*idx] == '\n' || str[*idx] == '\t' ||
-      str[*idx] == '\r') {
+         str[*idx] == '\r')
+  {
     (*idx) += 1;
   }
 }
@@ -46,7 +49,8 @@ _parse_value_seperator(char *str, size_t *idx)
    * determine if the value seperator denoted by a , exists after the
    * whitespace
    */
-  if (str[*idx] == ',') {
+  if (str[*idx] == ',')
+  {
 
     /* move past the comma */
     (*idx) += 1;
@@ -63,10 +67,12 @@ static __json_string
 _parse_string(char *str, size_t *idx)
 {
 
-  /* a string must begin with a " no matter what so make sure we start at it */
-  if (str[*idx] != '"') {
-    pprint_error(
-        "expected \" but got %c while parsing a string (aborting)", str[*idx]);
+  /* a string must begin with a " no matter what so make sure we start at it
+   */
+  if (str[*idx] != '"')
+  {
+    pprint_error("expected \" but got %c while parsing a string (aborting)",
+                 str[*idx]);
     abort();
   }
 
@@ -80,7 +86,8 @@ _parse_string(char *str, size_t *idx)
    * loop through all the characters until an unescped " comes to
    * mark the end of the string
    */
-  while (str[*idx] != (char)'"' && str[(*idx) - 1] != (char)'\\') {
+  while (str[*idx] != (char)'"' && str[(*idx) - 1] != (char)'\\')
+  {
     (*idx) += 1;
   }
 
@@ -103,24 +110,28 @@ _parse_string(char *str, size_t *idx)
 
 static void
 _parse_member(char *str, size_t *idx, char **name, __json_value *_val,
-    __json_object cached)
+              __json_object cached)
 {
   char *member_name = _parse_string(str, idx);
 
   // verify name-separator
   _parse_whitespace(str, idx);
-  if (str[*idx] != ':') {
+  if (str[*idx] != ':')
+  {
     pprint_error("expected a : after name %s (aborting)", member_name);
     abort();
   }
   (*idx) += 1;
   _parse_whitespace(str, idx);
 
-  if (!cached) {
+  if (!cached)
+  {
     __json_value val = _parse_value(str, idx);
     *name = member_name;
     *_val = val;
-  } else {
+  }
+  else
+  {
     __json_value val = hashmap_get(member_name, cached);
     json_parse_cached(str, idx, val);
   }
@@ -129,7 +140,8 @@ _parse_member(char *str, size_t *idx, char **name, __json_value *_val,
 static __json_object
 _parse_object(char *str, size_t *idx, __json_object cached)
 {
-  if (str[*idx] != '{') {
+  if (str[*idx] != '{')
+  {
     pprint_error("expected { got %c (aborting)", __FILE_NAME__, str[*idx]);
 
     pprint_info("%s", &str[(*idx)]);
@@ -146,13 +158,15 @@ _parse_object(char *str, size_t *idx, __json_object cached)
 
   __json_object obj = NULL;
 
-  if (!cached) {
+  if (!cached)
+  {
     // sorry R4stl1n 16 not a good number, 51 is tho ...
     //
     // TODO check this return value
     hashmap_new(51, &obj);
 
-    if (str[*idx] == '"') {
+    if (str[*idx] == '"')
+    {
       // loop through and parse all the members
       // we already know about the first member
       char *key;
@@ -160,14 +174,18 @@ _parse_object(char *str, size_t *idx, __json_object cached)
 
       _parse_member(str, idx, &key, &val, NULL);
       hashmap_put(key, val, obj);
-      while (_parse_value_seperator(str, idx)) {
+      while (_parse_value_seperator(str, idx))
+      {
         _parse_member(str, idx, &key, &val, NULL);
         hashmap_put(key, val, obj);
       }
     }
-  } else {
+  }
+  else
+  {
     _parse_member(str, idx, NULL, NULL, cached);
-    while (_parse_value_seperator(str, idx)) {
+    while (_parse_value_seperator(str, idx))
+    {
       _parse_member(str, idx, NULL, NULL, cached);
     }
   }
@@ -176,16 +194,20 @@ _parse_object(char *str, size_t *idx, __json_object cached)
   // object
 
   _parse_whitespace(str, idx);
-  if (str[*idx] != '}') {
+  if (str[*idx] != '}')
+  {
     pprint_error("invalid object expected } got %s (aborting)", str[*idx]);
     abort();
   }
   (*idx) += 1;
 
   // done processing the object.
-  if (!cached) {
+  if (!cached)
+  {
     return obj;
-  } else {
+  }
+  else
+  {
     return NULL;
   }
 }
@@ -193,7 +215,8 @@ _parse_object(char *str, size_t *idx, __json_object cached)
 static __json_array
 _parse_array(char *str, size_t *idx, __json_array cached)
 {
-  if (str[*idx] != '[') {
+  if (str[*idx] != '[')
+  {
     pprint_info("expected [ got %s (aborting)", str[*idx]);
     abort();
   }
@@ -202,17 +225,20 @@ _parse_array(char *str, size_t *idx, __json_array cached)
   _parse_whitespace(str, idx);
 
   __json_array data = NULL;
-  if (!cached) {
+  if (!cached)
+  {
     data = calloc(1, sizeof(struct json_array));
 
     // the array could be empty if the array is empty than we should find
     // a ] character if we do not then we must parse a value
-    if (str[*idx] != ']') {
+    if (str[*idx] != ']')
+    {
       data->val = _parse_value(str, idx);
 
       __json_array iter = data;
       // parse the optional members of the array
-      while (_parse_value_seperator(str, idx)) {
+      while (_parse_value_seperator(str, idx))
+      {
         // expand the array by 1
         iter->nxt = calloc(1, sizeof(struct json_array));
         iter = iter->nxt;
@@ -220,9 +246,12 @@ _parse_array(char *str, size_t *idx, __json_array cached)
       }
       _parse_whitespace(str, idx);
     }
-  } else {
+  }
+  else
+  {
     __json_array iter = cached;
-    while (iter) {
+    while (iter)
+    {
       json_parse_cached(str, idx, iter->val);
       iter = iter->nxt;
       _parse_value_seperator(str, idx);
@@ -230,15 +259,19 @@ _parse_array(char *str, size_t *idx, __json_array cached)
   }
 
   // verify end array
-  if (str[*idx] != ']') {
+  if (str[*idx] != ']')
+  {
     pprint_error("expected ] got %c", str[*idx]);
     abort();
   }
   (*idx) += 1;
 
-  if (!cached) {
+  if (!cached)
+  {
     return data;
-  } else {
+  }
+  else
+  {
     return NULL;
   }
 }
@@ -255,11 +288,14 @@ _parse_number(char *str, size_t *idx, __json_number cached)
   size_t characters = (size_t)(pend - (&str[*idx]));
   (*idx) += characters;
 
-  if (!cached) {
+  if (!cached)
+  {
     __json_number n = (__json_number)calloc(1, sizeof(double));
     *n = number;
     return n;
-  } else {
+  }
+  else
+  {
     *cached = number;
     return NULL;
   }
@@ -284,57 +320,72 @@ _parse_value(char *str, size_t *idx)
   // all values get rid of the white space in front of them
   _parse_whitespace(str, idx);
 
-  if (str[*idx] == '{') {
+  if (str[*idx] == '{')
+  {
     // parse object
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_OBJECT;
     val->data = _parse_object(str, idx, NULL);
     return val;
-  } else if (str[*idx] == '[') {
+  }
+  else if (str[*idx] == '[')
+  {
     // parse array
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_ARRAY;
     val->data = _parse_array(str, idx, NULL);
     return val;
-  } else if (str[*idx] == '"') {
+  }
+  else if (str[*idx] == '"')
+  {
     // parse string
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_STRING;
     val->data = _parse_string(str, idx);
     return val;
-  } else if (str[*idx] == '-' || str[*idx] == '1' || str[*idx] == '2' ||
-      str[*idx] == '3' || str[*idx] == '4' || str[*idx] == '5' ||
-      str[*idx] == '6' || str[*idx] == '7' || str[*idx] == '8' ||
-      str[*idx] == '9' || str[*idx] == '0') {
+  }
+  else if (str[*idx] == '-' || str[*idx] == '1' || str[*idx] == '2' ||
+           str[*idx] == '3' || str[*idx] == '4' || str[*idx] == '5' ||
+           str[*idx] == '6' || str[*idx] == '7' || str[*idx] == '8' ||
+           str[*idx] == '9' || str[*idx] == '0')
+  {
     // parse number
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_NUMBER;
     val->data = _parse_number(str, idx, NULL);
     return val;
-  } else if (strncmp(&(str[*idx]), "false", 5) == 0) {
+  }
+  else if (strncmp(&(str[*idx]), "false", 5) == 0)
+  {
     // parse false
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_FALSE;
     val->data = NULL;
     (*idx) += 5;
     return val;
-  } else if (strncmp(&(str[*idx]), "true", 4) == 0) {
+  }
+  else if (strncmp(&(str[*idx]), "true", 4) == 0)
+  {
     // parse true
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_TRUE;
     val->data = NULL;
     (*idx) += 4;
     return val;
-  } else if (strncmp(&(str[*idx]), "null", 4) == 0) {
+  }
+  else if (strncmp(&(str[*idx]), "null", 4) == 0)
+  {
     __json_value val = calloc(1, sizeof(struct json_value));
     val->t = JSON_TYPE_NULL;
     val->data = NULL;
     (*idx) += 4;
     return val;
-  } else {
+  }
+  else
+  {
     pprint_error("expected object|array|string|true|false|null|number in json"
                  "%s %lu (aborting)",
-        &(str[*idx]), *idx);
+                 &(str[*idx]), *idx);
     abort();
   }
 }
@@ -342,7 +393,8 @@ _parse_value(char *str, size_t *idx)
 __json_value
 json_parse(char *str)
 {
-  if (!str) {
+  if (!str)
+  {
     pprint_error("%s", "no string given to parse (aborting)");
     abort();
   }
@@ -362,15 +414,16 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
   // ws value ws
   _parse_whitespace(str, idx);
 
-  if (!tree ||
-      (tree->t != JSON_TYPE_TRUE && tree->t != JSON_TYPE_FALSE &&
-          tree->t != JSON_TYPE_NULL && tree->data == NULL)) {
-    pprint_error("%s",
-        "the json received is not the same and therefore cannot be cache parsed (aborting)");
+  if (!tree || (tree->t != JSON_TYPE_TRUE && tree->t != JSON_TYPE_FALSE &&
+                tree->t != JSON_TYPE_NULL && tree->data == NULL))
+  {
+    pprint_error("%s", "the json received is not the same and therefore cannot "
+                       "be cache parsed (aborting)");
     abort();
   }
 
-  switch (tree->t) {
+  switch (tree->t)
+  {
   case JSON_TYPE_OBJECT:
     _parse_object(str, idx, tree->data);
     break;
@@ -386,13 +439,18 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
   case JSON_TYPE_TRUE:
   case JSON_TYPE_FALSE:
   case JSON_TYPE_NULL:
-    if (strncmp(&(str[*idx]), "false", 5) == 0) {
+    if (strncmp(&(str[*idx]), "false", 5) == 0)
+    {
       tree->t = JSON_TYPE_FALSE;
       *idx += 5;
-    } else if (strncmp(&(str[*idx]), "true", 4) == 0) {
+    }
+    else if (strncmp(&(str[*idx]), "true", 4) == 0)
+    {
       tree->t = JSON_TYPE_TRUE;
       *idx += 4;
-    } else if (strncmp(&(str[*idx]), "null", 4) == 0) {
+    }
+    else if (strncmp(&(str[*idx]), "null", 4) == 0)
+    {
       tree->t = JSON_TYPE_NULL;
       *idx += 4;
     }
@@ -403,12 +461,13 @@ json_parse_cached(char *str, size_t *idx, __json_value tree)
   }
 }
 
-#define _json_get(TYPE, VAL)                                                  \
-  if (VAL->t != TYPE) {                                                       \
-    pprint_error("expected TYPE found %s", __FILE_NAME__, __func__, __LINE__, \
-        JSON_TYPE_STR[VAL->t]);                                               \
-    abort();                                                                  \
-  }                                                                           \
+#define _json_get(TYPE, VAL)                                                   \
+  if (VAL->t != TYPE)                                                          \
+  {                                                                            \
+    pprint_error("expected TYPE found %s", __FILE_NAME__, __func__, __LINE__,  \
+                 JSON_TYPE_STR[VAL->t]);                                       \
+    abort();                                                                   \
+  }                                                                            \
   return VAL->data
 
 __json_object
@@ -438,13 +497,18 @@ json_get_string(__json_value val)
 __json_bool
 json_get_bool(__json_value val)
 {
-  if (val->t == JSON_TYPE_TRUE) {
+  if (val->t == JSON_TYPE_TRUE)
+  {
     return true;
-  } else if (val->t == JSON_TYPE_FALSE) {
+  }
+  else if (val->t == JSON_TYPE_FALSE)
+  {
     return false;
-  } else {
+  }
+  else
+  {
     pprint_error("expected JSON_TYPE_TRUE or JSON_TYPE_FALSE got %s (aborting)",
-        JSON_TYPE_STR[val->t]);
+                 JSON_TYPE_STR[val->t]);
     abort();
   }
 }
@@ -452,12 +516,15 @@ json_get_bool(__json_value val)
 void
 json_free(__json_value root)
 {
-  switch (root->t) {
+  switch (root->t)
+  {
   case JSON_TYPE_OBJECT: {
     __json_object obj = root->data;
-    for (size_t i = 0; i < obj->num_bins; ++i) {
+    for (size_t i = 0; i < obj->num_bins; ++i)
+    {
       struct _map_list *ll = obj->bins[i];
-      while (ll) {
+      while (ll)
+      {
         json_free(ll->value);
         ll = ll->next;
       }
@@ -468,14 +535,18 @@ json_free(__json_value root)
   }
   case JSON_TYPE_ARRAY: {
     __json_array arr = root->data;
-    if (arr->val != NULL) {
-      while (arr) {
+    if (arr->val != NULL)
+    {
+      while (arr)
+      {
         json_free(arr->val);
         __json_array nxt = arr->nxt;
         free(arr);
         arr = nxt;
       }
-    } else {
+    }
+    else
+    {
       free(arr);
     }
     free(root);

@@ -5,12 +5,16 @@
 #include <pprint/pprint.h>
 #include <security/security.h>
 
-void exchange_init(void);
+void
+exchange_init(void);
 
-void exchange_put(char *name, struct security *sec);
+void
+exchange_put(char *name, struct security *sec);
 
-void exchange_free(void);
+void
+exchange_free(void);
 
-struct security *exchange_get(char *name);
+struct security *
+exchange_get(char *name);
 
 #endif

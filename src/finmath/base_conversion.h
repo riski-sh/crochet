@@ -11,11 +11,13 @@
 /*
  * Converts a bitcoin value into its satoshi equivalent
  */
-uint64_t btctosat_str(char *num);
+uint64_t
+btctosat_str(char *num);
 
 /*
  * Converts a USD dollar amount into its cents equivalent
  */
-uint64_t usdtocent_str(char *num);
+uint64_t
+usdtocent_str(char *num);
 
 #endif

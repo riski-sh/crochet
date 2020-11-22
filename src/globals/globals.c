@@ -6,9 +6,12 @@ bool is_safe = true;
 bool
 globals_continue(bool *val)
 {
-  if (val == NULL) {
+  if (val == NULL)
+  {
     return is_safe;
-  } else {
+  }
+  else
+  {
     pthread_mutex_lock(&lock);
     is_safe = *val;
     pthread_mutex_unlock(&lock);

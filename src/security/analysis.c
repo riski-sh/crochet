@@ -7,7 +7,8 @@ static size_t num_vtables = 0;
 void
 analysis_run(struct candle *cnds, size_t indx)
 {
-  for (size_t i = 0; i < num_vtables; ++i) {
+  for (size_t i = 0; i < num_vtables; ++i)
+  {
     tables[i]->run(cnds, indx);
   }
 }
@@ -16,14 +17,16 @@ static void
 _analysis_load_so(char path[PATH_MAX])
 {
   void *handle = dlopen(path, RTLD_LAZY);
-  if (!handle) {
+  if (!handle)
+  {
     pprint_error("unable to load %s", path);
     pprint_error("dlopen error: %s", dlerror());
     return;
   }
 
   struct vtable *libclass = dlsym(handle, "exports");
-  if (!libclass) {
+  if (!libclass)
+  {
     pprint_error("%s", "this library does not export a vtable (aborting)");
     exit(1);
   }
@@ -54,13 +57,16 @@ analysis_init(char *base_path)
     return;
 
   /* loop recursivly through the directory of the libs */
-  while ((dp = readdir(dir)) != NULL) {
-    if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
+  while ((dp = readdir(dir)) != NULL)
+  {
+    if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
+    {
 
       /* check if name ends in .so */
       size_t name_len = strlen(dp->d_name);
       if (dp->d_name[name_len - 1] == 'o' && dp->d_name[name_len - 2] == 's' &&
-          dp->d_name[name_len - 3] == '.') {
+          dp->d_name[name_len - 3] == '.')
+      {
 
         /* create the full path of the .so to load */
         strcpy(path, base_path);

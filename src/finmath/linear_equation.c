@@ -1,7 +1,8 @@
 #include <finmath/linear_equation.h>
 
 // Defines a linear equation
-struct linear_equation {
+struct linear_equation
+{
   int64_t a;
   int64_t b;
   int64_t c;

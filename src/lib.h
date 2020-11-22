@@ -5,7 +5,8 @@
 #include <finmath/base_conversion.h>
 #include <finmath/linear_equation.h>
 
-struct vtable {
+struct vtable
+{
   analysis_func run;
 };
 

@@ -4,7 +4,8 @@ status_t
 tls_session_new(char *endpoint, char *port, struct tls_session **_session)
 {
 
-  if (*_session != NULL) {
+  if (*_session != NULL)
+  {
     pprint_error("%s", "*_session != NULL, refusing to reuse address");
     return STATUS_EXPECTED_NULL;
   }
@@ -44,7 +45,8 @@ tls_session_new(char *endpoint, char *port, struct tls_session **_session)
    */
   pprint_info("%s", "establishing socket...");
   (*_session)->fd = socket(info->ai_family, SOCK_STREAM, 0);
-  if ((*_session)->fd <= 0) {
+  if ((*_session)->fd <= 0)
+  {
     pprint_error("%s", strerror(errno));
     pprint_error("%s", "unable to obtain socket");
     return STATUS_UNKNOWN_ERROR;
@@ -56,7 +58,8 @@ tls_session_new(char *endpoint, char *port, struct tls_session **_session)
    */
   pprint_info("%s", "connecting to remote host...");
   ret = connect((*_session)->fd, info->ai_addr, info->ai_addrlen);
-  if (ret != 0) {
+  if (ret != 0)
+  {
     pprint_error("unable to connect to %s", endpoint);
     pprint_error("%s", strerror(errno));
     return STATUS_UNKNOWN_ERROR;
@@ -111,7 +114,8 @@ tls_session_reconnect(struct tls_session *session)
    */
   pprint_info("%s", "establishing socket...");
   session->fd = socket(info->ai_family, SOCK_STREAM, 0);
-  if (session->fd <= 0) {
+  if (session->fd <= 0)
+  {
     pprint_error("%s", strerror(errno));
     pprint_error("%s", "unable to obtain socket");
     return STATUS_UNKNOWN_ERROR;
@@ -123,7 +127,8 @@ tls_session_reconnect(struct tls_session *session)
    */
   pprint_info("%s", "connecting to remote host...");
   ret = connect(session->fd, info->ai_addr, info->ai_addrlen);
-  if (ret != 0) {
+  if (ret != 0)
+  {
     pprint_error("unable to connect to %s", session->endpoint);
     pprint_error("%s", strerror(errno));
     return STATUS_UNKNOWN_ERROR;

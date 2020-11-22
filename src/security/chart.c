@@ -4,7 +4,8 @@
 /*
  * Represents a day of week from the start of the epoch
  */
-typedef enum {
+typedef enum
+{
   THURSDAY = 0,
   FRIDAY = 1,
   SATURDAY = 2,
@@ -28,16 +29,21 @@ static void
 _chart_update_candle(struct chart *cht, uint32_t bid, size_t idx)
 {
   struct candle *cnd = &(cht->candles[idx]);
-  if (cnd->volume != 0) {
-    if (bid > cnd->high) {
+  if (cnd->volume != 0)
+  {
+    if (bid > cnd->high)
+    {
       cnd->high = bid;
     }
-    if (bid < cnd->low) {
+    if (bid < cnd->low)
+    {
       cnd->low = bid;
     }
     cnd->close = bid;
     cnd->volume += 1;
-  } else {
+  }
+  else
+  {
     cnd->close = bid;
     cnd->open = bid;
     cnd->high = bid;
@@ -50,7 +56,7 @@ _chart_update_candle(struct chart *cht, uint32_t bid, size_t idx)
 /*
  * Convert dow_t to numbers of days since previous sunday
  */
-static size_t days_since_sunday[NUM_DOW_T] = { 4, 5, 6, 0, 1, 2, 3 };
+static size_t days_since_sunday[NUM_DOW_T] = {4, 5, 6, 0, 1, 2, 3};
 
 /*
  * the number of nanoseconds in a minute
@@ -68,9 +74,10 @@ chart_new(void)
 
   struct chart *cht = calloc(1, sizeof(struct chart));
 
-  if (!cht) {
+  if (!cht)
+  {
     pprint_error("%s@%s:%d unable to create chart no memory left (aborting)",
-        __FILE_NAME__, __func__, __LINE__);
+                 __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 
@@ -81,10 +88,11 @@ chart_new(void)
    */
   cht->candles = calloc(CHART_MINUTES_IN_WEEK, sizeof(struct candle));
 
-  if (!(cht->candles)) {
+  if (!(cht->candles))
+  {
     pprint_error("%s@%s:%d unable to create candle buffer no memory left "
                  "(aborting)",
-        __FILE_NAME__, __func__, __LINE__);
+                 __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 
@@ -102,7 +110,8 @@ _tstodow(size_t timestamp)
   return (dow_t)days_since_epoch % 7;
 }
 
-struct analysis_meta {
+struct analysis_meta
+{
   struct chart *cht;
   size_t cndidx;
 };
@@ -110,7 +119,8 @@ struct analysis_meta {
 void
 chart_runanalysis(struct chart *cht, size_t cndidx)
 {
-  if (cndidx > 1) {
+  if (cndidx > 1)
+  {
     analysis_run(cht->candles, cndidx);
   }
 }
@@ -127,11 +137,13 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
 
   size_t minutes_since_sunday = chart_tstoidx(timestamp);
 
-  if (minutes_since_sunday > cht->cur_candle_idx) {
+  if (minutes_since_sunday > cht->cur_candle_idx)
+  {
     chart_runanalysis(cht, minutes_since_sunday);
   }
 
-  if (minutes_since_sunday < cht->cur_candle_idx) {
+  if (minutes_since_sunday < cht->cur_candle_idx)
+  {
     pprint_info("%s", "resetting chart");
     chart_reset(cht);
   }

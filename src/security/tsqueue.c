@@ -1,16 +1,17 @@
 #include "tsqueue.h"
 
 void
-tsqueue_add(
-    struct tsqueue *queue, struct candles *cnds, size_t indx, analysis_func run)
+tsqueue_add(struct tsqueue *queue, struct candles *cnds, size_t indx,
+            analysis_func run)
 {
   /* create an element first */
   struct tsqueue_element *element = NULL;
   element = malloc(sizeof(struct tsqueue_element) * 1);
 
-  if (!element) {
+  if (!element)
+  {
     pprint_error("unable to allocate %lu bytes for analysis (aborting)",
-        sizeof(struct tsqueue_element));
+                 sizeof(struct tsqueue_element));
     exit(1);
   }
 

@@ -52,14 +52,15 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   size_t backfill = chart_tstoidx(ts);
 
   /* at max back fill by 5000 minute candles */
-  if (backfill > 5000) {
+  if (backfill > 5000)
+  {
     backfill = 5000;
   }
 
   /* generate the GET request url */
-  char stub[120] = { '\x0' };
+  char stub[120] = {'\x0'};
   sprintf(stub, "/v3/instruments/%s/candles?count=%lu&price=B&granularity=M1",
-      sec->name, backfill);
+          sec->name, backfill);
 
   request->stub = stub;
   char *response = NULL;
@@ -73,14 +74,14 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
    * loop through all historical candles and add them to the current
    * chart
    */
-  while (_candles && globals_continue(NULL)) {
+  while (_candles && globals_continue(NULL))
+  {
     __json_object _candle = json_get_object(_candles->val);
     __json_string _timestamp = json_get_string(hashmap_get("time", _candle));
     __json_object _bids = json_get_object(hashmap_get("bid", _candle));
 
     __json_string o, h, l, c = NULL;
     __json_number volume;
-
 
     /* extract the open/high/low/close/volume of the candle in the list */
     o = json_get_string(hashmap_get("o", _bids));
@@ -93,8 +94,9 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
     size_t latest_timestamp = _oanda_timetots(_timestamp);
 
     /* update the chart */
-    if (!security_update_historical(
-            sec, latest_timestamp, o, h, l, c, (uint32_t)*volume)) {
+    if (!security_update_historical(sec, latest_timestamp, o, h, l, c,
+                                    (uint32_t)*volume))
+    {
       pprint_error(
           "unable to push historical candle ts=%lu o=%s h=%s l=%s c=%s",
           latest_timestamp, o, h, l, c);
@@ -107,8 +109,8 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
 }
 
 static char *
-_oanda_gen_currency_list(
-    struct http11request *request, char *response, int *num_instruments)
+_oanda_gen_currency_list(struct http11request *request, char *response,
+                         int *num_instruments)
 {
 
   pprint_info("%s", "configuring tradeable oanda symbols...");
@@ -121,7 +123,8 @@ _oanda_gen_currency_list(
   currency_list[0] = '\x0';
   size_t total_len = 0;
 
-  while (instruments && globals_continue(NULL)) {
+  while (instruments && globals_continue(NULL))
+  {
     __json_object instrument = json_get_object(instruments->val);
     char *name = json_get_string(hashmap_get("name", instrument));
     int pip_location =
@@ -140,7 +143,8 @@ _oanda_gen_currency_list(
 
     total_len += 8;
     currency_list = realloc(currency_list, total_len + 1);
-    if (currency_list) {
+    if (currency_list)
+    {
       strcat(currency_list, name);
       strcat(currency_list, ",");
       currency_list[total_len] = '\x0';
@@ -162,14 +166,16 @@ exchanges_oanda_init(void *key)
 
   /* create a reusable record for openssl read */
   struct tls_session *master_session = NULL;
-  if (tls_session_new(OANDA_API_ROOT, "443", &master_session) != STATUS_OK) {
+  if (tls_session_new(OANDA_API_ROOT, "443", &master_session) != STATUS_OK)
+  {
     pprint_error("%s", "|");
     exit(1);
   }
 
   /* cconnect the master_sesssion to OANDA as a persistant connection */
   struct http11request *request = NULL;
-  if (http11request_new(master_session, &request) != STATUS_OK) {
+  if (http11request_new(master_session, &request) != STATUS_OK)
+  {
     pprint_error("%s", "|");
     exit(1);
   }
@@ -197,13 +203,13 @@ exchanges_oanda_init(void *key)
   /* keep this connection alive as much as possible */
   hashmap_put("Connection", "Keep-Alive", request->headers);
 
-
   /* the master response that will get passed to http11 client */
   char *response = NULL;
 
   /* duplicate the accounts format */
   request->stub = strdup(V3_ACCOUNTS_FMT);
-  if (request->stub == NULL) {
+  if (request->stub == NULL)
+  {
     pprint_error("%s", "unable to duplicate stub");
     exit(1);
   }
@@ -221,7 +227,6 @@ exchanges_oanda_init(void *key)
 
   pprint_info("%s", "using oanda account id [REDACTED]");
 
-
   /* query all tradable currencies */
   int get_instrument_size = 0;
   get_instrument_size = snprintf(NULL, 0, V3_ACCOUNT_INSTRUMENTS, id) + 1;
@@ -235,7 +240,6 @@ exchanges_oanda_init(void *key)
   http11request_push(request, &response);
   free(get_instrument_str);
 
-
   /* backfill the security data and create an instrument list */
   int number_monitored = 0;
   char *instrument_update_end =
@@ -248,10 +252,10 @@ exchanges_oanda_init(void *key)
   char *instrument_update_full = NULL;
 
   instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) +
-          strlen(instrument_update_end) + 2,
-      sizeof(char));
+                                      strlen(instrument_update_end) + 2,
+                                  sizeof(char));
   sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
-      instrument_update_end);
+          instrument_update_end);
 
   free(response);
   response = NULL;
@@ -269,7 +273,6 @@ exchanges_oanda_init(void *key)
    * requests
    */
   int num_valid_updates = 0;
-
 
   /* timers */
   struct timespec start_time;
@@ -289,15 +292,19 @@ exchanges_oanda_init(void *key)
   clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   /* continue iff there isn't a global kill signal */
-  while (globals_continue(NULL)) {
+  while (globals_continue(NULL))
+  {
 
     /* perform the request */
     http11request_push(request, &response);
 
     /* full parse first time, cached parse everytime else */
-    if (_response_root == NULL) {
+    if (_response_root == NULL)
+    {
       _response_root = json_parse(response);
-    } else {
+    }
+    else
+    {
       size_t idx = 0;
       json_parse_cached(response, &idx, _response_root);
     }
@@ -308,7 +315,8 @@ exchanges_oanda_init(void *key)
         json_get_array(hashmap_get("prices", _response_data));
 
     /* loop through each security */
-    while (_prices) {
+    while (_prices)
+    {
       __json_object _price_object = json_get_object(_prices->val);
 
       /* get the instrument */
@@ -334,11 +342,14 @@ exchanges_oanda_init(void *key)
       __json_string best_ask =
           json_get_string(hashmap_get("price", _best_ask_bucket));
 
-      /* query the security given by the instrument name in the response */
+      /* query the security given by the instrument name in the response
+       */
       struct security *working_sec = exchange_get(_price_instrument);
 
-      /* update the security and increment the valid updates for meta info */
-      if (security_update(working_sec, latest_timestamp, best_bid, best_ask)) {
+      /* update the security and increment the valid updates for meta info
+       */
+      if (security_update(working_sec, latest_timestamp, best_bid, best_ask))
+      {
         num_valid_updates += 1;
       }
 
@@ -354,11 +365,12 @@ exchanges_oanda_init(void *key)
     clock_gettime(CLOCK_MONOTONIC, &speed_monitor_end);
     result.tv_sec = speed_monitor_end.tv_sec - speed_monitor_start.tv_sec;
     result.tv_nsec = speed_monitor_end.tv_nsec - speed_monitor_start.tv_nsec;
-    size_t speed_duration = (((size_t) result.tv_sec * 1000000000L) +
-        (size_t)result.tv_nsec);
-    if (speed_duration >= (int)OANDA_PRINT_INTERVAL_SECONDS) {
-      num_messages =
-          (double)((num_messages / (double)speed_duration) * OANDA_PRINT_INTERVAL_SECONDS);
+    size_t speed_duration =
+        (((size_t)result.tv_sec * 1000000000L) + (size_t)result.tv_nsec);
+    if (speed_duration >= (int)OANDA_PRINT_INTERVAL_SECONDS)
+    {
+      num_messages = (double)((num_messages / (double)speed_duration) *
+                              OANDA_PRINT_INTERVAL_SECONDS);
       pprint_info("currently polling at %05.2f / %d r/s", num_messages, 30);
       clock_gettime(CLOCK_MONOTONIC, &speed_monitor_start);
       num_messages = 0;
@@ -370,13 +382,15 @@ exchanges_oanda_init(void *key)
      * for polling to fast
      */
     uint64_t start_nanoseconds =
-        (uint64_t) start_time.tv_sec * (uint64_t)1000000000L + (uint64_t) start_time.tv_nsec;
+        (uint64_t)start_time.tv_sec * (uint64_t)1000000000L +
+        (uint64_t)start_time.tv_nsec;
     uint64_t end_nanoseconds = start_nanoseconds;
-    do {
+    do
+    {
       struct timespec cur_time;
       clock_gettime(CLOCK_MONOTONIC, &cur_time);
-      end_nanoseconds =
-          (size_t) cur_time.tv_sec * (uint64_t)1000000000L + (size_t) cur_time.tv_nsec;
+      end_nanoseconds = (size_t)cur_time.tv_sec * (uint64_t)1000000000L +
+                        (size_t)cur_time.tv_nsec;
     } while (end_nanoseconds - start_nanoseconds <= (uint64_t)3.3e7);
 
     clock_gettime(CLOCK_MONOTONIC, &start_time);

@@ -6,7 +6,8 @@
 #include <pthread.h>
 
 /* represents an element in the queue */
-struct tsqueue_element {
+struct tsqueue_element
+{
   struct candles *cnds;
   size_t indx;
   analysis_func run;
@@ -14,7 +15,8 @@ struct tsqueue_element {
 };
 
 /* represents a queue */
-struct tsqueue {
+struct tsqueue
+{
   pthread_mutex_t locked;
   struct tsqueue_element *head;
 };
@@ -30,8 +32,9 @@ struct tsqueue {
  * NEVER reference cnds[indx].
  * @param run the analysis to run
  */
-void tsqueue_add(struct tsqueue *queue, struct candles *cnds, size_t indx,
-    analysis_func run);
+void
+tsqueue_add(struct tsqueue *queue, struct candles *cnds, size_t indx,
+            analysis_func run);
 
 /*
  * Pops the first element out of the queue
@@ -39,6 +42,7 @@ void tsqueue_add(struct tsqueue *queue, struct candles *cnds, size_t indx,
  * @param queue the queue to pop
  * @return the element in the queue. This element must be freed by the popper
  */
-struct tsqueue_element *tsqueue_pop(struct tsqueue *queue);
+struct tsqueue_element *
+tsqueue_pop(struct tsqueue *queue);
 
 #endif

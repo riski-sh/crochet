@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned char *base64(const unsigned char *input, int length);
-unsigned char *decode64(const unsigned char *input, int length);
+unsigned char *
+base64(const unsigned char *input, int length);
+unsigned char *
+decode64(const unsigned char *input, int length);
 
 #endif

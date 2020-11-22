@@ -15,9 +15,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int client_start();
-int client_getdisplay(Display **display);
-int client_getwindow(Window *window);
-void client_redraw();
+int
+client_start();
+int
+client_getdisplay(Display **display);
+int
+client_getwindow(Window *window);
+void
+client_redraw();
 
 #endif

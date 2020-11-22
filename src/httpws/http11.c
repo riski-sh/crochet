@@ -1,10 +1,11 @@
-#include "hashmap/hashmap.h"
 #include "http11.h"
+#include "hashmap/hashmap.h"
 
-#define STR_APPEND_STR(VAR, IDX, DATA)         \
-  do {                                         \
-    memcpy(&((VAR)[IDX]), DATA, strlen(DATA)); \
-    IDX += strlen(DATA);                       \
+#define STR_APPEND_STR(VAR, IDX, DATA)                                         \
+  do                                                                           \
+  {                                                                            \
+    memcpy(&((VAR)[IDX]), DATA, strlen(DATA));                                 \
+    IDX += strlen(DATA);                                                       \
   } while (0)
 
 status_t
@@ -13,10 +14,10 @@ http11request_new(struct tls_session *session, struct http11request **_ret)
   /*
    * Make sure that the pointer is not allocated ie set to null
    */
-  if (*_ret != NULL) {
-    pprint_info("%s",
-        "will not allocate a pointer that doesn't have a value "
-        "of null");
+  if (*_ret != NULL)
+  {
+    pprint_info("%s", "will not allocate a pointer that doesn't have a value "
+                      "of null");
     return STATUS_EXPECTED_NULL;
   }
 
@@ -37,7 +38,8 @@ http11request_new(struct tls_session *session, struct http11request **_ret)
    */
   struct hashmap *headers = NULL;
   status_t ret;
-  if ((ret = hashmap_new(16, &headers)) && ret != STATUS_OK) {
+  if ((ret = hashmap_new(16, &headers)) && ret != STATUS_OK)
+  {
     pprint_error("%s", "");
     return ret;
   }
@@ -57,21 +59,24 @@ _http11request_parse_content_length(SSL *ssl, char **data, int content_length)
   /*
    * Allocate exact amount since we know how much is coming
    */
-  *data = realloc(*data, (sizeof(char) * (size_t) content_length) + 1);
+  *data = realloc(*data, (sizeof(char) * (size_t)content_length) + 1);
 
-  if (*data == NULL) {
-    pprint_error(
-        "unable to allocate %d bytes for HTTP/1.1 response", content_length);
+  if (*data == NULL)
+  {
+    pprint_error("unable to allocate %d bytes for HTTP/1.1 response",
+                 content_length);
     return STATUS_ALLOC_ERR;
   }
 
   int total_read = 0;
-  while (total_read != content_length) {
+  while (total_read != content_length)
+  {
     int read =
         SSL_read(ssl, &((*data)[total_read]), content_length - total_read);
-    if (read < 0) {
+    if (read < 0)
+    {
       pprint_error("unable to read %d bytes openssl returned %d instead",
-          content_length, read);
+                   content_length, read);
       exit(1);
     }
     total_read += read;
@@ -93,11 +98,14 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
   int data_read = 0;
   int total_read = 0;
 
-  do {
+  do
+  {
     chunkidx = 0;
-    do {
+    do
+    {
       int ret = SSL_read(ssl, &(chunk_len)[chunkidx], 1);
-      if (ret != 1) {
+      if (ret != 1)
+      {
         pprint_error("unable to read 1 bytes openssl returned %d instead", ret);
         exit(1);
       }
@@ -107,20 +115,24 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
     chunk_len[chunkidx - 2] = '\x0';
     chunk_size = strtol(chunk_len, NULL, 16);
 
-    if (chunk_size != 0) {
+    if (chunk_size != 0)
+    {
       total_allocated += chunk_size;
 
-      if (realloc_data) {
-        (*data) = realloc(*data, (size_t) (total_allocated + 1));
+      if (realloc_data)
+      {
+        (*data) = realloc(*data, (size_t)(total_allocated + 1));
       }
 
       long toread = chunk_size;
 
-      while (toread != 0) {
-        int ret = SSL_read(ssl, &((*data)[total_read]), (int) toread);
-        if (ret < 0) {
+      while (toread != 0)
+      {
+        int ret = SSL_read(ssl, &((*data)[total_read]), (int)toread);
+        if (ret < 0)
+        {
           pprint_error("unable to read %ldd bytes openssl returned %d instead",
-              chunk_size, ret);
+                       chunk_size, ret);
           exit(1);
         }
         toread -= ret;
@@ -129,25 +141,29 @@ _http11request_parse_chuncked(SSL *ssl, char **data)
       }
 
       int chunkending = 2;
-      while (chunkending != 0) {
+      while (chunkending != 0)
+      {
         int ret = SSL_read(ssl, chunk_len, chunkending);
-        if (ret < 0) {
+        if (ret < 0)
+        {
           pprint_error("unable to read %ldd bytes openssl returned %d instead",
-              chunkending, ret);
+                       chunkending, ret);
           exit(1);
         }
         chunkending -= ret;
       }
-      memset(chunk_len, '\x0', (size_t) chunkidx);
+      memset(chunk_len, '\x0', (size_t)chunkidx);
     }
   } while (chunk_size != 0);
 
   int chunkending = 2;
-  while (chunkending != 0) {
+  while (chunkending != 0)
+  {
     int ret = SSL_read(ssl, chunk_len, chunkending);
-    if (ret < 0) {
+    if (ret < 0)
+    {
       pprint_error("unable to read %ldd bytes openssl returned %d instead",
-          chunkending, ret);
+                   chunkending, ret);
       exit(1);
     }
     chunkending -= ret;
@@ -199,17 +215,22 @@ _http11request_read(struct tls_session *session, char **data)
    * HTTP responses end in \r\n we will loop until we read that.
    * After that the body is read depending on how the body was sent
    */
-  do {
+  do
+  {
     /*
      * Reset the index to the beginning
      */
     headeridx = 0;
 
-    do {
+    do
+    {
       int ret = SSL_read(ssl, &(header[headeridx]), 1);
-      if (ret == 1) {
+      if (ret == 1)
+      {
         headeridx += 1;
-      } else {
+      }
+      else
+      {
         pprint_error("expected 1 byte got SSL error %d", ret);
         abort();
       }
@@ -220,27 +241,35 @@ _http11request_read(struct tls_session *session, char **data)
     /*
      * Add a NULL character to allow for string processing
      */
-    if (!found_content_length) {
+    if (!found_content_length)
+    {
       /*
        * Try to read the content length or transfer encoding
        */
-      if (strncmp("Content-Length: ", header, 16) == 0) {
-        content_length = (int) strtol(&(header[16]), NULL, 10);
+      if (strncmp("Content-Length: ", header, 16) == 0)
+      {
+        content_length = (int)strtol(&(header[16]), NULL, 10);
         found_content_length = true;
-      } else if (strncmp("Transfer-Encoding: ", header, 19) == 0) {
+      }
+      else if (strncmp("Transfer-Encoding: ", header, 19) == 0)
+      {
         found_content_length = true;
       }
     }
 
-    if (!found_connection_data) {
+    if (!found_connection_data)
+    {
       /*
        * Look for a connection header
        */
-      if (strncmp("Connection: close", header, 17) == 0) {
+      if (strncmp("Connection: close", header, 17) == 0)
+      {
         found_connection_data = true;
         pprint_warn("%s", "connection is closing...");
         isclosed = true;
-      } else if (strncmp("Connection: keep-alive", header, 22) == 0) {
+      }
+      else if (strncmp("Connection: keep-alive", header, 22) == 0)
+      {
         found_connection_data = true;
       }
     }
@@ -250,25 +279,30 @@ _http11request_read(struct tls_session *session, char **data)
   /*
    * Check and make sure the connection data type header was found
    */
-  if (!found_connection_data) {
-    // pprint_error("%s", "unable to find Connection header in HTTP response");
-    // abort();
+  if (!found_connection_data)
+  {
+    // pprint_error("%s", "unable to find Connection header in HTTP
+    // response"); abort();
   }
 
   /*
    * Make sure the content length header as found
    */
-  if (!found_content_length) {
+  if (!found_content_length)
+  {
     pprint_error("%s", "unable to find content length in HTTP response");
     abort();
   }
 
-  if (content_length == -1) {
+  if (content_length == -1)
+  {
     /*
      * Parse the chuncked response
      */
     _http11request_parse_chuncked(ssl, data);
-  } else {
+  }
+  else
+  {
     /*
      * Parse the response as a content length
      */
@@ -279,7 +313,8 @@ _http11request_read(struct tls_session *session, char **data)
    * if the connection was set to close then we should re establish the
    * connection for seamless polling
    */
-  if (isclosed) {
+  if (isclosed)
+  {
     pprint_warn("%s", "reestablishing connection...");
     tls_session_reconnect(session);
   }
@@ -289,7 +324,8 @@ static void
 _http11request_cache(struct http11request *req)
 {
 
-  if (req->cache == NULL) {
+  if (req->cache == NULL)
+  {
     pprint_info("%s", "allocating");
     req->cache = malloc(MAX_HTTP_REQUEST_SIZE);
   }
@@ -307,9 +343,11 @@ _http11request_cache(struct http11request *req)
   uint64_t nbins = req->headers->num_bins;
   struct hashmap *headers = req->headers;
 
-  for (uint64_t binidx = 0; binidx < nbins; ++binidx) {
+  for (uint64_t binidx = 0; binidx < nbins; ++binidx)
+  {
     struct _map_list *bin = headers->bins[binidx];
-    while (bin) {
+    while (bin)
+    {
       STR_APPEND_STR(req->cache, cache_idx, bin->orgkey);
       STR_APPEND_STR(req->cache, cache_idx, ": ");
       STR_APPEND_STR(req->cache, cache_idx, (char *)bin->value);
@@ -321,7 +359,7 @@ _http11request_cache(struct http11request *req)
   STR_APPEND_STR(req->cache, cache_idx, "\r\n");
   (req->cache)[cache_idx] = '\x0';
 
-  req->cache_len = (int) strlen(req->cache);
+  req->cache_len = (int)strlen(req->cache);
 }
 
 status_t
@@ -331,7 +369,8 @@ http11request_push(struct http11request *req, char **_data)
   /*
    * Make sure a request exists and we didn't get a NULL pointer instead
    */
-  if (req == NULL) {
+  if (req == NULL)
+  {
     pprint_error("%s", "request can not be null");
     return STATUS_UNKNOWN_ERROR;
   }
@@ -339,7 +378,8 @@ http11request_push(struct http11request *req, char **_data)
   /*
    * If this is dirty cache the request and remove the old cache
    */
-  if (req->dirty) {
+  if (req->dirty)
+  {
     _http11request_cache(req);
     // pprint_warn("generating cached http request\n=>\n%s<=", req->cache);
     req->dirty = false;
@@ -349,7 +389,8 @@ http11request_push(struct http11request *req, char **_data)
    * Send the data to the remote host
    */
   int ret = SSL_write(req->session->ssl, req->cache, req->cache_len);
-  if (ret != req->cache_len) {
+  if (ret != req->cache_len)
+  {
     /*
      * We didn't send all the data something whent wrong
      */

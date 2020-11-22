@@ -1,7 +1,8 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-typedef enum {
+typedef enum
+{
   STATUS_OK,
   STATUS_EXPECTED_NULL,
   STATUS_ALLOC_ERR,

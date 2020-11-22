@@ -34,12 +34,13 @@ _pprint_time(char (*time)[TIME_STR_LEN])
   clock_gettime(CLOCK_REALTIME, &current_time);
 
   sprintf(*time, "%lu",
-      ((uint64_t)current_time.tv_sec * (uint64_t)1e9) +
-          (uint64_t)current_time.tv_nsec);
+          ((uint64_t)current_time.tv_sec * (uint64_t)1e9) +
+              (uint64_t)current_time.tv_nsec);
 }
 
-void __attribute__((__format__(__printf__, 4, 0))) _pprint_info(
-    const char *file, const char *func, const int line, const char *str, ...)
+void __attribute__((__format__(__printf__, 4, 0)))
+_pprint_info(const char *file, const char *func, const int line,
+             const char *str, ...)
 {
   char time[TIME_STR_LEN];
   _pprint_time(&time);
@@ -54,8 +55,9 @@ void __attribute__((__format__(__printf__, 4, 0))) _pprint_info(
   _pprint_unlock(stdout);
 }
 
-void __attribute__((__format__(__printf__, 4, 0))) _pprint_warn(
-    const char *file, const char *func, const int line, const char *str, ...)
+void __attribute__((__format__(__printf__, 4, 0)))
+_pprint_warn(const char *file, const char *func, const int line,
+             const char *str, ...)
 {
   char time[TIME_STR_LEN];
   _pprint_time(&time);
@@ -71,8 +73,9 @@ void __attribute__((__format__(__printf__, 4, 0))) _pprint_warn(
   _pprint_unlock(stdout);
 }
 
-void __attribute__((__format__(__printf__, 4, 0))) _pprint_error(
-    const char *file, const char *func, const int line, const char *str, ...)
+void __attribute__((__format__(__printf__, 4, 0)))
+_pprint_error(const char *file, const char *func, const int line,
+              const char *str, ...)
 {
   char time[TIME_STR_LEN];
   _pprint_time(&time);

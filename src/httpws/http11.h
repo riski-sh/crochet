@@ -17,14 +17,16 @@
 /*
  * List of supported request types
  */
-typedef enum {
+typedef enum
+{
   HTTPREQ_GET,
 } httpreq_t;
 
 /*
  * A representation of an http 1.1 request.
  */
-struct http11request {
+struct http11request
+{
 
   /*
    * The http request type
@@ -48,9 +50,9 @@ struct http11request {
   char *cache;
 
   /*
-   * If dirty is set to true the cache will be regenerated before sending data.
-   * If dirty is false then the request string will not be regenerated and
-   * the value of cache will be sent instead.
+   * If dirty is set to true the cache will be regenerated before sending
+   * data. If dirty is false then the request string will not be regenerated
+   * and the value of cache will be sent instead.
    */
   bool dirty;
 
@@ -78,8 +80,8 @@ struct http11request {
  * @param _ret allocated *ret and creates an empty get request by default
  * @param session
  */
-status_t http11request_new(
-    struct tls_session *session, struct http11request **_ret);
+status_t
+http11request_new(struct tls_session *session, struct http11request **_ret);
 
 /*
  * Performs a request given an http11request
@@ -87,13 +89,15 @@ status_t http11request_new(
  * @param req the request to perform
  * @param _data the response
  */
-status_t http11request_push(struct http11request *req, char **_data);
+status_t
+http11request_push(struct http11request *req, char **_data);
 
 /*
  * Frees the request and sets the value to NULL
  *
  * @param req A pointer to the request to free
  */
-void http11request_free(struct http11request **req);
+void
+http11request_free(struct http11request **req);
 
 #endif

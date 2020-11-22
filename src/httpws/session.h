@@ -45,7 +45,8 @@
 /*
  * Structure that represents a session towards a websocket connection.
  */
-struct tls_session {
+struct tls_session
+{
   /*
    * raw file descriptor for socket
    */
@@ -75,8 +76,8 @@ struct tls_session {
  * @param _session a place to allocate and store the new session
  * @return a status code for failure/success
  */
-status_t tls_session_new(
-    char *endpoint, char *port, struct tls_session **_session);
+status_t
+tls_session_new(char *endpoint, char *port, struct tls_session **_session);
 
 /*
  * Cleans up the httpwss session that was created using the httpwss_session_new
@@ -85,7 +86,8 @@ status_t tls_session_new(
  * @param session a reference to the session pointer created by
  * httpwss_session_new
  */
-status_t tls_session_free(struct tls_session **session);
+status_t
+tls_session_free(struct tls_session **session);
 
 /*
  * If the connection is closed and you would like to reconnect the same way the
@@ -93,6 +95,7 @@ status_t tls_session_free(struct tls_session **session);
  *
  * @param session the session to reconnect to
  */
-status_t tls_session_reconnect(struct tls_session *session);
+status_t
+tls_session_reconnect(struct tls_session *session);
 
 #endif

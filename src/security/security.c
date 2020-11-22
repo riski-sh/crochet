@@ -13,12 +13,13 @@ security_new(char *name, int pip_location, int display_precision)
 }
 
 bool
-security_update(
-    struct security *sec, size_t timestamp, char *best_bid, char *best_ask)
+security_update(struct security *sec, size_t timestamp, char *best_bid,
+                char *best_ask)
 {
-  static const int pow10[7] = { 1, 10, 100, 1000, 10000, 100000, 1000000 };
+  static const int pow10[7] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
-  if (timestamp <= sec->last_update) {
+  if (timestamp <= sec->last_update)
+  {
     return false;
   }
 
@@ -44,10 +45,10 @@ security_update(
 
 bool
 security_update_historical(struct security *sec, size_t timestamp, char *o,
-    char *h, char *l, char *c, uint32_t volume)
+                           char *h, char *l, char *c, uint32_t volume)
 {
 
-  static const int pow10[7] = { 1, 10, 100, 1000, 10000, 100000, 1000000 };
+  static const int pow10[7] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
   double open, high, low, close;
   open = strtod(o, NULL);
@@ -63,9 +64,10 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
 
   size_t cndidx = chart_tstoidx(timestamp);
 
-  if (cndidx > CHART_MINUTES_IN_WEEK) {
-    pprint_error(
-        "malformed data in historical security impossible index %lu", cndidx);
+  if (cndidx > CHART_MINUTES_IN_WEEK)
+  {
+    pprint_error("malformed data in historical security impossible index %lu",
+                 cndidx);
     return false;
   }
 
@@ -84,7 +86,6 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
 
   return true;
 }
-
 
 void
 security_free(struct security **sec)

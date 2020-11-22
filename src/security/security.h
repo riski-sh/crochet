@@ -17,7 +17,8 @@
 /*
  * A security object a security is also defined as "instrument" or "stock"
  */
-struct security {
+struct security
+{
 
   /*
    * The name of the security
@@ -68,14 +69,15 @@ struct security {
  * @param pip_location the pip location
  * @param display_precision the display precision
  */
-struct security *security_new(
-    char *name, int pip_location, int display_precision);
+struct security *
+security_new(char *name, int pip_location, int display_precision);
 
 /*
  * Updates a security given a tick information
  */
-bool security_update(
-    struct security *sec, size_t timestamp, char *best_bid, char *best_ask);
+bool
+security_update(struct security *sec, size_t timestamp, char *best_bid,
+                char *best_ask);
 /*
  * Updates a security given the historical values
  *
@@ -86,14 +88,16 @@ bool security_update(
  * @param l the low of the candle
  * @param c the close of the candle
  */
-bool security_update_historical(struct security *sec, size_t timestamp, char *o,
-    char *h, char *l, char *c, uint32_t volume);
+bool
+security_update_historical(struct security *sec, size_t timestamp, char *o,
+                           char *h, char *l, char *c, uint32_t volume);
 
 /*
  * Frees a security and sets it values to NULL
  *
  * @param sec the security to free
  */
-void security_free(struct security **sec);
+void
+security_free(struct security **sec);
 
 #endif

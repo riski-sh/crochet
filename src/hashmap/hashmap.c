@@ -5,7 +5,8 @@ static uint64_t
 sdbm(char *str)
 {
   uint32_t hash = 0;
-  for (; *str; ++str) {
+  for (; *str; ++str)
+  {
     hash += (unsigned int)*str;
     hash += (hash << 10);
     hash ^= (hash >> 6);
@@ -32,27 +33,30 @@ status_t
 hashmap_new(uint64_t num_bins, struct hashmap **_ret)
 {
 
-  if (*_ret != NULL) {
-    pprint_error("%s",
-        "will not allocate a pointer that doesn't have a value "
-        "of NULL");
+  if (*_ret != NULL)
+  {
+    pprint_error("%s", "will not allocate a pointer that doesn't have a value "
+                       "of NULL");
     return STATUS_EXPECTED_NULL;
   }
 
   struct hashmap *map = calloc(1, sizeof(struct hashmap));
 
-  if (!map) {
-    pprint_error(
-        "unable to aquire %lu bytes for hashmap", sizeof(struct hashmap));
+  if (!map)
+  {
+    pprint_error("unable to aquire %lu bytes for hashmap",
+                 sizeof(struct hashmap));
     return STATUS_ALLOC_ERR;
   }
   map->bins = calloc(num_bins, sizeof(struct _map_list *));
-  if (!map->bins) {
+  if (!map->bins)
+  {
     pprint_error("unable to aquire %lu bytes for hashmap bins",
-        (num_bins * sizeof(struct _map_list **)));
+                 (num_bins * sizeof(struct _map_list **)));
     return STATUS_ALLOC_ERR;
   }
-  for (unsigned int i = 0; i < num_bins; ++i) {
+  for (unsigned int i = 0; i < num_bins; ++i)
+  {
     map->bins[i] = NULL;
   }
   map->num_bins = num_bins;
@@ -65,9 +69,10 @@ hashmap_new(uint64_t num_bins, struct hashmap **_ret)
 void
 hashmap_put(char *key, void *value, struct hashmap *map)
 {
-  if (!key || !value || !map) {
+  if (!key || !value || !map)
+  {
     pprint_error("%s@%s:%d key, value, or map points to null (aborting)",
-        __FILE_NAME__, __func__, __LINE__);
+                 __FILE_NAME__, __func__, __LINE__);
     abort();
   }
 
@@ -86,8 +91,10 @@ hashmap_get(char *key, struct hashmap *map)
 
   struct _map_list *iter = map->bins[bin];
 
-  while (iter) {
-    if (iter->key == hash) {
+  while (iter)
+  {
+    if (iter->key == hash)
+    {
       return iter->value;
     }
     iter = iter->next;
@@ -100,9 +107,11 @@ hashmap_get(char *key, struct hashmap *map)
 void
 hashmap_free(struct hashmap *map)
 {
-  for (size_t i = 0; i < map->num_bins; ++i) {
+  for (size_t i = 0; i < map->num_bins; ++i)
+  {
     struct _map_list *ll = map->bins[i];
-    while (ll) {
+    while (ll)
+    {
       struct _map_list *nxt = ll->next;
       free(ll);
       ll = nxt;
