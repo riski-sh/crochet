@@ -122,6 +122,8 @@ main(int argc, char **argv)
 
   free(_config_raw);
   json_free(_config_root);
+  exchange_free();
+  analysis_clear();
 
   pprint_info("%s", "goodbye");
   return 0;

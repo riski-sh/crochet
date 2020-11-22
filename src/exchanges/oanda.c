@@ -385,11 +385,14 @@ exchanges_oanda_init(void *key)
   pprint_info("%s", "cleaning up exchange oanda...");
 
   free(response);
-  json_free(_response_root);
-  free(instrument_update_full);
+  if (_response_root)
+  {
+    json_free(_response_root);
+  }
+  http11request_free(&request);
   free(instrument_update_end);
+  free(authtoken);
   free(id);
-  tls_session_free(&master_session);
 
   pprint_info("%s", "finished oanda cleanup");
   return NULL;

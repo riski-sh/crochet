@@ -79,11 +79,6 @@ struct chart {
    * A list of candles by default the 1 minute
    */
   struct candle *candles;
-
-  /*
-   * A list of chart objects that were added to the chart
-   */
-  struct chart_object *chart_objects;
 };
 
 /*
@@ -95,10 +90,29 @@ struct chart {
  */
 typedef void (*analysis_func)(struct candle *cnds, size_t indx);
 
+/*
+ * Generates a chart line
+ *
+ * @param cnd the candle to start drawing this line at
+ * @param start_idx the start index of the candle
+ * @param start_price the price to start drawing at
+ * @param end_idx the ending candle index
+ * @param end_price the ending price for the line
+ * @param function_name the function name that called this function given by
+ * the __func__ macro
+ */
 void chart_create_object_line(struct candle *cnd, size_t start_idx,
     uint32_t start_price, size_t end_idx, uint32_t end_price,
     const char *function_name);
 
+/*
+ * Generates a character to draw under the chart
+ *
+ * @param cnd the candle to draw the text under
+ * @param c the character to draw
+ * @param c the function name that called this function given by the __func__
+ * macro.
+ */
 void chart_create_object_text(
     struct candle *cnd, char c, const char *function_name);
 

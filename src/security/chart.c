@@ -88,11 +88,6 @@ chart_new(void)
     abort();
   }
 
-  /*
-   * There are no objects availibale in an empty chart
-   */
-  cht->chart_objects = NULL;
-
   return cht;
 }
 
@@ -180,4 +175,26 @@ chart_reset(struct chart *cht)
   cht->cur_candle_idx = 0;
   memset(cht->candles, 0, sizeof(struct candle) * cht->num_candles);
   // TODO reset chart objects
+}
+
+void
+chart_free(struct chart **cht)
+{
+
+  for (size_t i = 0; i < CHART_MINUTES_IN_WEEK; ++i)
+  {
+    struct chart_object *ll = (*cht)->candles[i].analysis_list;
+    while (ll)
+    {
+      free(ll->value);
+      struct chart_object *next = ll->next;
+      free(ll);
+      ll = next;
+    }
+    (*cht)->candles[i].analysis_list = NULL;
+  }
+  free((*cht)->candles);
+
+  free(*cht);
+  *cht = NULL;
 }

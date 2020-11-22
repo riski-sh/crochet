@@ -89,4 +89,11 @@ status_t http11request_new(
  */
 status_t http11request_push(struct http11request *req, char **_data);
 
+/*
+ * Frees the request and sets the value to NULL
+ *
+ * @param req A pointer to the request to free
+ */
+void http11request_free(struct http11request **req);
+
 #endif

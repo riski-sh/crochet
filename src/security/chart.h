@@ -31,13 +31,25 @@ void chart_update(
 size_t chart_tstoidx(size_t timestamp);
 
 /*
- * Reset the entire chart
+ * Reset the entire chart. This is used during the weekly reset of the chart.
+ *
+ * @param cht the chart to reset
  */
 void chart_reset(struct chart *cht);
 
 /*
  * Runs analysis on this chart
+ *
+ * @param cht the chart to perform analysis on
+ * @param cndidx the last working candle + 1
  */
 void chart_runanalysis(struct chart *cht, size_t cndidx);
+
+/*
+ * Frees the chart and sets the value to NULL
+ *
+ * @param cht the chart to free
+ */
+void chart_free(struct chart **cht);
 
 #endif

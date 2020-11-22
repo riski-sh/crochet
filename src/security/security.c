@@ -84,3 +84,16 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
 
   return true;
 }
+
+
+void
+security_free(struct security **sec)
+{
+  free((*sec)->name);
+  (*sec)->name = NULL;
+
+  chart_free(&(*sec)->chart);
+
+  free(*sec);
+  (*sec) = NULL;
+}

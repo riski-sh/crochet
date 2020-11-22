@@ -28,3 +28,19 @@ exchange_get(char *name)
 {
   return hashmap_get(name, securities);
 }
+
+void
+exchange_free()
+{
+  for (size_t i = 0; i < securities->num_bins; ++i)
+  {
+    struct _map_list *ll = securities->bins[i];
+    while (ll)
+    {
+      struct _map_list *nxt = ll->next;
+      security_free((struct security **) &(ll->value));
+      ll = nxt;
+    }
+  }
+  hashmap_free(securities);
+}

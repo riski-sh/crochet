@@ -1,3 +1,4 @@
+#include "hashmap/hashmap.h"
 #include "http11.h"
 
 #define STR_APPEND_STR(VAR, IDX, DATA)         \
@@ -362,4 +363,40 @@ http11request_push(struct http11request *req, char **_data)
   _http11request_read(req->session, _data);
 
   return STATUS_OK;
+}
+
+void
+http11request_free(struct http11request **req)
+{
+
+  if ((*req)->cache)
+  {
+    free((*req)->cache);
+    (*req)->cache = NULL;
+  }
+
+  if ((*req)->data)
+  {
+    free((*req)->data);
+    (*req)->data = NULL;
+  }
+
+  if ((*req)->headers)
+  {
+    hashmap_free((*req)->headers);
+    (*req)->headers = NULL;
+  }
+
+  if ((*req)->session)
+  {
+    tls_session_free(&((*req)->session));
+  }
+
+  if ((*req)->stub)
+  {
+    free((*req)->stub);
+  }
+
+  free((*req));
+  *req = NULL;
 }

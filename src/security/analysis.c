@@ -1,6 +1,7 @@
 #include "analysis.h"
 
 static struct vtable **tables = NULL;
+static void **libraries_handles = NULL;
 static size_t num_vtables = 0;
 
 void
@@ -31,6 +32,9 @@ _analysis_load_so(char path[PATH_MAX])
   tables = realloc(tables, sizeof(struct vtable *) * num_vtables);
   tables[num_vtables - 1] = libclass;
 
+  libraries_handles = realloc(libraries_handles, sizeof(void *) * num_vtables);
+  libraries_handles[num_vtables - 1] = handle;
+
   pprint_info("loading %s... OK", path);
 }
 
@@ -49,6 +53,7 @@ analysis_init(char *base_path)
   if (!dir)
     return;
 
+  /* loop recursivly through the directory of the libs */
   while ((dp = readdir(dir)) != NULL) {
     if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
 
@@ -56,6 +61,8 @@ analysis_init(char *base_path)
       size_t name_len = strlen(dp->d_name);
       if (dp->d_name[name_len - 1] == 'o' && dp->d_name[name_len - 2] == 's' &&
           dp->d_name[name_len - 3] == '.') {
+
+        /* create the full path of the .so to load */
         strcpy(path, base_path);
         strcat(path, dp->d_name);
         _analysis_load_so(path);
@@ -70,26 +77,15 @@ analysis_init(char *base_path)
     }
   }
   closedir(dir);
+}
 
-  /*
-  void *handle = dlopen("./libs/marubuzu.so", RTLD_NOW);
-  if (!handle) {
-    pprint_error("%s", "unable to load ./libs/marubuzu.so (aborting)");
-    pprint_error("dlopen error: %s", dlerror());
-    exit(1);
+void
+analysis_clear(void)
+{
+  for (size_t i = 0; i < num_vtables; ++i)
+  {
+    dlclose(libraries_handles[i]);
   }
-  pprint_info("%s", "loading libs/marubuzu.so...");
-
-  struct vtable *libclass = dlsym(handle, "exports");
-  if (!libclass) {
-    pprint_error("%s", "this library does not export a vtable (aborting)");
-    exit(1);
-  }
-
-  num_vtables += 1;
-  tables = realloc(tables, sizeof(struct vtable *) * num_vtables);
-  tables[num_vtables - 1] = libclass;
-
-  pprint_info("%s", "loading libs/marubuzu.so... vtable OK");
-  */
+  free(tables);
+  free(libraries_handles);
 }

@@ -89,4 +89,11 @@ bool security_update(
 bool security_update_historical(struct security *sec, size_t timestamp, char *o,
     char *h, char *l, char *c, uint32_t volume);
 
+/*
+ * Frees a security and sets it values to NULL
+ *
+ * @param sec the security to free
+ */
+void security_free(struct security **sec);
+
 #endif
