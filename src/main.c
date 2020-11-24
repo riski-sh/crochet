@@ -16,9 +16,10 @@
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
+#include <web/web.h>
 
 static __json_value
-_load_config(char *file, char **raw)
+_load_config(const char *file, char **raw)
 {
   FILE *fp = fopen(file, "r");
 
@@ -68,7 +69,7 @@ sig_handler(int sig)
 }
 
 int
-main(int argc, char **argv)
+main(int argc, const char **argv)
 {
   exchange_init();
 
@@ -77,15 +78,10 @@ main(int argc, char **argv)
   __json_value _config_root = NULL;
   __json_object config = NULL;
   char *_config_raw = NULL;
-  if (argc == 2)
+  if (argc >= 2)
   {
     _config_root = _load_config(argv[1], &_config_raw);
     config = json_get_object(_config_root);
-  }
-  else
-  {
-    pprint_error("%s", "no configuration file specified");
-    return 1;
   }
 
   pprint_info("%s", "loading analysis");
@@ -125,6 +121,8 @@ main(int argc, char **argv)
       abort();
     }
   }
+
+  server_start(argc, argv);
 
   if (oanda_mainloop != pthread_self())
   {

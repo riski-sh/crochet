@@ -119,7 +119,6 @@ chart_create_object_line(struct candle *cnd, size_t start_idx,
  * Generates a character to draw under the chart
  *
  * @param cnd the candle to draw the text under
- * @param c the character to draw
  * @param c the function name that called this function given by the __func__
  * macro.
  */

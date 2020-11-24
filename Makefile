@@ -1,14 +1,15 @@
-CC?=clang
+CC=clang
 
 CFLAGS+=-Weverything -Werror -pedantic -isystem /usr/local/include -O2 -g
-CFLAGS+=-Wno-padded
+CFLAGS+=-Wno-padded -isystem
 
 IFLAGS=-I$(shell pwd)/src
+IFLAGS+=-I$(shell pwd)/depends/libwebsockets/build/include/
 IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
-
 IFLAGS:=$(sort $(IFLAGS))
 
 LFLAGS=$(shell pkgconf --libs openssl | xargs)
+LFLAGS+=-L/usr/local/lib/ -lwebsockets
 LFLAGS:=$(sort $(LFLAGS)) -lpthread -lm -ldl
 
 OBJDIR:=$(shell pwd)/obj
@@ -18,6 +19,8 @@ STRUCTURE=$(shell find src/ -type d)
 %.o : %.c %.h
 	@mkdir -p $(OBJDIR)/$(shell dirname $*)
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $(OBJDIR)/$@
+
+.server: src/web/web.o
 
 .exchanges: src/exchanges/exchanges.o \
 						src/exchanges/coinbase.o 	\
@@ -63,7 +66,7 @@ STRUCTURE=$(shell find src/ -type d)
 				libs/resistance_trend.so
 
 .PHONY: all
-all : .exchanges .ffjson .finmath .globals .hashmap .httpws \
+all : .exchanges .ffjson .finmath .globals .hashmap .httpws .server \
 			.orderbooks .pprint .security .libs
 	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c src/api.c -o crochet.bin
 

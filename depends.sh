@@ -1,9 +1,4 @@
-#!/usr/bin/env sh
-
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
-  exit
-fi
+#!/usr/bin/env bash
 
 mkdir depends
 cd depends
@@ -17,4 +12,4 @@ git pull
 mkdir -p build
 cd build
 cmake ..
-make install clean
+make
