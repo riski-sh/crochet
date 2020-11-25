@@ -78,7 +78,8 @@ struct http11request
  * Creates a new http11request
  *
  * @param _ret allocated *ret and creates an empty get request by default
- * @param session
+ * @param session the session to send requests on
+ * @return the status
  */
 status_t
 http11request_new(struct tls_session *session, struct http11request **_ret);

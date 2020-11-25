@@ -66,7 +66,6 @@ struct candle
   struct chart_object *analysis_list;
 };
 
-#define CHART_MINUTES_IN_WEEK 10080
 /*
  * Represents a chart and all the elements needed for analysis to draw
  * correctly and informative information on the chart

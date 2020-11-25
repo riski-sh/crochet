@@ -25,7 +25,7 @@ analysis_init(char *base_path);
  * Runs all the analysis that are currently loaded
  *
  * @param cnds the candle list to pass to the functions
- * @indx the index to pass to the candles
+ * @param indx the index to pass to the candles
  */
 void
 analysis_run(struct candle *cnds, size_t indx);

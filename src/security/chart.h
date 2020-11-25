@@ -10,6 +10,8 @@
 
 #include "analysis.h"
 
+#define CHART_MINUTES_IN_WEEK 10080
+
 /*
  * Creates a new chart
  */

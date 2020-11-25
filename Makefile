@@ -1,20 +1,25 @@
-CC=clang
+CC  = clang
 
-CFLAGS+=-Weverything -Werror -pedantic -isystem /usr/local/include -O2 -g
-CFLAGS+=-Wno-padded -isystem
+CWD != pwd
 
-IFLAGS=-I$(shell pwd)/src
-IFLAGS+=-I$(shell pwd)/depends/libwebsockets/build/include/
-IFLAGS+=$(shell pkgconf --cflags openssl | xargs)
-IFLAGS:=$(sort $(IFLAGS))
+OPENSSL_CFLAGS != pkgconf --cflags openssl | xargs
+OPENSSL_LIBS != pkgconf --libs openssl | xargs
 
-LFLAGS=$(shell pkgconf --libs openssl | xargs)
-LFLAGS+=-L/usr/local/lib/ -lwebsockets
-LFLAGS:=$(sort $(LFLAGS)) -lpthread -lm -ldl
+CFLAGS  += -isystem /usr/local/include
+CFLAGS  += -isystem ${CWD}/depends/libwebsockets/build/include/
+CFLAGS  += -Weverything -Werror -Wno-padded
+CFLAGS  += -O2 -g3
+CFLAGS  != echo ${CFLAGS} | sort
 
-OBJDIR:=$(shell pwd)/obj
+IFLAGS  += -I${CWD}/src
+IFLAGS  += -I${CWD}/depends/libwebsockets/build/include/
+IFLAGS  != echo ${IFLAGS} | sort
 
-STRUCTURE=$(shell find src/ -type d)
+LFLAGS  += ${OPENSSL_LIBS}
+LFLAGS  += -L/usr/local/lib/ -lwebsockets -lpthread -lm -ldl
+LFLAGS  != echo ${LFLAGS} | sort
+
+OBJDIR  := ${CWD}/obj
 
 %.o : %.c %.h
 	@mkdir -p $(OBJDIR)/$(shell dirname $*)
@@ -68,7 +73,7 @@ STRUCTURE=$(shell find src/ -type d)
 .PHONY: all
 all : .exchanges .ffjson .finmath .globals .hashmap .httpws .server \
 			.orderbooks .pprint .security .libs
-	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $(shell find obj/ -type f -name "*.o") src/main.c src/api.c -o crochet.bin
+	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) ${OBJDIR}/src/**/*.o src/main.c src/api.c -o crochet.bin
 
 libs : .libs
 
