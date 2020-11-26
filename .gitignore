@@ -36,3 +36,5 @@ key.pem
 *.pid
 *.swp
 depends/*
+*.o
+*.so

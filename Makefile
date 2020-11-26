@@ -25,44 +25,39 @@ OBJDIR  := ${CWD}/obj
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
 .SUFFIXES: .so
-.c.so :
+.c.so:
 	${CC} -shared ${CFLAGS} ${IFLAGS} -fPIC src/api.c src/finmath/linear_equation.c $< -o $@
 
-.PHONY: all
-all: .SERVER .EXCHANGES .FFJSON .GLOBALS .HASHMAP .HTTPWS .ORDERBOOKS .PPRINT  \
-		 .SECURITY .LIBS
-	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) ${CWD}/src/**/*.o src/main.c src/api.c -o crochet.bin
+SERVER: src/web/web.o
 
-.SERVER: src/web/web.o
-
-.EXCHANGES: src/exchanges/exchanges.o \
+EXCHANGES: src/exchanges/exchanges.o \
 						src/exchanges/coinbase.o 	\
 						src/exchanges/oanda.o
 
-.FFJSON: src/ffjson/ffjson.o
+FFJSON: src/ffjson/ffjson.o
 
-.FINMATH: src/finmath/base_conversion.o \
+FINMATH: src/finmath/base_conversion.o \
 					src/finmath/linear_equation.o
 
-.GLOBALS: src/globals/globals.o
+GLOBALS: src/globals/globals.o
 
-.HASHMAP: src/hashmap/hashmap.o
+HASHMAP: src/hashmap/hashmap.o
 
-.HTTPWS: src/httpws/base64.o 	\
-				 src/httpws/http11.o	\
-				 src/httpws/session.o \
-				 src/httpws/wss.o
+HTTPWS: src/httpws/base64.o 	\
+	src/httpws/http11.o	\
+	src/httpws/session.o \
+	src/httpws/wss.o
 
-.ORDERBOOKS: src/orderbooks/book.o \
+ORDERBOOKS: src/orderbooks/book.o \
 						 src/orderbooks/coinbase.o
 
-.PPRINT: src/pprint/pprint.o
+PPRINT: src/pprint/pprint.o
 
-.SECURITY: src/security/analysis.o	\
+SECURITY: src/security/analysis.o	\
 					 src/security/chart.o			\
 					 src/security/security.o
 
-.LIBS : libs/black_marubuzu.so \
+LIBS: libs/black_marubuzu.so \
 				libs/dragonfly_doji.so \
 				libs/four_price_doji.so \
 				libs/gravestone_doji.so \
@@ -74,9 +69,12 @@ all: .SERVER .EXCHANGES .FFJSON .GLOBALS .HASHMAP .HTTPWS .ORDERBOOKS .PPRINT  \
 				libs/support_trend.so \
 				libs/resistance_trend.so
 
-libs : .libs
+libs: LIBS
 
-.PHONY: clean
-clean :
-	rm -rf src/**/*.o
-	rm -rf libs/**/*.so
+all: SERVER EXCHANGES FFJSON GLOBALS HASHMAP HTTPWS ORDERBOOKS \
+		 PPRINT SECURITY  libs
+	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) ${CWD}/src/**/*.o src/main.c src/api.c -o crochet.bin
+
+clean:
+	find libs/ -name "*.so" | xargs rm
+	find src/ -name "*.o" | xargs rm
