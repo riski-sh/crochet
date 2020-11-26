@@ -80,7 +80,7 @@ server_start(int argc, const char **argv)
   info.mounts = &mount;
   info.protocols = protocols;
   info.vhost_name = "localhost";
-  info.options = LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
+  // info.options = LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
 
 #if defined(LWS_WITH_TLS)
   if (lws_cmdline_option(argc, argv, "-s"))

@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'crashnumberinggothicregular';
+    src: url('crashnumbergothic-webfont.woff2') format('woff2'),
+         url('crashnumbergothic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 html, body {
   margin: 0px;
   padding: 0px;
@@ -63,13 +71,16 @@ body {
 }
 
 .watchlist-element > span:nth-child(2) {
+  font-family: 'crashnumberinggothicregular';
   flex-grow: 1;
 }
 
 .watchlist-element > span:nth-child(3) {
+  font-family: 'crashnumberinggothicregular';
   flex-grow: 1;
 }
 
 .watchlist-element > span:nth-child(4) {
+  font-family: 'crashnumberinggothicregular';
   flex-grow: 1;
 }
