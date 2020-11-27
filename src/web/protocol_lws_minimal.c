@@ -138,6 +138,7 @@ callback_minimal(struct lws *wsi, enum lws_callback_reasons reason, void *user,
     vhd->current++;
 
     lws_callback_on_writable(wsi);
+
     /*
      * let everybody know we want to write something on them
      * as soon as they are ready

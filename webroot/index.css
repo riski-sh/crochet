@@ -22,8 +22,8 @@ html, body {
 }
 
 body {
-  grid-template-rows: 2.5em 4em 3em auto auto;
-  grid-template-columns: auto auto auto auto;
+  grid-template-rows: 2em 8em 3em auto;
+  grid-template-columns: auto;
 }
 
 #watchlist {
@@ -39,29 +39,54 @@ body {
 #header {
   grid-column-start: 1;
   grid-column-end: 5;
-  grid-row-start: 1;
-  grid-row-end: 1;
-
-  display: flex;
+  grid-row-start: 2;
+  grid-row-end: 2;
   align-items: center;
   justify-content: center;
-  font-size: 1.5em;
+  padding-top: 0.3em;
+  font-size: 3em;
   font-family: 'Goudy Old Style';
-  background-color: #f0f0f0;
+  background-color: #f0f0f080;
+  display: grid;
+  grid-template-rows: 1em auto;
+}
+
+#header-name {
+  user-select: none;
+  text-align: center;
+  border-bottom: 1px solid black;
+  padding-left: 3em;
+  padding-right: 3em;
+}
+
+#navigation-bar {
+  padding-top: 0.3em;
+  font-size: 0.33em;
+  font-family: 'American Typewriter';
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: auto;
+}
+
+#navigation-bar > span {
+  text-align: center;
+  cursor: pointer;
 }
 
 #header-bar {
   grid-column-start: 1;
   grid-column-end: 5;
-  grid-row-start: 2;
-  grid-row-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 1;
   display: grid;
   align-items: center;
   justify-content: center;
-  font-family: 'tex_gyre_cursorregular';
-  font-size: 1.1em;
-  grid-template-rows: 2em 2em;
-  grid-template-columns: auto auto auto auto auto;
+  font-family: 'Lucida Console';
+  font-size: 1em;
+  grid-template-rows: 2em;
+  grid-template-columns: auto auto auto auto auto auto;
+  background-color: #262626;
+  color: #f0f0f0;
 }
 
 #header-bar > span {
@@ -84,6 +109,10 @@ body {
   padding-right: 1em;
   display: flex;
   align-items: center;
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: auto auto;
+  justify-content: center;
 }
 
 #exchange {
@@ -91,6 +120,14 @@ body {
   border: 1px solid gray;
   border-radius: 5px;
   align-items: center;
+  margin-right: 10px;
+}
+
+#exchange-button {
+  display: flex;
+  align-items: center;
+  width: 1.7em;
+  height: 1.7em;
 }
 
 #exchange-logo {
@@ -112,12 +149,14 @@ body {
   font-family: 'tex_gyre_cursorregular';
   font-size: 1.5em;
   border: none;
+  border-style: none;
+  outline: none;
+  padding-bottom: 0.15em;
 }
 
 #exchange-exchange {
-  margin-left: calc(1em - 5px);
-  margin-right: calc(0.3em + 5px);
-  width: 3em;
+  margin-left: 0.7em;
+  width: 4em;
 }
 
 #exchange-text > span {
@@ -129,4 +168,67 @@ body {
   margin-left: calc(0.3em + 5px);
   margin-right: 5px;
   width: 4em;
+}
+
+#options {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: auto auto auto auto auto;
+}
+
+#options > span {
+  padding-left: 10px;
+  margin-right: 10px;
+  border-left: 1px solid gray;
+}
+
+#options > span:last-child {
+  margin-right: 0px !important;
+  padding-right: 10px;
+  border-right: 1px solid gray;
+}
+
+#dash {
+  grid-row-start: 4;
+  grid-row-end: 5;
+  grid-column-start: 1;
+  grid-column-end: 5;
+  padding-left: calc(50% - 650px);
+  padding-right: calc(50% - 650px);
+  display: grid;
+  grid-template-columns: 25% auto;
+  grid-template-rows: 75% auto;
+}
+
+#chart {
+  grid-row-start: 1;
+  grid-row-end: 1;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#news-feed {
+  grid-row-start: 1;
+  grid-row-end: 1;
+  grid-column-start: 1;
+  grid-column-end: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#alerts {
+  grid-row-start: 2;
+  grid-row-end: 3;
+  grid-column-start: 1;
+  grid-column-end: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

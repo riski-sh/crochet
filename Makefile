@@ -21,6 +21,8 @@ LFLAGS  != echo ${LFLAGS} | sort
 
 OBJDIR  := ${CWD}/obj
 
+CFILES  != find src/ -name "*.c"
+
 .c.o:
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
@@ -72,8 +74,22 @@ LIBS: libs/black_marubuzu.so \
 libs: LIBS
 
 all: SERVER EXCHANGES FFJSON GLOBALS HASHMAP HTTPWS ORDERBOOKS \
-		 PPRINT SECURITY  libs
+		 PPRINT SECURITY  libs   compile_commands
 	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) ${CWD}/src/**/*.o src/main.c src/api.c -o crochet.bin
+
+.PHONY: compile_commands
+compile_commands:
+	@echo "[" > compile_commands.json
+	@for f in ${CFILES}; do \
+		echo "  {" >> compile_commands.json ; \
+		echo "    \"directory\": \"${CWD}\"," >> compile_commands.json ; \
+		echo "    \"command\":   \"${CC} -c ${CFLAGS} ${IFLAGS} $${f}\"," >> compile_commands.json; \
+		echo "    \"file\":      \"$${f}\"" >> compile_commands.json ; \
+		echo "  }," >> compile_commands.json ; \
+	done
+	@truncate -s-2 compile_commands.json
+	@echo "" >> compile_commands.json
+	@echo "]" >> compile_commands.json
 
 clean:
 	find libs/ -name "*.so" | xargs rm

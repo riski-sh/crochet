@@ -2,15 +2,12 @@
 
 <html>
   <head>
-    <title>Crochet</title>
+    <title>RISKI - Financial Hardship</title>
     <link rel="stylesheet" href="index.css">
     <meta charset="utf-8"/>
   </head>
 
   <body>
-    <div id="header">
-      - RISKI -
-    </div>
     <div id="header-bar">
       <span>
         <span>EUR/USD</span>
@@ -42,26 +39,14 @@
         <span>$0.00000</span>
         <span>&#8593;</span>
       </span>
-      <span>
-        <span>USD/CHF</span>
-        <span>$0.00000</span>
-        <span>&#8593;</span>
+    </div>
+    <div id="header">
+      <span id="header-name">
+      - RISKI -
       </span>
-      <span>
-        <span>USD/HKD</span>
-        <span>$0.00000</span>
-        <span>&#8593;</span>
-      </span>
-      <span>
-        <span>EUR/GBP</span>
-        <span>$0.00000</span>
-        <span>&#8593;</span>
-      </span>
-      <span>
-        <span>USD/KRW</span>
-        <span>$0.00000</span>
-        <span>&#8593;</span>
-      </span>
+      <div id="navigation-bar">
+        <span>If you let me read the charts, I will let you form opinions.</span>
+      </div>
     </div>
     <div id="security-bar">
       <div id="exchange">
@@ -69,12 +54,30 @@
           <img src="https://www.oanda.com/assets/images/oanda-icon.svg" alt="OANDA"/>
         </div>
         <div id="exchange-text">
-          <input id="exchange-exchange"/>
+          <input id="exchange-exchange" spellcheck="false" value="OANDA"/>
           <span></span>
-          <input id="exchange-security"/>
+          <input id="exchange-security" spellcheck="false" value="EURUSD"/>
         </div>
+        <div id="exchange-button">
+          <img src="glyfs/iconmonstr-search-thin.svg" alt="search"/>
+        </div>
+      </div>
+      <div id="options">
+        <span>Health</span>
+        <span>Detailed Report</span>
+      </div>
+    </div>
+    <div id="dash">
+      <div id="news-feed">
+        news feed
+      </div>
+      <div id="chart">
+        chart goes here
+      </div>
+      <div id="alerts">
+        put something here idk
       </div>
     </div>
   </body>
-
+  <script src="comms.js"></script>
 </html>
