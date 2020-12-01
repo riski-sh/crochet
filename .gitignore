@@ -26,7 +26,6 @@ crochet
 compile_commands.json
 node_modules
 *.core
-*.js
 config.h
 *.tsbuildinfo
 crochet.bin
