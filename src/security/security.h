@@ -1,6 +1,7 @@
 #ifndef SECURITY_H
 #define SECURITY_H
 
+#include <pprint/pprint.h>
 #include <ffjson/ffjson.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -13,6 +14,8 @@
 #ifndef CHART_H
 #include "chart.h"
 #endif
+
+#include <string/string.h>
 
 /*
  * A security object a security is also defined as "instrument" or "stock"
@@ -99,5 +102,21 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
  */
 void
 security_free(struct security **sec);
+
+/*
+ * Generates the following json string
+ * {
+ *   "symbol": string,
+ *   "bid": number,
+ *   "ask": number,
+ *   "precision": number
+ * }
+ *
+ * @param sec the security to generate this data for
+ * @param _data sets *_data to the allocated pointer with the json string
+ * @param _len sets *_len to the value of the length of the string
+ */
+void
+security_header_update(struct security *sec, char **_data, size_t *_len);
 
 #endif

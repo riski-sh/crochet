@@ -60,7 +60,7 @@ _pprint_error(const char *file, const char *func, const int line,
     {                                                                          \
       pprint_error("%s@%s:%d %s == NULL *alloc failed", __FILE__, __func__,    \
                    __LINE__, #PTR);                                            \
-      abort();                                                                 \
+      exit(1);                                                                 \
     }                                                                          \
   } while (0)
 

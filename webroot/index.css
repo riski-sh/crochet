@@ -1,16 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
+
 @font-face {
   font-family: 'Goudy Old Style';
   font-style: normal;
   font-weight: normal;
   src: local('Goudy Old Style'), url('fonts/GOUDOS.woff') format('woff');
-}
-
-@font-face {
-    font-family: 'tex_gyre_cursorregular';
-    src: url('fonts/texgyrecursor-regular-webfont.woff2') format('woff2'),
-         url('fonts/texgyrecursor-regular-webfont.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
 }
 
 html, body {
@@ -24,6 +18,7 @@ html, body {
 body {
   grid-template-rows: 2em 8em 3em auto;
   grid-template-columns: auto;
+  background: #fff;
 }
 
 #watchlist {
@@ -46,9 +41,9 @@ body {
   padding-top: 0.3em;
   font-size: 3em;
   font-family: 'Goudy Old Style';
-  background-color: #f0f0f080;
   display: grid;
   grid-template-rows: 1em auto;
+  color: #000;
 }
 
 #header-name {
@@ -62,7 +57,7 @@ body {
 #navigation-bar {
   padding-top: 0.3em;
   font-size: 0.33em;
-  font-family: 'American Typewriter';
+  font-family: 'Goudy Old Style';
   display: grid;
   grid-template-rows: auto;
   grid-template-columns: auto;
@@ -81,12 +76,11 @@ body {
   display: grid;
   align-items: center;
   justify-content: center;
-  font-family: 'Lucida Console';
+  font-family: 'Inconsolata', monospace;
   font-size: 1em;
   grid-template-rows: 2em;
   grid-template-columns: auto auto auto auto auto auto;
-  background-color: #262626;
-  color: #f0f0f0;
+  color: #000;
 }
 
 #header-bar > span {
@@ -105,22 +99,19 @@ body {
   grid-row-end: 3;
   grid-column-start: 1;
   grid-column-end: 5;
-  padding-left: 1em;
-  padding-right: 1em;
+  padding-left: calc(50% - 800px);
+  padding-right: calc(50% - 800px);
   display: flex;
-  align-items: center;
-  display: grid;
-  grid-template-rows: auto;
-  grid-template-columns: auto auto;
-  justify-content: center;
+  align-items: flex-end;
 }
 
 #exchange {
   display: flex;
-  border: 1px solid gray;
-  border-radius: 5px;
   align-items: center;
-  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  min-width: 25%;
+  min-height: 75%;
 }
 
 #exchange-button {
@@ -133,25 +124,47 @@ body {
 #exchange-logo {
   display: flex;
   align-items: center;
+  align-self: stretch;
+  border-radius: 5px 0px 0px 0px;
+  border: 1px solid #1a1a1a;
+  background: #000;
 }
 
 #exchange-logo > img {
-  margin-left: 1em;
-  width: 1.7em;
-  height: 1.7em;
+  margin-left: 0.5em;
+}
+
+#exchange-logo > img:nth-child(1) {
+  width: 1em;
+  height: 1em;
+}
+
+#exchange-logo > img:nth-child(2) {
+  margin-right: 0.5em;
+  width: 1.5em;
+  height: 1.5em;
 }
 
 #exchange-text {
   display: flex;
+  flex-grow: 1;
+  border-top: 1px solid #1a1a1a;
+  border-right: 1px solid #1a1a1a;
+  border-radius: 0px 5px 0px 0px;
+  align-self: stretch;
 }
 
 #exchange-text > input {
-  font-family: 'tex_gyre_cursorregular';
-  font-size: 1.5em;
-  border: none;
+  font-size: 1em;
   border-style: none;
   outline: none;
-  padding-bottom: 0.15em;
+  display: flex;
+  flex-grow: 1;
+  padding-left: 1em;
+  border-radius: 0px 5px 5px 0px;
+  align-self: stretch;
+  font-family: 'Inconsolata', monospace;
+  padding-right: 1em;
 }
 
 #exchange-exchange {
@@ -159,7 +172,7 @@ body {
   width: 4em;
 }
 
-#exchange-text > span {
+#exchange-logo > span {
   align-self: stretch;
   border-left: 1px solid gray;
 }
@@ -196,11 +209,11 @@ body {
   grid-row-end: 5;
   grid-column-start: 1;
   grid-column-end: 5;
-  padding-left: calc(50% - 650px);
-  padding-right: calc(50% - 650px);
+  padding-left: calc(50% - 800px);
+  padding-right: calc(50% - 800px);
   display: grid;
   grid-template-columns: 25% auto;
-  grid-template-rows: 75% auto;
+  grid-template-rows: calc(100% - 2em) auto;
 }
 
 #chart {
@@ -211,9 +224,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  border-top: 1px solid #1a1a1a;
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
 }
 
-#news-feed {
+#chart-drawable {
+  width: 100%;
+  height: 100%;
+}
+
+#feed {
   grid-row-start: 1;
   grid-row-end: 1;
   grid-column-start: 1;
@@ -221,6 +242,10 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  border-left: 1px solid #1a1a1a;
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  border-top: 1px solid #1a1a1a;
 }
 
 #alerts {

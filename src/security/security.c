@@ -1,4 +1,5 @@
 #include "security.h"
+#include "pprint/pprint.h"
 
 struct security *
 security_new(char *name, int pip_location, int display_precision)
@@ -85,6 +86,31 @@ security_update_historical(struct security *sec, size_t timestamp, char *o,
   // chart_runanalysis(sec->chart, cndidx + 1);
 
   return true;
+}
+
+void
+security_header_update(struct security *sec, char **_data, size_t *_len)
+{
+  int json_len = snprintf(NULL, 0,
+      "{\"symbol\": \"%s\", \"bid\": %d, \"ask\": %d, \"precision\": %d}",
+      sec->name, sec->best_bid, sec->best_ask, sec->display_precision);
+
+  char *update_str = calloc((size_t)(json_len + 1), sizeof(char));
+
+  PPRINT_CHECK_ALLOC(update_str);
+
+  int wrote = snprintf(update_str, (size_t) json_len + 1,
+      "{\"symbol\": \"%s\", \"bid\": %d, \"ask\": %d, \"precision\": %d}",
+      sec->name, sec->best_bid, sec->best_ask, sec->display_precision);
+
+  if (wrote != json_len)
+  {
+    pprint_error("%s", "did not write the expected amount for header_update");
+    exit(1);
+  }
+
+  *_data = update_str;
+  *_len = (size_t) json_len;
 }
 
 void

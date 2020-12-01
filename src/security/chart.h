@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string/string.h>
 
 #include "analysis.h"
 
@@ -58,5 +59,15 @@ chart_runanalysis(struct chart *cht, size_t cndidx);
  */
 void
 chart_free(struct chart **cht);
+
+/*
+ * Given a candle, seralizes the data into a json object
+ *
+ * @param cnd the candle to serialize
+ * @param _data will allocate *_data, caller owns data and must free
+ * @param _len the length of the data
+ */
+void
+chart_candle_json(struct candle *cnd, size_t index, char **_data, size_t *_len);
 
 #endif

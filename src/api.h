@@ -2,6 +2,7 @@
 #define CROCHET_API
 
 #include <pprint/pprint.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -87,6 +88,12 @@ struct chart
    * A list of candles by default the 1 minute
    */
   struct candle *candles;
+
+  /*
+   * A lock for the last candle, don't read while another thread is writing
+   * data
+   */
+  pthread_mutex_t last_candle_grab;
 };
 
 /*

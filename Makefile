@@ -1,4 +1,4 @@
-CC  = clang
+CC  ?= clang
 
 CWD != pwd
 
@@ -30,7 +30,10 @@ CFILES  != find src/ -name "*.c"
 .c.so:
 	${CC} -shared ${CFLAGS} ${IFLAGS} -fPIC src/api.c src/finmath/linear_equation.c $< -o $@
 
-SERVER: src/web/web.o
+STRING: src/string/string.o
+
+SERVER: src/web/web.o \
+				src/web/comms.o
 
 EXCHANGES: src/exchanges/exchanges.o \
 						src/exchanges/coinbase.o 	\
@@ -74,7 +77,7 @@ LIBS: libs/black_marubuzu.so \
 libs: LIBS
 
 all: SERVER EXCHANGES FFJSON GLOBALS HASHMAP HTTPWS ORDERBOOKS \
-		 PPRINT SECURITY  libs   compile_commands
+		 PPRINT SECURITY  libs   STRING  compile_commands
 	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) ${CWD}/src/**/*.o src/main.c src/api.c -o crochet.bin
 
 .PHONY: compile_commands

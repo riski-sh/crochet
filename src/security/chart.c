@@ -29,6 +29,8 @@ static void
 _chart_update_candle(struct chart *cht, uint32_t bid, size_t idx)
 {
   struct candle *cnd = &(cht->candles[idx]);
+
+  pthread_mutex_lock(&(cht->last_candle_grab));
   if (cnd->volume != 0)
   {
     if (bid > cnd->high)
@@ -51,6 +53,8 @@ _chart_update_candle(struct chart *cht, uint32_t bid, size_t idx)
 
     cnd->volume += 1;
   }
+  pthread_mutex_unlock(&(cht->last_candle_grab));
+
 }
 
 /*
@@ -209,4 +213,35 @@ chart_free(struct chart **cht)
 
   free(*cht);
   *cht = NULL;
+}
+
+void
+chart_candle_json(struct candle *cnd, size_t index, char **_data, size_t *_len)
+{
+  struct string_t candle;
+  string_new(&candle);
+
+  int json_len = snprintf(NULL, 0,
+      "{\"open\": %d, \"high\": %d, \"low\": %d, \"close\": %d, \"volume\": %d,"
+      "\"index\": %lu}",
+      cnd->open, cnd->high, cnd->low, cnd->close, cnd->volume, index);
+
+  char *update_str = calloc((size_t)(json_len + 1), sizeof(char));
+
+  PPRINT_CHECK_ALLOC(update_str);
+
+  int wrote = snprintf(update_str, (size_t) json_len + 1,
+      "{\"open\": %d, \"high\": %d, \"low\": %d, \"close\": %d, \"volume\": %d,"
+      "\"index\": %lu}",
+      cnd->open, cnd->high, cnd->low, cnd->close, cnd->volume, index);
+
+
+  if (wrote != json_len)
+  {
+    pprint_error("%s", "did not write the expected amount for header_update");
+    exit(1);
+  }
+
+  *_data = update_str;
+  *_len = (size_t) json_len;
 }

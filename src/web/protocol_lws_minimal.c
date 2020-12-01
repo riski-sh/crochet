@@ -11,13 +11,16 @@
  * but using an lws_ring ringbuffer to hold up to 8 messages at a time.
  */
 
+#include <pprint/pprint.h>
 #if !defined(LWS_PLUGIN_STATIC)
 #define LWS_DLL
 #define LWS_INTERNAL
 #include <libwebsockets.h>
 #endif
 
+#include <web/comms.h>
 #include <string.h>
+#include <pthread.h>
 
 /* one of these created for each message */
 
@@ -33,7 +36,10 @@ struct per_session_data__minimal
 {
   struct per_session_data__minimal *pss_list;
   struct lws *wsi;
+
   int last; /* the last message number we sent */
+  struct msg amsg; /* the one pending message... */
+  int current;     /* the current message number we are caching */
 };
 
 /* one of these is created for each vhost our protocol is used with */
@@ -45,9 +51,7 @@ struct per_vhost_data__minimal
   const struct lws_protocols *protocol;
 
   struct per_session_data__minimal *pss_list; /* linked-list of live pss*/
-
-  struct msg amsg; /* the one pending message... */
-  int current;     /* the current message number we are caching */
+  int current;
 };
 
 /* destroys the message when everyone has had a copy of it */
@@ -103,57 +107,55 @@ callback_minimal(struct lws *wsi, enum lws_callback_reasons reason, void *user,
                       vhd->pss_list) break;
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
-    if (!vhd->amsg.payload)
+    if (!pss->amsg.payload)
       break;
 
     if (pss->last == vhd->current)
       break;
 
     /* notice we allowed for LWS_PRE in the payload already */
-    m = lws_write(wsi, ((unsigned char *)vhd->amsg.payload) + LWS_PRE,
-                  vhd->amsg.len, LWS_WRITE_TEXT);
-    if (m < (int)vhd->amsg.len)
+    m = lws_write(wsi, ((unsigned char *)pss->amsg.payload) + LWS_PRE,
+                  pss->amsg.len, LWS_WRITE_TEXT);
+    if (m < (int)pss->amsg.len)
     {
       lwsl_err("ERROR %d writing to ws\n", m);
-      return -1;
+      exit(1);
     }
+
+    __minimal_destroy_message(&pss->amsg);
 
     pss->last = vhd->current;
     break;
 
   case LWS_CALLBACK_RECEIVE:
-    if (vhd->amsg.payload)
-      __minimal_destroy_message(&vhd->amsg);
 
-    vhd->amsg.len = len;
-    /* notice we over-allocate by LWS_PRE */
-    vhd->amsg.payload = malloc(LWS_PRE + len);
-    if (!vhd->amsg.payload)
-    {
-      lwsl_user("OOM: dropping\n");
-      break;
+    /* clear the last payload if any that was sent to the client */
+    if (pss->amsg.payload)
+      __minimal_destroy_message(&pss->amsg);
+
+    /* modify payload to be c null terminiated string */
+    ((char*)(in))[len] = '\x0';
+
+    char *response = NULL;
+    size_t msg_length = 0;
+
+    comms_parse_message(in, &response, &msg_length);
+
+    if (response) {
+      pss->amsg.payload = malloc(LWS_PRE + msg_length);
+      memcpy((char*)pss->amsg.payload + LWS_PRE, response, msg_length);
+      pss->amsg.len = strlen(response);
+      free(response);
+
+      pss->current++;
+      vhd->current++;
+      lws_callback_on_writable(pss->wsi);
+    } else {
+      pss->amsg.payload = NULL;
+      pss->amsg.len = 0;
     }
-    printf("current?=%d\n", vhd->current);
-    memcpy((char *)vhd->amsg.payload + LWS_PRE, in, len);
-    vhd->current++;
 
-    lws_callback_on_writable(wsi);
-
-    /*
-     * let everybody know we want to write something on them
-     * as soon as they are ready
-     */
-    /*
-    lws_start_foreach_llp(struct per_session_data__minimal **, ppss,
-                          vhd->pss_list)
-    {
-      lws_callback_on_writable((*ppss)->wsi);
-    }
-    lws_end_foreach_llp(ppss, pss_list)
-    */
     break;
-
-
   default:
     break;
   }
