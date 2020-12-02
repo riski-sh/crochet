@@ -7,8 +7,7 @@ let chart = class Chart
   constructor()
   {
     this.context = DrawingArea.getContext('2d');
-    // this.context.font = 'regular 16px Inconsolata';
-    this.context.font = '30px Arial';
+    this.context.font = '16px Inconsolata';
     this.candles = [];
     this.chartMax = Number.MIN_VALUE;
     this.chartMin = Number.MAX_VALUE;
@@ -81,7 +80,10 @@ let chart = class Chart
 
     if (data.what == 'chart-full')
     {
-      Object.assign(this.candles, data.data);
+      for (let i = 0; i < data.data.length; ++i)
+      {
+        this.candles[data.data[i].index] = data.data[i];
+      }
       this.numericalPrecision = data.precision;
     }
     else if (data.what == 'chart-partial')
@@ -102,8 +104,6 @@ let chart = class Chart
       DrawingArea.height = DrawingArea.getBoundingClientRect().height;
     }
 
-    this.context.font = '1.3em Monospace';
-
     let candleOccupationWidth = 7
     let candleRealWidth = 5;
 
@@ -115,10 +115,12 @@ let chart = class Chart
     /* clear the drawing area */
     this.context.clearRect(0,0,DrawingArea.width, DrawingArea.height);
 
+    this.context.font = '11px Monospace';
+
 
     /* draw a bar to represent where the price axis on the right of the chart */
-    this.context.strokeStyle = '#262626';
-    this.context.fillStyle = '#262626';
+    this.context.strokeStyle = '#839496';
+    this.context.fillStyle = '#93a1a1';
     this.context.textBaseline = 'middle';
 
     this.context.setLineDash([]);
@@ -138,10 +140,19 @@ let chart = class Chart
       let drawHeight = Math.floor(x * (this.PricePixelTransformation.slope) +
         this.PricePixelTransformation.inter);
 
+      this.context.fillStyle = '#839496';
       this.context.fillText('  ' + parseFloat(x/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
         DrawingArea.width - this.getAxisWidth(), drawHeight+1.5);
-    }
 
+      this.context.strokeStyle = '#586e7550';
+      this.context.setLineDash([candleRealWidth, candleOccupationWidth - candleRealWidth]);
+      this.context.beginPath();
+      this.context.moveTo(0, drawHeight+0.5);
+      this.context.lineTo(DrawingArea.width - this.getAxisWidth(), drawHeight+0.5);
+      this.context.stroke();
+
+    }
+    this.context.setLineDash([]);
 
     let bar = DrawingArea.width - this.getAxisWidth();
     let bidHeight = Math.floor(this.bestBid * (this.PricePixelTransformation.slope) +
@@ -156,7 +167,7 @@ let chart = class Chart
       bidHeight - (this.getTextHeight() / 2) - 1);
     this.context.lineTo(bar + (2*this.getCharWidth()),
       bidHeight - (this.getTextHeight() / 2) - 1);
-    this.context.fillStyle = '#AB3131';
+    this.context.fillStyle = '#b58900';
     this.context.fill();
 
     let askHeight = Math.floor(this.bestAsk * (this.PricePixelTransformation.slope) +
@@ -172,12 +183,12 @@ let chart = class Chart
     this.context.lineTo(bar + (2*this.getCharWidth()),
       askHeight - (this.getTextHeight() / 2) - 1);
 
-    this.context.fillStyle = '#507B58';
+    this.context.fillStyle = '#dc322f';
     this.context.fill();
 
 
 
-    this.context.fillStyle = '#f7f7f7';
+    this.context.fillStyle = '#eee8d5';
     this.context.fillText('  ' + parseFloat(this.bestBid/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
         DrawingArea.width - this.getAxisWidth(), bidHeight+1.5);
 
@@ -191,6 +202,8 @@ let chart = class Chart
       startIndex = 0;
     }
 
+
+    this.context.strokeStyle = '#93a1a1';
     for (let idx = startIndex; idx < this.candles.length; ++idx)
     {
       let candle = this.candles[idx];
@@ -217,7 +230,7 @@ let chart = class Chart
         this.context.beginPath();
         this.context.moveTo(((idx - startIndex) * candleOccupationWidth) + Math.floor((candleRealWidth / 2.0)) + 0.5, high);
         this.context.lineTo(((idx - startIndex) * candleOccupationWidth) + Math.floor((candleRealWidth / 2.0)) + 0.5, close);
-        this.context.fillStyle = '#507B58';
+        this.context.fillStyle = '#b58900';
         this.context.fillRect(((idx - startIndex) * candleOccupationWidth), close, candleRealWidth,
           open - close);
         this.context.fillStyle = '#1A1A1A';
@@ -230,7 +243,7 @@ let chart = class Chart
         this.context.beginPath();
         this.context.moveTo(((idx - startIndex) * candleOccupationWidth) + Math.floor((candleRealWidth / 2.0)) + 0.5, high);
         this.context.lineTo(((idx - startIndex) * candleOccupationWidth) + Math.floor((candleRealWidth / 2.0)) + 0.5, open);
-        this.context.fillStyle = '#AB3131';
+        this.context.fillStyle = '#dc322f';
         this.context.fillRect(((idx - startIndex) * candleOccupationWidth), open, candleRealWidth,
           close - open);
         this.context.fillStyle = '#1A1A1A';

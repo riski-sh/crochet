@@ -18,7 +18,8 @@ html, body {
 body {
   grid-template-rows: 2em 8em 3em auto;
   grid-template-columns: auto;
-  background: #fff;
+  background: var(--brblack);
+  color: var(--white);
 }
 
 #watchlist {
@@ -43,7 +44,6 @@ body {
   font-family: 'Goudy Old Style';
   display: grid;
   grid-template-rows: 1em auto;
-  color: #000;
 }
 
 #header-name {
@@ -80,7 +80,6 @@ body {
   font-size: 1em;
   grid-template-rows: 2em;
   grid-template-columns: auto auto auto auto auto auto;
-  color: #000;
 }
 
 #header-bar > span {
