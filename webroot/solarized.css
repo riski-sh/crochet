@@ -1,12 +1,12 @@
 :root {
-  --brblack: #002b36;
-  --black: #073642;
-  --brgreen: #586e75;
-  --bryellow: #657b83;
-  --brblue: #839496;
-  --brcyan: #93a1a1;
-  --white: #eee8d5;
-  --brwhite: #fdf6e3;
+  --base03: #002b36;
+  --base02: #073642;
+  --base01: #586e75;
+  --base00: #657b83;
+  --base0: #839496;
+  --base1: #93a1a1;
+  --base2: #eee8d5;
+  --base3: #fdf6e3;
   --yellow: #b58900;
   --orange: #cb4b16;
   --red: #dc322f;
