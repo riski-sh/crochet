@@ -11,7 +11,6 @@ let chart = class Chart
     this.dpr = window.devicePixelRatio;
 
     this.context = DrawingArea.getContext('2d');
-    this.context.font = '16px Inconsolata';
     this.candles = [];
     this.chartMax = Number.MIN_VALUE;
     this.chartMin = Number.MAX_VALUE;
@@ -32,7 +31,8 @@ let chart = class Chart
 
   getAxisWidth()
   {
-    let metrics = Math.ceil(this.context.measureText('  0.00000 ').width);
+    this.context.font = '14px Monospace';
+    let metrics = Math.ceil(this.context.measureText(' 0.00000 ').width);
     return metrics;
   }
 
@@ -45,7 +45,7 @@ let chart = class Chart
   getTextHeight()
   {
     let metrics = this.context.measureText('0');
-    return Math.ceil(metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
+    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
   }
 
   setChartMinMax(offset)
@@ -81,7 +81,6 @@ let chart = class Chart
 
   loop(data)
   {
-
     this.received += 1;
 
     if (data.what == 'chart-full')
@@ -146,7 +145,7 @@ let chart = class Chart
         this.PricePixelTransformation.inter);
 
       this.context.fillStyle = '#586e75';
-      this.context.fillText('  ' + parseFloat(x/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
+      this.context.fillText(' ' + parseFloat(x/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
         DrawingArea.width - this.getAxisWidth(), drawHeight+1.5);
 
       this.context.strokeStyle = '#eee8d5';
@@ -162,13 +161,13 @@ let chart = class Chart
       this.PricePixelTransformation.inter);
     this.context.beginPath();
     this.context.moveTo(bar, bidHeight + 0.5);
-    this.context.lineTo(bar + (2*this.getCharWidth()),
+    this.context.lineTo(bar + (this.getCharWidth()),
       bidHeight + (this.getTextHeight() / 2) + 1);
     this.context.lineTo(DrawingArea.width,
       bidHeight + (this.getTextHeight() / 2) + 1);
     this.context.lineTo(DrawingArea.width,
       bidHeight - (this.getTextHeight() / 2) - 1);
-    this.context.lineTo(bar + (2*this.getCharWidth()),
+    this.context.lineTo(bar + (this.getCharWidth()),
       bidHeight - (this.getTextHeight() / 2) - 1);
     this.context.fillStyle = '#859900';
     this.context.fill();
@@ -177,13 +176,13 @@ let chart = class Chart
       this.PricePixelTransformation.inter);
     this.context.beginPath();
     this.context.moveTo(bar, askHeight + 0.5);
-    this.context.lineTo(bar + (2*this.getCharWidth()),
+    this.context.lineTo(bar + (this.getCharWidth()),
       askHeight + (this.getTextHeight() / 2) + 1);
     this.context.lineTo(DrawingArea.width,
       askHeight + (this.getTextHeight() / 2) + 1);
     this.context.lineTo(DrawingArea.width,
       askHeight - (this.getTextHeight() / 2) - 1);
-    this.context.lineTo(bar + (2*this.getCharWidth()),
+    this.context.lineTo(bar + (this.getCharWidth()),
       askHeight - (this.getTextHeight() / 2) - 1);
 
     this.context.fillStyle = '#dc322f';
@@ -192,11 +191,11 @@ let chart = class Chart
 
 
     this.context.fillStyle = '#fdf6e3';
-    this.context.fillText('  ' + parseFloat(this.bestBid/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
-        DrawingArea.width - this.getAxisWidth(), bidHeight+1.5);
+    this.context.fillText(' ' + parseFloat(this.bestBid/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
+        DrawingArea.width - this.getAxisWidth(), bidHeight+1.25);
 
-    this.context.fillText('  ' + parseFloat(this.bestAsk/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
-        DrawingArea.width - this.getAxisWidth(), askHeight+1.5);
+    this.context.fillText(' ' + parseFloat(this.bestAsk/(Math.pow(10, this.numericalPrecision))).toFixed(this.numericalPrecision),
+        DrawingArea.width - this.getAxisWidth(), askHeight+1.25);
 
 
     let startIndex = this.candles.length - numCandles;

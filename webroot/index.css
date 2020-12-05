@@ -5,6 +5,7 @@
   font-style: normal;
   font-weight: normal;
   src: local('Goudy Old Style'), url('fonts/GOUDOS.woff') format('woff');
+  font-display: swap;
 }
 
 html, body {
@@ -39,26 +40,18 @@ body {
   grid-row-end: 2;
   align-items: center;
   justify-content: center;
-  padding-top: 0.3em;
   font-size: 2em;
   font-family: 'Goudy Old Style';
   display: grid;
   grid-template-rows: auto;
-  align-self: center;
+  align-self: stretch;
+  padding-left: calc(50% - 800px);
+  padding-right: calc(50% - 800px);
 }
 
 #header-name {
   user-select: none;
   text-align: center;
-}
-
-#navigation-bar {
-  padding-top: 0.3em;
-  font-size: 0.33em;
-  font-family: 'Goudy Old Style';
-  display: grid;
-  grid-template-rows: auto;
-  grid-template-columns: auto;
 }
 
 #navigation-bar > span {
@@ -206,16 +199,22 @@ body {
   grid-row-end: 3;
   grid-column-start: 1;
   grid-column-end: 5;
-  padding-left: calc(50% - 600px);
-  padding-right: calc(50% - 600px);
+  padding-left: calc(50% - 800px);
+  padding-right: calc(50% - 800px);
   display: grid;
-  grid-template-columns: 100%;
+  grid-template-columns: auto;
   grid-template-rows: calc(100% - 2em);
+}
+
+#tape {
+  display: grid;
 }
 
 #chart {
   display: flex;
   align-items: center;
+  grid-column-start: 2;
+  grid-column-end: 3;
 }
 
 #chart-drawable {
