@@ -9,7 +9,7 @@
     "online": false
   },
   "server": {
-    "cert": "cert.pem",
+    "cert": "certificate.pem",
     "key": "key.pem"
   }
 }

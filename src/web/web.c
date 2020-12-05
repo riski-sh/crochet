@@ -54,7 +54,7 @@ static const struct lws_http_mount mount = {
 #pragma clang diagnostic pop
 
 int
-server_start(int argc, const char **argv)
+server_start(int argc, const char **argv, char *cert, char *key)
 {
   struct lws_context_creation_info info;
   struct lws_context *context;
@@ -71,25 +71,17 @@ server_start(int argc, const char **argv)
     logs = atoi(p);
 
   lws_set_log_level(logs, NULL);
-  lwsl_user("LWS minimal ws server | visit http://localhost:7681 (-s = use TLS "
-            "/ https)\n");
 
   memset(&info, 0, sizeof info); /* otherwise uninitialized garbage */
-  info.port = 7681;
+  info.port = 443;
   info.mounts = &mount;
   info.protocols = protocols;
   info.vhost_name = "localhost";
   // info.options = LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
 
-#if defined(LWS_WITH_TLS)
-  if (lws_cmdline_option(argc, argv, "-s"))
-  {
-    lwsl_user("Server using TLS\n");
-    info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-    info.ssl_cert_filepath = "localhost-100y.cert";
-    info.ssl_private_key_filepath = "localhost-100y.key";
-  }
-#endif
+  info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+  info.ssl_cert_filepath = cert;
+  info.ssl_private_key_filepath = key;
 
   if (lws_cmdline_option(argc, argv, "-h"))
     info.options |= LWS_SERVER_OPTION_VHOST_UPG_STRICT_HOST_CHECK;

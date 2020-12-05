@@ -3,7 +3,7 @@
 /*
  * The websocket address for communication with the server.
  */
-const WebSocketAddress = 'ws://' + document.location.host + '/';
+const WebSocketAddress = 'wss://' + document.location.host + '/';
 
 /*
  * The DOM element that represents the symbol

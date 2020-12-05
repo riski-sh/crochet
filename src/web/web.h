@@ -9,6 +9,6 @@
 #include <web/comms.h>
 
 int
-server_start(int argc, const char **argv);
+server_start(int argc, const char **argv, char *cert, char *key);
 
 #endif
