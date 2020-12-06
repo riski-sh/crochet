@@ -154,8 +154,6 @@ let chart = class Chart
       }
     }
 
-    console.log(this.tempShift, this.candles.length);
-
     let numCandles = Math.floor((DrawingArea.width - this.getAxisWidth()) /
                                 candleOccupationWidth);
 
