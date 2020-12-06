@@ -82,18 +82,24 @@ let chart = class Chart
     this.chartMin = Number.MAX_VALUE;
     for (let i = this.candles.length - offset - this.tempShift; i < this.candles.length - this.tempShift; ++i)
     {
-      if (this.candles[i].volume != 0)
-      {
-        if (this.chartMax < this.candles[i].high)
+      if (i >= 0) {
+        if (this.candles[i].volume != 0)
         {
-          this.chartMax = this.candles[i].high;
-        }
+          if (this.chartMax < this.candles[i].high)
+          {
+            this.chartMax = this.candles[i].high;
+          }
 
-        if (this.chartMin > this.candles[i].low)
-        {
-          this.chartMin = this.candles[i].low;
+          if (this.chartMin > this.candles[i].low)
+          {
+            this.chartMin = this.candles[i].low;
+          }
         }
       }
+    }
+    if (this.bestAsk > this.chartMax)
+    {
+      this.chartMax = this.bestAsk;
     }
   }
 
@@ -381,7 +387,7 @@ let chart = class Chart
 }
 
 const CommsChart =
-    new comms(WebSocketAddress, () => { const Chart = new chart('USD_JPY'); });
+    new comms(WebSocketAddress, () => { const Chart = new chart('EUR_USD'); });
 
 const CommsHeader =
     new comms(WebSocketAddress, () => { CommsHeader.SendHeaderUpdate(); });
