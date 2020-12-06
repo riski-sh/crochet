@@ -31,19 +31,54 @@ body {
   flex-direction: column;
 }
 
+#search-container {
+  align-items: flex-end;
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: 3em auto;
+}
+
+#security-text {
+  font-family: 'Monospace';
+  border-right: 1px solid var(--base01);
+  border-left: none;
+  border-top: 1px solid var(--base01);
+  border-bottom: none;
+  background-color: var(--base2);
+  border-radius: 0px 10px 0px 0px;
+  padding: 0px;
+  height: 2rem;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+#exchange-container {
+  background-color: var(--base2);
+  border-top: 1px solid var(--base01);
+  height: 1em;
+  border-radius: 10px 0px 0px 0px;
+  border-left: 1px solid var(--base01);
+  border-right: 1px solid var(--base01);
+  display: flex;
+  align-items: center;
+}
+
+#exchange-container > img {
+  height: 1.2rem;
+  padding-left: 10px;
+}
+
 #header {
   grid-column-start: 1;
   grid-column-end: 5;
   grid-row-start: 1;
   grid-row-end: 2;
-  align-items: center;
-  justify-content: center;
   font-size: 2em;
   font-family: 'Goudy Old Style';
   display: grid;
-  grid-template-rows: auto;
-  grid-template-columns: auto auto auto;
-  align-self: stretch;
+  grid-template-columns: 400px auto 400px;
+  padding-left: calc(50% - 800px);
+  padding-right: calc(50% - 800px);
 }
 
 #sections {
@@ -64,6 +99,13 @@ body {
 #center-navigation {
   text-align: center;
   display: grid;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--base01);
+}
+
+#misc-content {
+  border-bottom: 1px solid var(--base01);
 }
 
 #header-name {
@@ -128,103 +170,16 @@ body {
   height: 1.7em;
 }
 
-#exchange-logo {
-  display: flex;
-  align-items: center;
-  align-self: stretch;
-  border-radius: 5px 0px 0px 0px;
-  border: 1px solid #1a1a1a;
-  background: #000;
-}
-
-#exchange-logo > img {
-  margin-left: 0.5em;
-}
-
-#exchange-logo > img:nth-child(1) {
-  width: 1em;
-  height: 1em;
-}
-
-#exchange-logo > img:nth-child(2) {
-  margin-right: 0.5em;
-  width: 1.5em;
-  height: 1.5em;
-}
-
-#exchange-text {
-  display: flex;
-  flex-grow: 1;
-  border-top: 1px solid #1a1a1a;
-  border-right: 1px solid #1a1a1a;
-  border-radius: 0px 5px 0px 0px;
-  align-self: stretch;
-}
-
-#exchange-text > input {
-  font-size: 1em;
-  border-style: none;
-  outline: none;
-  display: flex;
-  flex-grow: 1;
-  padding-left: 1em;
-  border-radius: 0px 5px 5px 0px;
-  align-self: stretch;
-  font-family: 'Inconsolata', monospace;
-  padding-right: 1em;
-}
-
-#exchange-exchange {
-  margin-left: 0.7em;
-  width: 4em;
-}
-
-#exchange-logo > span {
-  align-self: stretch;
-  border-left: 1px solid gray;
-}
-
-#exchange-security {
-  margin-left: calc(0.3em + 5px);
-  margin-right: 5px;
-  width: 4em;
-}
-
-#options {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  display: grid;
-  grid-template-rows: auto;
-  grid-template-columns: auto auto auto auto auto;
-}
-
-#options > span {
-  padding-left: 10px;
-  margin-right: 10px;
-  border-left: 1px solid gray;
-}
-
-#options > span:last-child {
-  margin-right: 0px !important;
-  padding-right: 10px;
-  border-right: 1px solid gray;
-}
-
 #dash {
   grid-row-start: 2;
   grid-row-end: 3;
   grid-column-start: 1;
   grid-column-end: 5;
   padding-left: calc(50% - 800px);
-  padding-right: calc(50% - 800px);
+  padding-right: calc(50% - 798px);
   display: grid;
   grid-template-columns: auto;
   grid-template-rows: calc(100% - 2em);
-}
-
-#tape {
-  display: grid;
 }
 
 #chart {
@@ -238,6 +193,9 @@ body {
 #chart-drawable {
   width: 100%;
   height: 100%;
+  border-left: 1px solid var(--base01);
+  border-bottom: 1px solid var(--base01);
+  border-right: 1px solid var(--base01);
 }
 
 #alerts {
