@@ -42,14 +42,33 @@ body {
   font-family: 'Goudy Old Style';
   display: grid;
   grid-template-rows: auto;
+  grid-template-columns: auto auto auto;
   align-self: stretch;
-  padding-left: calc(50% - 800px);
-  padding-right: calc(50% - 800px);
+}
+
+#sections {
+  font-size: 0.6em;
+  text-align: center;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: auto auto auto auto;
+}
+
+#sections > span {
+  padding-left: 1em;
+  padding-right: 1em;
+  user-select: none;
+}
+
+#center-navigation {
+  text-align: center;
+  display: grid;
 }
 
 #header-name {
   user-select: none;
-  text-align: center;
+  border-bottom: 1px solid var(--base0);
 }
 
 #navigation-bar > span {
@@ -211,14 +230,14 @@ body {
 #chart {
   display: flex;
   align-items: center;
-  grid-column-start: 2;
+  grid-column-start: 1;
   grid-column-end: 3;
+  width: 100%;
 }
 
 #chart-drawable {
   width: 100%;
   height: 100%;
-  border: 1px solid var(--base01);
 }
 
 #alerts {

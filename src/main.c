@@ -85,7 +85,7 @@ main(int argc, const char **argv)
   }
 
   pprint_info("%s", "loading analysis");
-  analysis_init("./obj/libs/");
+  analysis_init("./libs/");
   pprint_info("%s", "setting up openssl");
 
   SSL_load_error_strings();
