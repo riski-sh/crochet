@@ -1,5 +1,6 @@
 ---
 Language:        Cpp
+Language:        JavaScript
 # BasedOnStyle:  Microsoft
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align

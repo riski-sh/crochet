@@ -75,19 +75,9 @@ __parse_update_chart_full(__json_object __root_obj, char **_response,
   struct chart *cht = sec->chart;
 
   /* send to the client the last 24 hours worth of candles */
-  int indx = (int) cht->cur_candle_idx;
-  if (indx - 1440 < 0)
-  {
-    indx = 0;
-  }
-  else
-  {
-    indx -= 1440;
-  }
-
   char *data = NULL;
   size_t len = 0;
-  for (size_t i = (size_t) indx; i < cht->cur_candle_idx; ++i)
+  for (size_t i = 0; i < cht->cur_candle_idx; ++i)
   {
     struct candle *cnd = &(cht->candles[i]);
     chart_candle_json(cnd, i, &data, &len);

@@ -51,13 +51,12 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   size_t ts = (size_t)time(NULL) * 1000000000L;
   size_t backfill = chart_tstoidx(ts);
 
-  /*
   if (backfill > 5000)
   {
+    pprint_warn("%s only backfilling 5000 candles instead of %lu", sec->name,
+                backfill);
     backfill = 5000;
   }
-  */
-  backfill = 200;
 
   /* generate the GET request url */
   char stub[120] = {'\x0'};

@@ -1,4 +1,5 @@
 #include "chart.h"
+#include "api.h"
 #include "security/analysis.h"
 
 /*
@@ -223,7 +224,7 @@ chart_candle_json(struct candle *cnd, size_t index, char **_data, size_t *_len)
 
   int json_len = snprintf(NULL, 0,
       "{\"open\": %d, \"high\": %d, \"low\": %d, \"close\": %d, \"volume\": %d,"
-      "\"index\": %lu}",
+      "\"index\": %lu, \"analysis\": [",
       cnd->open, cnd->high, cnd->low, cnd->close, cnd->volume, index);
 
   char *update_str = calloc((size_t)(json_len + 1), sizeof(char));
@@ -232,7 +233,7 @@ chart_candle_json(struct candle *cnd, size_t index, char **_data, size_t *_len)
 
   int wrote = snprintf(update_str, (size_t) json_len + 1,
       "{\"open\": %d, \"high\": %d, \"low\": %d, \"close\": %d, \"volume\": %d,"
-      "\"index\": %lu}",
+      "\"index\": %lu, \"analysis\": [",
       cnd->open, cnd->high, cnd->low, cnd->close, cnd->volume, index);
 
 
@@ -242,6 +243,81 @@ chart_candle_json(struct candle *cnd, size_t index, char **_data, size_t *_len)
     exit(1);
   }
 
-  *_data = update_str;
-  *_len = (size_t) json_len;
+  string_append(&candle, update_str, (size_t) json_len);
+  free(update_str);
+  update_str = NULL;
+
+  /* loop through each chart object associated with the candle */
+  struct chart_object *iter = cnd->analysis_list;
+
+  while (iter)
+  {
+    switch (iter->object_type)
+    {
+      case CHART_OBJECT_LINE:
+      {
+        struct chart_object_t_line *line = iter->value;
+        json_len = snprintf(NULL, 0,
+            "{\"name\": \"%s\", \"type\": \"CHART_OBJECT_LINE\", \"end\": %lu, \"endPrice\": %d, \"start\": %lu, \"startPrice\": %d}",
+            iter->name, line->end, line->end_price, line->start, line->start_price);
+        update_str = calloc((size_t) (json_len + 1), sizeof(char));
+
+        PPRINT_CHECK_ALLOC(update_str);
+
+        wrote = snprintf(update_str, (size_t) json_len + 1,
+            "{\"name\": \"%s\", \"type\": \"CHART_OBJECT_LINE\", \"end\": %lu, \"endPrice\": %d, \"start\": %lu, \"startPrice\": %d}",
+            iter->name, line->end, line->end_price, line->start, line->start_price);
+
+        if (wrote != json_len)
+        {
+          pprint_error("%s", "did not write the expected amount for CHART_OBJECT_LINE");
+          exit(1);
+        }
+        string_append(&candle, update_str, (size_t) json_len);
+        free(update_str);
+
+        if (iter->next)
+        {
+          string_append(&candle, ",", 1);
+        }
+
+        break;
+      }
+      case CHART_OBJECT_TEXT:
+      {
+        struct chart_object_t_text *line = iter->value;
+        json_len = snprintf(NULL, 0,
+            "{\"name\": \"%s\", \"type\": \"CHART_OBJECT_TEXT\", \"char\": \"%c\"}",
+            iter->name, line->TEXT);
+        update_str = calloc((size_t) (json_len + 1), sizeof(char));
+
+        PPRINT_CHECK_ALLOC(update_str);
+
+        wrote = snprintf(update_str, (size_t) json_len + 1,
+            "{\"name\": \"%s\", \"type\": \"CHART_OBJECT_TEXT\", \"char\": \"%c\"}",
+            iter->name, line->TEXT);
+
+        if (wrote != json_len)
+        {
+          pprint_error("%s", "did not write the expected amount for CHART_OBJECT_LINE");
+          exit(1);
+        }
+        string_append(&candle, update_str, (size_t) json_len);
+        free(update_str);
+
+        if (iter->next)
+        {
+          string_append(&candle, ",", 1);
+        }
+
+        break;
+      }
+    }
+    iter = iter->next;
+  }
+
+  string_append(&candle, "]}", 2);
+
+  *_data = candle.data;
+  *_len = (size_t) candle.len;
 }
