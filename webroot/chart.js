@@ -2,13 +2,24 @@
 
 const DrawingArea = document.getElementById('chart-drawable');
 const DrawingContainer = document.getElementById('chart');
+const SearchSymbol = document.getElementById('security-text');
+
+SearchSymbol.onkeypress = (evt) =>
+{
+  console.log(evt);
+  if (evt.key == 'Enter')
+  {
+    window.Chart.symbol = SearchSymbol.value.replace('/', '_');
+    window.Chart.reset = true;
+  }
+}
 
 let chart = class Chart
 {
   constructor(symbol)
   {
     this.symbol = symbol;
-
+    this.reset = false;
     this.context = DrawingArea.getContext('2d');
     this.candles = [];
     this.chartMax = Number.MIN_VALUE;
@@ -97,9 +108,14 @@ let chart = class Chart
         }
       }
     }
+
     if (this.bestAsk > this.chartMax)
     {
       this.chartMax = this.bestAsk;
+    }
+    if (this.bestBid < this.chartMin)
+    {
+      this.chartMin = this.bestBid;
     }
   }
 
@@ -126,6 +142,9 @@ let chart = class Chart
 
     if (data.what == 'chart-full')
     {
+      this.candles = []
+      this.chartMin = Number.MAX_VALUE;
+      this.chartMax = Number.MIN_VALUE;
       for (let i = 0; i < data.data.length; ++i)
       {
         this.candles[data.data[i].index] = data.data[i];
@@ -376,9 +395,15 @@ let chart = class Chart
       }
     }
 
-    if (this.sent == this.received)
+    if (this.reset)
     {
-      this.sent += 1;
+      this.reset = false;
+      window.setTimeout(() => {
+        CommsChart.SendSymbolUpdate(this.symbol, this.loop.bind(this));
+      }, 33);
+    }
+    else
+    {
       window.setTimeout(() => {
         CommsChart.SendSymbolUpdatePartial(this.symbol, this.loop.bind(this));
       }, 33);
@@ -387,7 +412,9 @@ let chart = class Chart
 }
 
 const CommsChart =
-    new comms(WebSocketAddress, () => { const Chart = new chart('EUR_USD'); });
+    new comms(WebSocketAddress, () => { window.Chart = new chart(SearchSymbol.value.replace('/', '_')); });
 
 const CommsHeader =
     new comms(WebSocketAddress, () => { CommsHeader.SendHeaderUpdate(); });
+
+
