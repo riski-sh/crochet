@@ -1,0 +1,52 @@
+\documentclass{article}
+\title{Simple Market Micro Structure Inefficiencies}
+\author{washcloth}
+\begin{document}
+
+  \maketitle
+
+  As traders we are aware two main concepts, price action and volume. Some
+  say that these are the most important tools a trader has in hand since they
+  represent rawly what the market is doing, and who is in control. This paper
+  suggests a theory to the change of price in relation to volume of a financial
+  market. Looking at a market through an intraday lense can show that
+  the amount a volume needed to move a price toward a specific price increases
+  exponentially as the day goes on until the market closes, in which case no
+  amount of volume can move the price.
+  \\
+
+  This theory is very easy to model. Let  us define a function to represent
+  cumulative intraday volume $v(c)$.
+
+  \[
+    v_c(t) = \sum_{n=0}^{t} v(t)
+  \]
+
+  where $v(t)$ is the closing volume at candle $t$, $t = 0$ is the first candle
+  of the opening day, and $0 \le t \le 330$ since there are $330$ minutes in a
+  normal trading day. For clarity, the function $p(t)$ is the closing price
+  of candle $t$.
+
+  Now, we show that a function exists with inputs price $p$, and volume $v$,
+  that decays to $p$ as $v \rightarrow \infty$.
+
+  \[
+    f(t) = \frac{v_c(t)}{\frac{v_c(t)}{p(t)} - \frac{p(t)}{v_c{t}}}
+  \]
+
+  As an exersize to the reader, show the limit of $f(t)$ is indeed $p(t)$.
+  How is this useful in anyway? Well, one can take advantage of these small
+  micro inefficiences once market conditions are correct.
+  There are many constrants where this function is not useful,
+  for example when $p(t) = v_c(t)$, which happens at most once a day.
+  When $v_c(t) \le p(t)$, this function becomes a poor model since it produces
+  a negative price, therefore constraning the useful range even more. What
+  is the useful range of using this model? The useful range of this model
+  is completly dependent of the value of $\frac{p(t)}{v_c(t)}$, since
+  the value of $\frac{p(t)}{v_c(t)}$ determines how much volume is needed
+  to push the price of a security in any given direction. Unfortuantly
+  there is no easy answer to when this will perform as intended. I encourage
+  you to explore the use of this function in helping you pick securities
+  and take advantage of micro inefficiencies.
+
+\end{document}

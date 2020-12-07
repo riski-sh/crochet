@@ -39,3 +39,6 @@ depends/*
 *.so
 certificate.pem
 key.pem
+*.pdf
+*.aux
+*.log
