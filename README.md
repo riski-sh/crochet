@@ -1,2 +1,3 @@
 # Crochet
-AlgoTrading done right
+
+An open source server developed for algorithmic trading.
