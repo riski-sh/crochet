@@ -94,7 +94,7 @@ let chart = class Chart
     for (let i = this.candles.length - offset - this.tempShift; i < this.candles.length - this.tempShift; ++i)
     {
       if (i >= 0) {
-        if (this.candles[i].volume != 0)
+        if (this.candles[i].volume != 0 && this.candles[i])
         {
           if (this.chartMax < this.candles[i].high)
           {

@@ -6,6 +6,10 @@
   font-display: swap;
 }
 
+h1 {
+  font-size: 1em;
+}
+
 html, body {
   margin: 0px;
   padding: 0px;
