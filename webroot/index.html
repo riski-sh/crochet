@@ -11,13 +11,27 @@
 
   <body>
     <div id="header">
-      <div id="search-container">
-        <div id="exchange-container">
-          <img src="glyfs/up-down-dropdown.svg" />
-          <img src="glyfs/oanda-icon.svg" />
+
+      <div id="left-header">
+        <div>
+          <label class="switch">
+            <input type="checkbox" onclick="switchtheme()">
+            <span class="slider round"></span>
+          </label>
         </div>
-        <input id="security-text" value="EUR/USD">
+        <div>
+          <div id="search-container">
+              <div id="exchange-container">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10.486" height="16.141" viewBox="0 0 10.486 16.141">
+  <path id="Union_12" data-name="Union 12" d="M-9945.05,16.263l-.038-.04-4.2-4.2a1,1,0,0,1,0-1.416,1,1,0,0,1,1.413,0l3.536,3.536,3.535-3.536a1,1,0,0,1,1.413,0,1,1,0,0,1,0,1.416l-4.242,4.242a.994.994,0,0,1-.706.292A1,1,0,0,1-9945.05,16.263Zm4.242-9.9-3.535-3.536-3.536,3.536a1,1,0,0,1-1.413,0,1,1,0,0,1,0-1.413l4.242-4.242a1,1,0,0,1,1.413,0l4.242,4.242a1,1,0,0,1,0,1.413.991.991,0,0,1-.706.294A1,1,0,0,1-9940.808,6.362Z" transform="translate(9949.586 -0.415)" fill="var(--base02)"/>
+</svg>
+                <img src="glyfs/oanda-icon.svg" />
+              </div>
+              <input id="security-text" value="EUR/USD">
+          </div>
+        </div>
       </div>
+
       <div id="center-navigation">
         <span id="header-name">
           <h1>-RISKI-</h1>
@@ -44,8 +58,10 @@
   </body>
 
   <link rel="stylesheet" href="solarized.css">
+  <link rel="stylesheet" href="switch.css">
   <link rel="stylesheet" href="index.css">
 
+  <script src="themes.js"></script>
   <script src="comms.js"></script>
   <script src="chart.js"></script>
 </html>

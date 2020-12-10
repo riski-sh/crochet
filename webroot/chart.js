@@ -196,8 +196,8 @@ let chart = class Chart
     this.context.clearRect(0, 0, DrawingArea.width, DrawingArea.height);
 
     /* draw a bar to represent where the price axis on the right of the chart */
-    this.context.strokeStyle = '#586e75';
-    this.context.fillStyle = '#586e75';
+    this.context.strokeStyle = getComputedStyle(document.body).getPropertyValue('--base01');
+    this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--base01');
     this.context.textBaseline = 'middle';
 
     this.context.setLineDash([]);
@@ -218,13 +218,13 @@ let chart = class Chart
     {
       let drawHeight = this.evalEquation(this.PricePixelTransformation, x);
 
-      this.context.fillStyle = '#586e75';
+      this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--base01');
       this.context.fillText(
           ' ' + parseFloat(x / (Math.pow(10, this.numericalPrecision)))
                     .toFixed(this.numericalPrecision),
           DrawingArea.width - this.getAxisWidth(), drawHeight + 1.5);
 
-      this.context.strokeStyle = '#eee8d5';
+      this.context.strokeStyle = getComputedStyle(document.body).getPropertyValue('--base2');
       this.context.beginPath();
       this.context.moveTo(0, drawHeight + 0.5);
       this.context.lineTo(DrawingArea.width - this.getAxisWidth(),
@@ -246,7 +246,7 @@ let chart = class Chart
                         bidHeight - (this.getTextHeight() / 2) - 1);
     this.context.lineTo(bar + (this.getCharWidth()),
                         bidHeight - (this.getTextHeight() / 2) - 1);
-    this.context.fillStyle = '#859900';
+    this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--green');
     this.context.fill();
 
     let askHeight =
@@ -262,10 +262,10 @@ let chart = class Chart
     this.context.lineTo(bar + (this.getCharWidth()),
                         askHeight - (this.getTextHeight() / 2) - 1);
 
-    this.context.fillStyle = '#dc322f';
+    this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--red');;
     this.context.fill();
 
-    this.context.fillStyle = '#fdf6e3';
+    this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--base3');
     this.context.fillText(
         ' ' + parseFloat(this.bestBid / (Math.pow(10, this.numericalPrecision)))
                   .toFixed(this.numericalPrecision),
@@ -289,7 +289,7 @@ let chart = class Chart
 
       if (candle.index % 20 == 0)
       {
-        this.context.strokeStyle = '#93a1a1';
+        this.context.strokeStyle = getComputedStyle(document.body).getPropertyValue('--base1');
         this.context.beginPath();
         this.context.moveTo(((idx - startIndex + 1) * candleOccupationWidth) -
                                 ((candleOccupationWidth - candleRealWidth) / 2),
@@ -300,7 +300,7 @@ let chart = class Chart
         this.context.stroke();
       }
 
-      this.context.strokeStyle = '#073642';
+      this.context.strokeStyle = getComputedStyle(document.body).getPropertyValue('--base02');
       if (candle.volume == 0)
       {
         continue;
@@ -321,7 +321,7 @@ let chart = class Chart
         this.context.lineTo(((idx - startIndex) * candleOccupationWidth) +
                                 Math.floor((candleRealWidth / 2.0)) + 0.5,
                             close);
-        this.context.fillStyle = '#859900';
+        this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--green');
         this.context.fillRect(((idx - startIndex) * candleOccupationWidth),
                               close, candleRealWidth, open - close);
         this.context.moveTo(((idx - startIndex) * candleOccupationWidth) +
@@ -341,10 +341,9 @@ let chart = class Chart
         this.context.lineTo(((idx - startIndex) * candleOccupationWidth) +
                                 Math.floor((candleRealWidth / 2.0)) + 0.5,
                             open);
-        this.context.fillStyle = '#dc322f';
+        this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--red');
         this.context.fillRect(((idx - startIndex) * candleOccupationWidth),
                               open, candleRealWidth, close - open);
-        this.context.fillStyle = '#1A1A1A';
         this.context.moveTo(((idx - startIndex) * candleOccupationWidth) +
                                 Math.floor((candleRealWidth / 2.0)) + 0.5,
                             close);
@@ -376,7 +375,7 @@ let chart = class Chart
       {
         if (analysis[i].type == 'CHART_OBJECT_LINE')
         {
-          this.context.strokeStyle = 'black';
+          this.context.strokeStyle = getComputedStyle(document.body).getPropertyValue('--base02');
           this.context.beginPath();
           this.context.moveTo(
               ((analysis[i].end - startIndex) * candleOccupationWidth) +
