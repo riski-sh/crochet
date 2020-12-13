@@ -1,5 +1,7 @@
 #include "security.h"
 #include "pprint/pprint.h"
+#include "security/chart.h"
+#include <stdio.h>
 
 struct security *
 security_new(char *name, int pip_location, int display_precision)
@@ -13,15 +15,49 @@ security_new(char *name, int pip_location, int display_precision)
   return sec;
 }
 
+static void _mkdir(const char *dir) {
+        char tmp[_POSIX_PATH_MAX];
+        char *p = NULL;
+        size_t len;
+
+        snprintf(tmp, sizeof(tmp),"%s",dir);
+        len = strlen(tmp);
+        if(tmp[len - 1] == '/')
+                tmp[len - 1] = 0;
+        for(p = tmp + 1; *p; p++)
+                if(*p == '/') {
+                        *p = 0;
+                        mkdir(tmp, S_IRWXU);
+                        *p = '/';
+                }
+        mkdir(tmp, S_IRWXU);
+}
+
 bool
 security_update(struct security *sec, uint64_t timestamp, char *best_bid,
                 char *best_ask)
 {
   static const int pow10[7] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
-  if (timestamp <= sec->last_update)
+  if (timestamp == sec->last_update)
   {
     return false;
+  }
+
+  char *log_path = chart_timestamp_log_path(timestamp, "OANDA", sec->name);
+  struct stat st = {0};
+  if (stat(log_path, &st) == -1) {
+    _mkdir(log_path);
+  }
+
+  char local_path[_POSIX_PATH_MAX] = {0};
+  sprintf(local_path, "%s/ticks.csv", log_path);
+
+  FILE *fp = fopen(local_path, "w+");
+
+  if (!fp)
+  {
+    pprint_warn("unable to log to path %s", local_path);
   }
 
   /*
@@ -39,8 +75,15 @@ security_update(struct security *sec, uint64_t timestamp, char *best_bid,
   sec->best_ask = best_ask_fixed;
   sec->last_update = timestamp;
 
+  if (fp)
+  {
+    fprintf(fp, "%d,%d,%lu\n", best_bid_fixed, best_ask_fixed, timestamp);
+  }
+
   chart_update(sec->chart, best_bid_fixed, best_ask_fixed, timestamp);
 
+  fflush(fp);
+  fclose(fp);
   return true;
 }
 

@@ -116,12 +116,32 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   _chart_update_candle(cht, bid, minutes_since_sunday);
 }
 
+char *
+chart_timestamp_log_path(uint64_t timestamp, char *exchange_name,
+                         char *security_name)
+{
+  /*
+   * Get the number of nanoseconds in a day.
+   */
+  const uint64_t day_ns = 86400000000000;
+
+  /*
+   * The beginning of the day, eg. Tuesday Decement 12 2020 00:00:00 +0000
+   */
+  uint64_t beg_of_day = timestamp - (timestamp % day_ns);
+
+  /*
+   * A place to store the path
+   */
+  char path[_POSIX_PATH_MAX] = {0};
+  sprintf(path, "./archive/%s/%lu/%s", exchange_name, beg_of_day, security_name);
+
+  return strdup(path);
+}
+
 size_t
 chart_tstoidx(uint64_t timestamp)
 {
-
-
-  printf("timestamp=%lu\n", timestamp);
   /*
    * Get the number of nanoseconds in a day.
    */
@@ -136,7 +156,6 @@ chart_tstoidx(uint64_t timestamp)
    * Get the current day as an index. Where 0 is sunday
    */
   uint64_t day_of_week = (((timestamp / day_ns) % 7) + 4) % 7;
-  printf("day_of_week = %lu\n", day_of_week);
 
   /*
    * The beginning of the day, eg. Tuesday Decement 12 2020 00:00:00 +0000
