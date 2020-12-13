@@ -100,7 +100,6 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   (void)ask;
 
   size_t minutes_since_sunday = chart_tstoidx(timestamp);
-  pprint_info("minutes_since_sunday=%lu", minutes_since_sunday);
 
   if (minutes_since_sunday > cht->cur_candle_idx)
   {
