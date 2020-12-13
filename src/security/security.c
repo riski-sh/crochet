@@ -16,7 +16,7 @@ security_new(char *name, int pip_location, int display_precision)
 }
 
 static void _mkdir(const char *dir) {
-        char tmp[_POSIX_PATH_MAX];
+        char tmp[PATH_MAX];
         char *p = NULL;
         size_t len;
 
