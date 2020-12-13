@@ -50,7 +50,7 @@ security_update(struct security *sec, uint64_t timestamp, char *best_bid,
     _mkdir(log_path);
   }
 
-  char local_path[_POSIX_PATH_MAX] = {0};
+  char local_path[PATH_MAX] = {0};
   sprintf(local_path, "%s/ticks.csv", log_path);
 
   FILE *fp = fopen(local_path, "w+");

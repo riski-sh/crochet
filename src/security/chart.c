@@ -133,7 +133,7 @@ chart_timestamp_log_path(uint64_t timestamp, char *exchange_name,
   /*
    * A place to store the path
    */
-  char path[_POSIX_PATH_MAX] = {0};
+  char path[PATH_MAX] = {0};
   sprintf(path, "./archive/%s/%lu/%s", exchange_name, beg_of_day, security_name);
 
   return strdup(path);
