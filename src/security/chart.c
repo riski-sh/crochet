@@ -116,9 +116,29 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   _chart_update_candle(cht, bid, minutes_since_sunday);
 }
 
-char *
+
+static void _mkdir(const char *dir) {
+        char tmp[PATH_MAX];
+        char *p = NULL;
+        size_t len;
+
+        snprintf(tmp, sizeof(tmp),"%s",dir);
+        len = strlen(tmp);
+        if(tmp[len - 1] == '/')
+                tmp[len - 1] = 0;
+        for(p = tmp + 1; *p; p++)
+                if(*p == '/') {
+                        *p = 0;
+                        mkdir(tmp, S_IRWXU);
+                        *p = '/';
+                }
+        mkdir(tmp, S_IRWXU);
+}
+
+void
 chart_timestamp_log_path(uint64_t timestamp, char *exchange_name,
-                         char *security_name)
+                         char *security_name, char **_tick_location,
+                         uint64_t *_cache_day)
 {
   /*
    * Get the number of nanoseconds in a day.
@@ -130,13 +150,28 @@ chart_timestamp_log_path(uint64_t timestamp, char *exchange_name,
    */
   uint64_t beg_of_day = timestamp - (timestamp % day_ns);
 
+  if (beg_of_day == *_cache_day)
+  {
+    return;
+  }
+
   /*
    * A place to store the path
    */
   char path[PATH_MAX] = {0};
   sprintf(path, "./archive/%s/%lu/%s", exchange_name, beg_of_day, security_name);
 
-  return strdup(path);
+  if (*_tick_location)
+  {
+    free(*_tick_location);
+  }
+
+  _mkdir(path);
+
+  char tick_path[PATH_MAX] = {0};
+  sprintf(tick_path, "%s/tick.csv", path);
+  *_tick_location = strdup(tick_path);
+  *_cache_day = beg_of_day;
 }
 
 size_t

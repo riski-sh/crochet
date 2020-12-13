@@ -61,6 +61,16 @@ struct security
   uint64_t last_update;
 
   /*
+   * The current day used to cache the log_path_tick location
+   */
+  uint64_t current_day;
+
+  /*
+   * Where to store tick data
+   */
+  char *log_path_tick;
+
+  /*
    * A structure representing a chart, that defines this security
    */
   struct chart *chart;

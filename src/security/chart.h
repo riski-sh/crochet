@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string/string.h>
+#include <sys/stat.h>
 
 #include "analysis.h"
 
@@ -70,18 +71,10 @@ chart_free(struct chart **cht);
 void
 chart_candle_json(struct candle *cnd, size_t index, char **_data, size_t *_len);
 
-/*
- * Given the following meta information create a path that represents the
- * archive location of tick data.
- *
- * @param timestamp the timestamp of the tick
- * @param exchange_name the name of the exchange of this security
- * @param security_name the name of the security
- *
- * @return a malloced pointer to a realtive path.
- */
-char *
+
+void
 chart_timestamp_log_path(uint64_t timestamp, char *exchange_name,
-                         char *security_name);
+                         char *security_name, char **_tick_location,
+                         uint64_t *_cache_day);
 
 #endif
