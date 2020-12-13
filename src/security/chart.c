@@ -100,6 +100,7 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
   (void)ask;
 
   size_t minutes_since_sunday = chart_tstoidx(timestamp);
+  pprint_info("minutes_since_sunday=%lu", minutes_since_sunday);
 
   if (minutes_since_sunday > cht->cur_candle_idx)
   {
@@ -217,17 +218,13 @@ chart_tstoidx(uint64_t timestamp)
    */
   uint64_t minutes_since_sunday = nanoseconds_since_sunday / minute_ns;
 
-  /*
-   * Market opens at 11PM gmt which is 1380 minutes since the weeks sunday
-   * at 00:00:00
-   */
-  if (minutes_since_sunday < 1380)
+  if (minutes_since_sunday < 1320)
   {
     minutes_since_sunday = 0;
   }
   else
   {
-    minutes_since_sunday -= 1380;
+    minutes_since_sunday -= 1320;
   }
 
   return minutes_since_sunday;

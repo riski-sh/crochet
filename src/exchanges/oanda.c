@@ -53,6 +53,7 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   uint64_t ts = (uint64_t) time(NULL) * 1000000000;
 
   size_t backfill = chart_tstoidx(ts);
+  pprint_info("%lu", backfill);
 
   if (backfill == 0)
   {
