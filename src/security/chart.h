@@ -33,7 +33,7 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp);
  * Converts timestamp to offset where 0 is 0 minutes since sunday.
  */
 size_t
-chart_tstoidx(size_t timestamp);
+chart_tstoidx(uint64_t timestamp);
 
 /*
  * Reset the entire chart. This is used during the weekly reset of the chart.

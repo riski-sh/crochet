@@ -1,4 +1,5 @@
 #include "oanda.h"
+#include <time.h>
 
 /*
  * String formats for basic OANDA endpoints
@@ -17,7 +18,7 @@ static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
  * Converts the OANDA string represents the timestamp into a nanosecond
  * EPOCH tick.
  */
-static size_t
+static uint64_t
 _oanda_timetots(char *str)
 {
   double val = strtod(str, NULL);
@@ -48,8 +49,19 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   /* get the current timestamp */
   struct timespec tv;
   clock_gettime(CLOCK_REALTIME, &tv);
-  size_t ts = (size_t)time(NULL) * 1000000000L;
+
+  uint64_t ts = (uint64_t) time(NULL) * 1000000000;
+
   size_t backfill = chart_tstoidx(ts);
+
+  if (backfill == 0)
+  {
+    /*
+     * don't update because there are no candles this week or we are in the
+     * first minute
+     */
+    return;
+  }
 
   if (backfill > 5000)
   {
@@ -92,7 +104,7 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
     volume = json_get_number(hashmap_get("volume", _candle));
 
     /* convert the string timestamp to a nanosecond EPOCH tick */
-    size_t latest_timestamp = _oanda_timetots(_timestamp);
+    uint64_t latest_timestamp = _oanda_timetots(_timestamp);
 
     /* update the chart */
     if (!security_update_historical(sec, latest_timestamp, o, h, l, c,
@@ -328,7 +340,7 @@ exchanges_oanda_init(void *key)
       __json_string price_update_time =
           json_get_string(hashmap_get("time", _price_object));
 
-      size_t latest_timestamp = _oanda_timetots(price_update_time);
+      uint64_t latest_timestamp = _oanda_timetots(price_update_time);
 
       /* get the bid order book and the ask order book */
       __json_array _bids = json_get_array(hashmap_get("bids", _price_object));

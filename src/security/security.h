@@ -57,7 +57,7 @@ struct security
   /*
    * The last update timestamp
    */
-  size_t last_update;
+  uint64_t last_update;
 
   /*
    * A structure representing a chart, that defines this security
@@ -79,7 +79,7 @@ security_new(char *name, int pip_location, int display_precision);
  * Updates a security given a tick information
  */
 bool
-security_update(struct security *sec, size_t timestamp, char *best_bid,
+security_update(struct security *sec, uint64_t timestamp, char *best_bid,
                 char *best_ask);
 /*
  * Updates a security given the historical values
@@ -92,7 +92,7 @@ security_update(struct security *sec, size_t timestamp, char *best_bid,
  * @param c the close of the candle
  */
 bool
-security_update_historical(struct security *sec, size_t timestamp, char *o,
+security_update_historical(struct security *sec, uint64_t timestamp, char *o,
                            char *h, char *l, char *c, uint32_t volume);
 
 /*

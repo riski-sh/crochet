@@ -1,23 +1,7 @@
 #include "chart.h"
 #include "api.h"
 #include "security/analysis.h"
-
-/*
- * Represents a day of week from the start of the epoch
- */
-typedef enum
-{
-  THURSDAY = 0,
-  FRIDAY = 1,
-  SATURDAY = 2,
-  SUNDAY = 3,
-  MONDAY = 4,
-  TUESDAY = 5,
-  WEDNESDAY = 6,
-
-  // number of days in a week
-  NUM_DOW_T = 7
-} dow_t;
+#include <pthread.h>
 
 /*
  * Updates a candle on the chart
@@ -58,20 +42,6 @@ _chart_update_candle(struct chart *cht, uint32_t bid, size_t idx)
 
 }
 
-/*
- * Convert dow_t to numbers of days since previous sunday
- */
-static size_t days_since_sunday[NUM_DOW_T] = {4, 5, 6, 0, 1, 2, 3};
-
-/*
- * the number of nanoseconds in a minute
- */
-static const size_t NANOSECONDS_IN_MINUTE = 60000000000;
-
-/*
- * the number of nanoseconds in a day
- */
-static const size_t NANOSECONDS_IN_DAY = 8.64e+13;
 
 struct chart *
 chart_new(void)
@@ -102,17 +72,6 @@ chart_new(void)
   }
 
   return cht;
-}
-
-/*
- * Converts a nanosecond timestamp to the day of week
- */
-static dow_t
-_tstodow(size_t timestamp)
-{
-  size_t ts_sec = timestamp / 1000000000;
-  size_t days_since_epoch = ts_sec / 86400;
-  return (dow_t)days_since_epoch % 7;
 }
 
 struct analysis_meta
@@ -158,40 +117,85 @@ chart_update(struct chart *cht, uint32_t bid, uint32_t ask, size_t timestamp)
 }
 
 size_t
-chart_tstoidx(size_t timestamp)
+chart_tstoidx(uint64_t timestamp)
 {
+
+
+  printf("timestamp=%lu\n", timestamp);
   /*
-   * Get the current day.
+   * Get the number of nanoseconds in a day.
    */
-  dow_t current_day = _tstodow(timestamp);
+  const uint64_t day_ns = 86400000000000;
 
   /*
-   * Convert out day into days since sunday
+   * Number of nanoseconds in a minute
    */
-  size_t positive_sunday_offset = days_since_sunday[current_day];
+  const uint64_t minute_ns = 60000000000;
 
   /*
-   * Compute the number of minutes that have passed since sunday
-   *
-   * (CUR_TS - SUN_TS) / NANOSECONDS_IN_MINUTES
-   *
+   * Get the current day as an index. Where 0 is sunday
    */
-  size_t beginning_of_day = timestamp - (timestamp % NANOSECONDS_IN_DAY);
-  size_t beginning_of_week =
-      beginning_of_day - (positive_sunday_offset * NANOSECONDS_IN_DAY);
-  size_t minutes_since_sunday =
-      (timestamp - beginning_of_week) / NANOSECONDS_IN_MINUTE;
+  uint64_t day_of_week = (((timestamp / day_ns) % 7) + 4) % 7;
+  printf("day_of_week = %lu\n", day_of_week);
 
-  // market opens at 5PM sunday EST time
-  return minutes_since_sunday - 1320;
+  /*
+   * The beginning of the day, eg. Tuesday Decement 12 2020 00:00:00 +0000
+   */
+  uint64_t beg_of_day = timestamp - (timestamp % day_ns);
+
+  /*
+   * Nanoseconds since last sunday
+   */
+  uint64_t last_sunday_offset = day_of_week * day_ns;
+
+  /*
+   * The epoch time representing last sunday
+   */
+  uint64_t sunday_epoch = beg_of_day - last_sunday_offset;
+
+  /*
+   * The number of nanoseconds that have passed since last sunday
+   */
+  uint64_t nanoseconds_since_sunday = timestamp - sunday_epoch;
+
+  /*
+   * The number of minutes that have passed since last sunday
+   */
+  uint64_t minutes_since_sunday = nanoseconds_since_sunday / minute_ns;
+
+  /*
+   * Market opens at 11PM gmt which is 1380 minutes since the weeks sunday
+   * at 00:00:00
+   */
+  if (minutes_since_sunday < 1380)
+  {
+    minutes_since_sunday = 0;
+  }
+  else
+  {
+    minutes_since_sunday -= 1380;
+  }
+
+  return minutes_since_sunday;
 }
 
 void
 chart_reset(struct chart *cht)
 {
   cht->cur_candle_idx = 0;
+  for (size_t i = 0; i < CHART_MINUTES_IN_WEEK; ++i)
+  {
+    struct chart_object *ll = cht->candles[i].analysis_list;
+    while (ll)
+    {
+      free(ll->value);
+      struct chart_object *next = ll->next;
+      free(ll);
+      ll = next;
+    }
+    cht->candles[i].analysis_list = NULL;
+  }
   memset(cht->candles, 0, sizeof(struct candle) * cht->num_candles);
-  // TODO reset chart objects
 }
 
 void

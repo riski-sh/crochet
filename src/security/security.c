@@ -14,7 +14,7 @@ security_new(char *name, int pip_location, int display_precision)
 }
 
 bool
-security_update(struct security *sec, size_t timestamp, char *best_bid,
+security_update(struct security *sec, uint64_t timestamp, char *best_bid,
                 char *best_ask)
 {
   static const int pow10[7] = {1, 10, 100, 1000, 10000, 100000, 1000000};
@@ -45,10 +45,9 @@ security_update(struct security *sec, size_t timestamp, char *best_bid,
 }
 
 bool
-security_update_historical(struct security *sec, size_t timestamp, char *o,
+security_update_historical(struct security *sec, uint64_t timestamp, char *o,
                            char *h, char *l, char *c, uint32_t volume)
 {
-
   static const int pow10[7] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
   double open, high, low, close;
