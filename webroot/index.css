@@ -101,7 +101,7 @@ body {
   display: grid;
   grid-template-columns: 400px auto 400px;
   padding-left: calc(50% - 800px);
-  padding-right: calc(50% - 800px);
+  padding-right: calc(50% - 798px);
 }
 
 #sections {
