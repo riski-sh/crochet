@@ -236,6 +236,9 @@ let chart = class Chart
     let bar = DrawingArea.width - this.getAxisWidth();
     let bidHeight =
         this.evalEquation(this.PricePixelTransformation, this.bestBid);
+    let askHeight =
+        this.evalEquation(this.PricePixelTransformation, this.bestAsk);
+
     this.context.beginPath();
     this.context.moveTo(bar, bidHeight + 0.5);
     this.context.lineTo(bar + (this.getCharWidth()),
@@ -248,9 +251,15 @@ let chart = class Chart
                         bidHeight - (this.getTextHeight() / 2) - 1);
     this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--green');
     this.context.fill();
+    this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--base3');
+    this.context.fillText(
+        ' ' + parseFloat(this.bestBid / (Math.pow(10, this.numericalPrecision)))
+                  .toFixed(this.numericalPrecision),
+        DrawingArea.width - this.getAxisWidth(), bidHeight + 1.25);
+    this.context.closePath();
 
-    let askHeight =
-        this.evalEquation(this.PricePixelTransformation, this.bestAsk);
+
+
     this.context.beginPath();
     this.context.moveTo(bar, askHeight + 0.5);
     this.context.lineTo(bar + (this.getCharWidth()),
@@ -264,17 +273,12 @@ let chart = class Chart
 
     this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--red');;
     this.context.fill();
-
     this.context.fillStyle = getComputedStyle(document.body).getPropertyValue('--base3');
-    this.context.fillText(
-        ' ' + parseFloat(this.bestBid / (Math.pow(10, this.numericalPrecision)))
-                  .toFixed(this.numericalPrecision),
-        DrawingArea.width - this.getAxisWidth(), bidHeight + 1.25);
-
     this.context.fillText(
         ' ' + parseFloat(this.bestAsk / (Math.pow(10, this.numericalPrecision)))
                   .toFixed(this.numericalPrecision),
         DrawingArea.width - this.getAxisWidth(), askHeight + 1.25);
+    this.context.closePath();
 
     let startIndex = this.candles.length - numCandles - this.tempShift;
     if (startIndex < 0)
