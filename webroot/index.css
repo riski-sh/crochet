@@ -25,6 +25,15 @@ body {
   color: var(--base02);
 }
 
+#github {
+  display: flex;
+  align-items: center
+}
+
+#github > svg {
+  fill: var(--base02);
+}
+
 #left-header {
   align-self: stretch;
   grid-template-rows: auto auto;
@@ -37,16 +46,6 @@ body {
 
 #left-header > div:nth-child(2) {
   align-self: flex-end;
-}
-
-#watchlist {
-  grid-column-start: 1;
-  grid-column-end: 1;
-  grid-row-start: 2;
-  grid-row-end: 4;
-  display: flex;
-  align-items: fill;
-  flex-direction: column;
 }
 
 #search-container {
@@ -211,7 +210,7 @@ body {
   align-items: center;
   grid-column-start: 1;
   grid-column-end: 3;
-  width: 100%;
+  width: calc(100% - 2px);
 }
 
 #chart-drawable {

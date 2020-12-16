@@ -81,8 +81,6 @@ let comms = class Socket
    */
   onopen(evt)
   {
-    console.log(evt);
-    console.log('Connected to ' + this.address);
     this.connectionEstablished();
   }
 
@@ -103,21 +101,7 @@ let comms = class Socket
 
     if (data.type == 'update')
     {
-      if (data.what == 'header')
-      {
-        let headerList = data.data;
-        let doc;
-        for (let iter = 0; iter < headerList.length; ++iter)
-        {
-          doc = document.getElementById('header-bar-' + headerList[iter].symbol);
-          doc.children[1].innerText =
-            '$' +
-            parseFloat((headerList[iter].bid/Math.pow(10,headerList[iter].precision)), headerList[iter].precision).toFixed(headerList[iter].precision);
-        }
-        setTimeout(this.SendHeaderUpdate.bind(this), 1000);
-        return;
-      }
-      else if (data.what == 'chart-full')
+      if (data.what == 'chart-full')
       {
         this.SendSymbolUpdateCallback(data);
         return;

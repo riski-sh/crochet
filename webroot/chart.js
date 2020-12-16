@@ -412,8 +412,3 @@ let chart = class Chart
 
 const CommsChart =
     new comms(WebSocketAddress, () => { window.Chart = new chart(SearchSymbol.value.replace('/', '_')); });
-
-const CommsHeader =
-    new comms(WebSocketAddress, () => { CommsHeader.SendHeaderUpdate(); });
-
-
