@@ -53,6 +53,8 @@ body {
   display: grid;
   grid-template-rows: auto;
   grid-template-columns: 3em auto;
+  grid-row-start: 2;
+  grid-row-end: 3;
 }
 
 #security-text {
@@ -129,6 +131,9 @@ body {
 
 #misc-content {
   border-bottom: 1px solid var(--base01);
+  display: grid;
+  align-content: flex-end;
+  justify-content: flex-end;
 }
 
 #header-name {
