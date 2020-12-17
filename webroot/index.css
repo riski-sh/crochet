@@ -45,6 +45,12 @@ body {
   justify-content: center;
   align-content: center;
   color: var(--base01);
+  user-select: none;
+}
+
+#navigation > span:hover {
+  color: var(--base02);
+  font-weight: bold;
 }
 
 #github {
@@ -118,6 +124,7 @@ body {
   padding-right: calc(50% - 798px);
   justify-content: center;
   align-items: center;
+  user-select: none;
 }
 
 #sections {
@@ -222,6 +229,7 @@ body {
   display: grid;
   grid-template-columns: 400px auto 400px;
   grid-template-rows: calc(100% - 2em);
+  z-index: 1;
 }
 
 #night-light {
