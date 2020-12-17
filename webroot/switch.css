@@ -1,9 +1,12 @@
  /* The switch - the box around the slider */
 .switch {
   position: relative;
-  display: inline-block;
+  display: flex;
   width: 60px;
-  height: 34px;
+  height: 2rem;
+  border-left: 1px solid var(--base01);
+  border-top: 1px solid var(--base01);
+  border-right: 1px solid var(--base01);
 }
 
 /* Hide default HTML checkbox */
@@ -32,7 +35,7 @@
   height: 26px;
   width: 26px;
   left: 4px;
-  bottom: 4px;
+  bottom: 3px;
   background-color: var(--base03);
   -webkit-transition: .4s;
   transition: .4s;
@@ -42,7 +45,6 @@ input:checked + .slider {
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
 }
 
 input:checked + .slider:before {

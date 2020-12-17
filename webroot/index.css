@@ -19,10 +19,32 @@ html, body {
 }
 
 body {
-  grid-template-rows: 8em auto;
+  grid-template-rows: 6em 3em auto;
   grid-template-columns: auto;
   background: var(--base3);
   color: var(--base02);
+}
+
+#navigation {
+  grid-column-start: 2;
+  grid-column-end: 3;
+  align-items: flex-end;
+  display: flex;
+  align-self: stretch;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  justify-content: center;
+  border-bottom: 1px solid var(--base01);
+}
+
+#navigation > span {
+  display: grid;
+  align-self: stretch;
+  padding-left: 1em;
+  padding-right: 1em;
+  justify-content: center;
+  align-content: center;
+  color: var(--base01);
 }
 
 #github {
@@ -36,23 +58,14 @@ body {
 
 #left-header {
   align-self: stretch;
-  grid-template-rows: auto auto;
   display: grid;
-}
-
-#left-header > div:nth-child(1) {
-  padding-top: 1.1em;
-}
-
-#left-header > div:nth-child(2) {
-  align-self: flex-end;
 }
 
 #search-container {
   align-items: flex-end;
   display: grid;
   grid-template-rows: auto;
-  grid-template-columns: 3em auto;
+  grid-template-columns: auto;
   grid-row-start: 2;
   grid-row-end: 3;
 }
@@ -60,11 +73,10 @@ body {
 #security-text {
   font-family: 'Monospace';
   border-right: 1px solid var(--base01);
-  border-left: none;
+  border-left: 1px solid var(--base01);
   border-top: 1px solid var(--base01);
   border-bottom: none;
   background-color: var(--base2);
-  border-radius: 0px 10px 0px 0px;
   padding: 0px;
   height: 2rem;
   padding-left: 10px;
@@ -98,12 +110,14 @@ body {
   grid-column-end: 5;
   grid-row-start: 1;
   grid-row-end: 2;
-  font-size: 2em;
+  font-size: 3em;
   font-family: 'Goudy Old Style';
   display: grid;
-  grid-template-columns: 400px auto 400px;
+  grid-template-columns: auto;
   padding-left: calc(50% - 800px);
   padding-right: calc(50% - 798px);
+  justify-content: center;
+  align-items: center;
 }
 
 #sections {
@@ -198,9 +212,32 @@ body {
   height: 1.7em;
 }
 
-#dash {
+#header-tools {
   grid-row-start: 2;
   grid-row-end: 3;
+  grid-column-start: 1;
+  grid-column-end: 5;
+  padding-left: calc(50% - 800px);
+  padding-right: calc(50% - 798px);
+  display: grid;
+  grid-template-columns: 400px auto 400px;
+  grid-template-rows: calc(100% - 2em);
+}
+
+#night-light {
+  display: grid;
+  grid-column-start: 3;
+  grid-column-end: 4;
+  justify-content: right;
+  align-content: flex-end;
+  align-self: flex-end;
+  grid-row-start: 2;
+  grid-row-end: 3;
+}
+
+#dash {
+  grid-row-start: 3;
+  grid-row-end: 4;
   grid-column-start: 1;
   grid-column-end: 5;
   padding-left: calc(50% - 800px);
