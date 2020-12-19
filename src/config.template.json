@@ -1,14 +1,12 @@
 {
-  "client": false,
   "oanda": {
-    "key": "your_api_key",
-    "online": false
+    "key": "your_api_key"
   },
   "coinbase": {
-    "key": "your_api_key",
-    "online": false
+    "key": "your_api_key"
   },
   "server": {
+    "port": 8443,
     "cert": "certificate.pem",
     "key": "key.pem"
   }
