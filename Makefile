@@ -6,17 +6,17 @@ OPENSSL_CFLAGS != pkgconf --cflags openssl | xargs
 OPENSSL_LIBS != pkgconf --libs openssl | xargs
 
 CFLAGS  += -isystem /usr/local/include
-CFLAGS  += -isystem ${CWD}/depends/libwebsockets/build/include/
+CFLAGS  += -isystem /opt/riski-sh/env/include/
 CFLAGS  += -Weverything -Werror -Wno-padded
 CFLAGS  += -O2 -g3
 CFLAGS  != echo ${CFLAGS} | sort
 
 IFLAGS  += -I${CWD}/src
-IFLAGS  += -I${CWD}/depends/libwebsockets/build/include/
+IFLAGS  += -I/opt/riski-sh/env/include/
 IFLAGS  != echo ${IFLAGS} | sort
 
 LFLAGS  += ${OPENSSL_LIBS}
-LFLAGS  += -L/usr/local/lib/ -lwebsockets -lpthread -lm -ldl
+LFLAGS  += -L/opt/riski-sh/env/lib/ -lwebsockets -lpthread -lm -ldl
 LFLAGS  != echo ${LFLAGS} | sort
 
 OBJDIR  := ${CWD}/obj
