@@ -49,4 +49,7 @@ fi
 
 /opt/riski-sh/crochet/depends.sh
 
+cd /opt/riski-sh/
+git clone https://github.com/riski-sh/web
+
 EOF
