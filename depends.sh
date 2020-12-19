@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 
-mkdir depends
-cd depends
+cd /opt/riski-sh/
 
 if [ ! -d ./libwebsockets/ ]; then
   git clone https://github.com/warmcat/libwebsockets
