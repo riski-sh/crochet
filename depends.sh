@@ -10,6 +10,6 @@ cd ./libwebsockets/
 git pull
 mkdir -p build
 cd build
-cmake -DLWS_WITH_HTTP2=0 -DCMAKE_INSTALL_PREFIX:PATH=/opt/riski-sh/lib ..
+cmake -DLWS_WITH_HTTP2=0 -DCMAKE_INSTALL_PREFIX:PATH=/opt/riski-sh/env ..
 make
 make install
