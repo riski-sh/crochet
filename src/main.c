@@ -125,8 +125,9 @@ main(int argc, const char **argv)
   __json_object _server = json_get_object(hashmap_get("server", config));
   __json_string _server_cert = json_get_string(hashmap_get("cert", _server));
   __json_string _server_key = json_get_string(hashmap_get("key", _server));
+  __json_number _server_listen = json_get_number(hashmap_get("port", _server));
 
-  server_start(argc, argv, _server_cert, _server_key);
+  server_start(argc, argv, _server_cert, _server_key, (int)(*_server_listen));
 
   if (oanda_mainloop != pthread_self())
   {

@@ -33,10 +33,10 @@ static const lws_retry_bo_t retry = {
 };
 
 static const struct lws_http_mount mount = {
-    /* .mount_next */ NULL,         /* linked-list "next" */
-    /* .mountpoint */ "/",          /* mountpoint URL */
-    /* .origin */ "./webroot", /* serve from dir */
-    /* .def */ "index.html",        /* default filename */
+    /* .mount_next */ NULL,             /* linked-list "next" */
+    /* .mountpoint */ "/",              /* mountpoint URL */
+    /* .origin */ "/opt/riski-sh/web/", /* serve from dir */
+    /* .def */ "index.html",            /* default filename */
     /* .protocol */ NULL,
     /* .cgienv */ NULL,
     /* .extra_mimetypes */ NULL,
@@ -53,8 +53,8 @@ static const struct lws_http_mount mount = {
 };
 #pragma clang diagnostic pop
 
-int
-server_start(int argc, const char **argv, char *cert, char *key)
+bool
+server_start(int argc, const char **argv, char *cert, char *key, int port)
 {
   struct lws_context_creation_info info;
   struct lws_context *context;
@@ -73,7 +73,7 @@ server_start(int argc, const char **argv, char *cert, char *key)
   lws_set_log_level(logs, NULL);
 
   memset(&info, 0, sizeof info); /* otherwise uninitialized garbage */
-  info.port = 443;
+  info.port = port;
   info.mounts = &mount;
   info.protocols = protocols;
   info.vhost_name = "localhost";
@@ -93,7 +93,7 @@ server_start(int argc, const char **argv, char *cert, char *key)
   if (!context)
   {
     lwsl_err("lws init failed\n");
-    return 1;
+    return false;
   }
 
   while (n >= 0 && globals_continue(NULL))
@@ -101,5 +101,5 @@ server_start(int argc, const char **argv, char *cert, char *key)
 
   lws_context_destroy(context);
 
-  return 0;
+  return true;
 }
