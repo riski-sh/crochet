@@ -50,6 +50,12 @@ fi
 /opt/riski-sh/crochet/depends.sh
 
 cd /opt/riski-sh/
-git clone https://github.com/riski-sh/web
+
+if [ -d /opt/riski-sh/web ]
+then
+  git clone https://github.com/riski-sh/web
+else
+  git clone https://github.com/riski-sh/web
+fi
 
 EOF
