@@ -1,13 +1,18 @@
 {
   "oanda": {
-    "key": "your_api_key"
+    "key": "your_api_key",
+    "online": false
   },
   "coinbase": {
-    "key": "your_api_key"
+    "key": "your_api_key",
+    "online": false
   },
   "server": {
-    "port": 8443,
+    "port": 443,
     "cert": "certificate.pem",
     "key": "key.pem"
+  },
+  "analysis": {
+    "lib_location": "./crochet/libs/"
   }
 }

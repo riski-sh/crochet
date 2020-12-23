@@ -85,8 +85,27 @@ main(int argc, const char **argv)
   }
 
   pprint_info("%s", "loading analysis");
-  analysis_init("./libs/");
-  pprint_info("%s", "setting up openssl");
+
+  __json_object _analysis = json_get_object(hashmap_get("analysis", config));
+  if (_analysis)
+  {
+    __json_string so_loc = json_get_string(hashmap_get("lib_location", _analysis));
+    if (so_loc)
+    {
+      pprint_info("loading analysis in %s", so_loc);
+      analysis_init(so_loc);
+    }
+    else
+    {
+      pprint_error("%s", "no lib_location property in analysis (aborting)");
+      exit(1);
+    }
+  }
+  else
+  {
+    pprint_error("%s", "analysis object not found in config json (aborting)");
+    exit(1);
+  }
 
   SSL_load_error_strings();
   ERR_load_crypto_strings();
