@@ -167,7 +167,6 @@ static void
 __parse_update_chart_last_valid(__json_object __root_obj, char **_response,
                                 size_t *_len)
 {
-
   __json_string __secu = json_get_string(hashmap_get("secu", __root_obj));
 
   struct security *sec = exchange_get(__secu);
@@ -181,10 +180,26 @@ __parse_update_chart_last_valid(__json_object __root_obj, char **_response,
     return;
   }
 
+  struct string_t response;
+  string_new(&response);
+
+  string_append(&response,
+      "{\"type\": \"update\", \"what\": \"chart-last-valid\", \"data\": [",
+      strlen("{\"type\": \"update\", \"what\": \"chart-last-valid\", \"data\": "));
+
+  char *data = NULL;
+  size_t len = 0;
+
   /* grab the last candle that won't change */
   struct candle *cnd = NULL;
   cnd = &(sec->chart->candles[sec->chart->cur_candle_idx - 1]);
-  chart_candle_json(cnd, sec->chart->cur_candle_idx - 1, _response, _len);
+  chart_candle_json(cnd, sec->chart->cur_candle_idx - 1, &data, &len);
+
+  string_append(&response, data, len);
+  string_append(&response, "}", 1);
+
+  *_response = response.data;
+  *_len = response.len;
 }
 
 static void
