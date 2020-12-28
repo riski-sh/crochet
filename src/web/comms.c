@@ -164,6 +164,30 @@ __parse_update_chart_partial(__json_object __root_obj, char **_response,
 }
 
 static void
+__parse_update_chart_last_valid(__json_object __root_obj, char **_response,
+                                size_t *_len)
+{
+
+  __json_string __secu = json_get_string(hashmap_get("secu", __root_obj));
+
+  struct security *sec = exchange_get(__secu);
+
+  if (!sec)
+  {
+    pprint_warn("requested header update for %s but %s is not a known "
+                  "symbol ", __secu);
+    *_response = NULL;
+    *_len = 0;
+    return;
+  }
+
+  /* grab the last candle that won't change */
+  struct candle *cnd = NULL;
+  cnd = &(sec->chart->candles[sec->chart->cur_candle_idx - 1]);
+  chart_candle_json(cnd, sec->chart->cur_candle_idx - 1, _response, _len);
+}
+
+static void
 __parse_type_update(__json_object __root_obj, char **_response, size_t *_len)
 {
   __json_string __what = json_get_string(hashmap_get("what", __root_obj));
@@ -187,6 +211,10 @@ __parse_type_update(__json_object __root_obj, char **_response, size_t *_len)
   else if (strcmp(__what, "chart-partial") == 0)
   {
     __parse_update_chart_partial(__root_obj, _response, _len);
+  }
+  else if (strcmp(__what, "chart-last-valid") == 0)
+  {
+    __parse_update_chart_last_valid(__root_obj, _response, _len);
   }
 }
 
