@@ -48,7 +48,7 @@ static const struct lws_http_mount mount_archive = {
     /* cgienv */ NULL,
     /* .extra_mimetypes */ &archive_mimes,
     /* .interpret */ NULL,
-    /* .cgi_timeout */ 9,
+    /* .cgi_timeout */ 0,
     /* .cache_max_age */ 0,
     /* auth_mask */ 0,
     /* .cache_reusable */ 0,
