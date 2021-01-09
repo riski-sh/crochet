@@ -32,8 +32,35 @@ static const lws_retry_bo_t retry = {
     .secs_since_valid_hangup = 10,
 };
 
+static const struct lws_protocol_vhost_options archive_mimes = {
+  NULL,
+  NULL,
+  ".csv",
+  "text/csv"
+};
+
+static const struct lws_http_mount mount_archive = {
+    /* .mount_next */ NULL,
+    /* .mountpoint */ "/archive",
+    /* .origin */ "/opt/riski-sh/archive",
+    /* .def */ NULL,
+    /* .protocol */ NULL,
+    /* cgienv */ NULL,
+    /* .extra_mimetypes */ &archive_mimes,
+    /* .interpret */ NULL,
+    /* .cgi_timeout */ 9,
+    /* .cache_max_age */ 0,
+    /* auth_mask */ 0,
+    /* .cache_reusable */ 0,
+    /* cache_revalidate */ 0,
+    /* .cache_intermediaries */ 0,
+    /* .origin_protocol */ LWSMPRO_FILE,
+    /* .mountpoint_len */ 8,
+    /* .basic_auth_login_file */ NULL,
+};
+
 static const struct lws_http_mount mount = {
-    /* .mount_next */ NULL,             /* linked-list "next" */
+    /* .mount_next */ &mount_archive,   /* linked-list "next" */
     /* .mountpoint */ "/",              /* mountpoint URL */
     /* .origin */ "/opt/riski-sh/web/", /* serve from dir */
     /* .def */ "index.html",            /* default filename */
