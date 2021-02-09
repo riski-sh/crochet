@@ -5,9 +5,13 @@ CWD != pwd
 OPENSSL_CFLAGS != pkgconf --cflags openssl | xargs
 OPENSSL_LIBS != pkgconf --libs openssl | xargs
 
+LIBCURL_CFLAGS != pkgconf --cflags libcurl | xargs
+LIBCURL_LIBS != pkgconf --libs libcurl | xargs
+
 CFLAGS  += -isystem /usr/local/include
 CFLAGS  += -isystem /opt/riski-sh/env/include/
-CFLAGS  += -Weverything -Werror -Wno-padded
+CFLAGS  += ${OPENSSL_CFLAGS}
+CFLAGS  += -Weverything -Werror -Wno-padded -Wno-disabled-macro-expansion
 CFLAGS  += -O2 -g3
 CFLAGS  != echo ${CFLAGS} | sort
 
@@ -16,6 +20,7 @@ IFLAGS  += -I/opt/riski-sh/env/include/
 IFLAGS  != echo ${IFLAGS} | sort
 
 LFLAGS  += ${OPENSSL_LIBS}
+LFLAGS  += ${LIBCURL_LIBS}
 LFLAGS  += -L/opt/riski-sh/env/lib/ -lwebsockets -lpthread -lm -ldl
 LFLAGS  != echo ${LFLAGS} | sort
 
@@ -48,7 +53,7 @@ GLOBALS:     src/globals/globals.o
 
 HASHMAP:     src/hashmap/hashmap.o
 
-HTTPWS:      src/httpws/base64.o 	\
+#HTTPWS:      src/httpws/base64.o 	\
 	           src/httpws/http11.o	\
 	           src/httpws/session.o \
 	           src/httpws/wss.o
@@ -76,7 +81,7 @@ LIBS:        libs/black_marubuzu.so \
 
 libs: LIBS
 
-all: SERVER EXCHANGES FFJSON GLOBALS HASHMAP HTTPWS ORDERBOOKS \
+all: SERVER EXCHANGES FFJSON GLOBALS HASHMAP ORDERBOOKS \
 		 PPRINT SECURITY  libs   STRING  compile_commands
 	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) ${CWD}/src/**/*.o src/main.c src/api.c -o crochet.bin
 

@@ -1,18 +1,33 @@
 #include "oanda.h"
-#include <time.h>
 
 /*
  * String formats for basic OANDA endpoints
  */
 
 /* Queries basic account information */
-static const char V3_ACCOUNTS_FMT[] = "/v3/accounts";
+static const char V3_ACCOUNTS_FMT[] = OANDA_API_ROOT "/v3/accounts";
 
 /*
  * Gets the tradeable instruments for the account which is the first
  * string format argument
  */
-static const char V3_ACCOUNT_INSTRUMENTS[] = "/v3/accounts/%s/instruments";
+static const char V3_ACCOUNT_INSTRUMENTS[] = OANDA_API_ROOT "/v3/accounts/%s/instruments";
+
+static size_t
+write_func(void *ptr, size_t size, size_t nmemb, struct string_t *s)
+{
+
+  size_t new_len = s->len + size*nmemb;
+  s->data = realloc(s->data, new_len+1);
+  if (s->data == NULL) {
+    fprintf(stderr, "realloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  memcpy(s->data+s->len, ptr, size*nmemb);
+  s->data[new_len] = '\0';
+  s->len = new_len;
+  return size*nmemb;
+}
 
 /*
  * Converts the OANDA string represents the timestamp into a nanosecond
@@ -40,11 +55,8 @@ _oanda_first_id(char *response)
 }
 
 static void
-_oanda_load_historical(struct http11request *request, struct security *sec)
+_oanda_load_historical(CURL *curl, struct security *sec)
 {
-
-  /* set the request to dirty to secure a non cached request */
-  request->dirty = true;
 
   /* get the current timestamp */
   struct timespec tv;
@@ -53,7 +65,6 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   uint64_t ts = (uint64_t) time(NULL) * 1000000000;
 
   size_t backfill = chart_tstoidx(ts);
-  pprint_info("%lu", backfill);
 
   if (backfill == 0)
   {
@@ -72,15 +83,21 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   }
 
   /* generate the GET request url */
-  char stub[120] = {'\x0'};
-  sprintf(stub, "/v3/instruments/%s/candles?count=%lu&price=B&granularity=M1",
+  char url[120] = {'\x0'};
+  sprintf(url, OANDA_API_ROOT "/v3/instruments/%s/candles?count=%lu&price=B&granularity=M1",
           sec->name, backfill);
 
-  request->stub = stub;
-  char *response = NULL;
-  http11request_push(request, &response);
+  pprint_info("DEBUG: %s", url);
 
-  __json_value _root = json_parse(response);
+  struct string_t response;
+  response.data = NULL;
+  response.len = 0;
+
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+  curl_easy_perform(curl);
+
+  __json_value _root = json_parse(response.data);
   __json_object _robj = json_get_object(_root);
   __json_array _candles = json_get_array(hashmap_get("candles", _robj));
 
@@ -119,16 +136,18 @@ _oanda_load_historical(struct http11request *request, struct security *sec)
   }
 
   json_free(_root);
-  free(response);
+  free(response.data);
+  response.len = 0;
+  response.data = NULL;
 }
 
 static char *
-_oanda_gen_currency_list(struct http11request *request, char *response,
+_oanda_gen_currency_list(CURL *curl, struct string_t *response,
                          int *num_instruments)
 {
 
   pprint_info("%s", "configuring tradeable oanda symbols...");
-  __json_value _root = json_parse(response);
+  __json_value _root = json_parse(response->data);
   __json_object _instruments = json_get_object(_root);
   __json_array instruments =
       json_get_array(hashmap_get("instruments", _instruments));
@@ -151,7 +170,7 @@ _oanda_gen_currency_list(struct http11request *request, char *response,
 
     /* load at max the last 5000 minutes of historical data */
     pprint_info("loading historial info for %s...", name);
-    _oanda_load_historical(request, sec);
+    _oanda_load_historical(curl, sec);
 
     (*num_instruments) += 1;
 
@@ -178,66 +197,43 @@ void *
 exchanges_oanda_init(void *key)
 {
 
-  /* create a reusable record for openssl read */
-  struct tls_session *master_session = NULL;
-  if (tls_session_new(OANDA_API_ROOT, "443", &master_session) != STATUS_OK)
+  /* create a new curl handle */
+  CURL *curl = curl_easy_init();
+  if (!curl)
   {
-    pprint_error("%s", "|");
-    exit(1);
+    pprint_error("%s", "unable to init curl aborting...");
   }
 
-  /* cconnect the master_sesssion to OANDA as a persistant connection */
-  struct http11request *request = NULL;
-  if (http11request_new(master_session, &request) != STATUS_OK)
-  {
-    pprint_error("%s", "|");
-    exit(1);
-  }
+  /* construct api key header value */
+  char *authtoken = malloc(strlen("Authorization: Bearer \n") + strlen(key) + 1);
+  sprintf(authtoken, "Authorization: Bearer %s", key);
 
-  /* setup basic headers that will be used in all requests to OANDA */
+  /* build headers */
+  struct curl_slist *headers = NULL;
+  headers = curl_slist_append(headers, "Content-Type: application/json");
+  headers = curl_slist_append(headers, authtoken);
+  headers = curl_slist_append(headers, "Accept-DateTime-Format: UNIX");
+  headers = curl_slist_append(headers, "User-Agent: riski/crochet");
+  headers = curl_slist_append(headers, "Accept: */*");
 
-  /* api key */
-  char *authtoken = malloc(strlen("Bearer ") + strlen(key) + 1);
-  memcpy(authtoken, "Bearer \x0", 8);
-  strcat(authtoken, key);
-  hashmap_put("Authorization", authtoken, request->headers);
+  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-  /* request a unix timestamp and not a windows timestamp */
-  hashmap_put("Accept-DateTime-Format", "UNIX", request->headers);
 
-  /* tell OANDA that crochet is connecting */
-  hashmap_put("User-Agent", "crochet", request->headers);
+  struct string_t response;
 
-  /* only accept requests that are json responses */
-  hashmap_put("Content-Type", "application/json", request->headers);
+  /* setup curl write function */
+  curl_easy_setopt(curl, CURLOPT_URL, V3_ACCOUNTS_FMT);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_func);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-  /* accept any type response format */
-  hashmap_put("Accept", "*/*", request->headers);
-
-  /* keep this connection alive as much as possible */
-  hashmap_put("Connection", "Keep-Alive", request->headers);
-
-  /* the master response that will get passed to http11 client */
-  char *response = NULL;
-
-  /* duplicate the accounts format */
-  request->stub = strdup(V3_ACCOUNTS_FMT);
-  if (request->stub == NULL)
-  {
-    pprint_error("%s", "unable to duplicate stub");
-    exit(1);
-  }
-
-  /* request account information */
-  http11request_push(request, &response);
-  free(request->stub);
+  /* query json endpoing to account data */
+  /* the master response that libcurl will write to */
+  response.data = NULL;
+  response.len = 0;
+  curl_easy_perform(curl);
 
   /* get the ID out of the response */
-  char *id = _oanda_first_id(response);
-
-  /* clean up this response as we will never request another account again */
-  free(response);
-  response = NULL;
+  char *id = _oanda_first_id(response.data);
 
   pprint_info("%s", "using oanda account id [REDACTED]");
 
@@ -247,38 +243,38 @@ exchanges_oanda_init(void *key)
 
   /* query to get all the securities */
   char *get_instrument_str = malloc((size_t)get_instrument_size * sizeof(char));
-  sprintf(get_instrument_str, "/v3/accounts/%s/instruments", id);
-  request->stub = get_instrument_str;
+  sprintf(get_instrument_str, V3_ACCOUNT_INSTRUMENTS, id);
 
-  request->dirty = true;
-  http11request_push(request, &response);
-  free(get_instrument_str);
+  curl_easy_setopt(curl, CURLOPT_URL, get_instrument_str);
+
+  free(response.data);
+  response.data = NULL;
+  response.len = 0;
+  curl_easy_perform(curl);
 
   /* backfill the security data and create an instrument list */
   int number_monitored = 0;
   char *instrument_update_end =
-      _oanda_gen_currency_list(request, response, &number_monitored);
+      _oanda_gen_currency_list(curl, &response, &number_monitored);
+
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
   pprint_info("oanda: loaded %d symbols", number_monitored);
 
   /* setup polling request */
-  char *instrument_update_beg = "/v3/accounts/%s/pricing?instruments=";
+  char *instrument_update_beg = OANDA_API_ROOT "/v3/accounts/%s/pricing?instruments=";
   char *instrument_update_full = NULL;
 
   instrument_update_full = calloc(strlen(id) + strlen(instrument_update_beg) +
                                       strlen(instrument_update_end) + 2,
                                   sizeof(char));
-  sprintf(instrument_update_full, "/v3/accounts/%s/pricing?instruments=%s", id,
+  sprintf(instrument_update_full, OANDA_API_ROOT "/v3/accounts/%s/pricing?instruments=%s", id,
           instrument_update_end);
 
-  free(response);
-  response = NULL;
-
-  request->stub = instrument_update_full;
-  request->dirty = true;
+  pprint_info("DEBUG: %s", instrument_update_full);
+  curl_easy_setopt(curl, CURLOPT_URL, instrument_update_full);
 
   /* counters for monitoring status */
-
   /* the number of messages in a second counter */
   double num_messages = 0;
 
@@ -296,7 +292,6 @@ exchanges_oanda_init(void *key)
   __json_value _response_root = NULL;
 
   /* clear the response to force first allocation */
-  response = NULL;
   pprint_info("%s", "starting oanda main loop...");
 
   /* setup clocks for the speed limiters */
@@ -310,17 +305,21 @@ exchanges_oanda_init(void *key)
   {
 
     /* perform the request */
-    http11request_push(request, &response);
+    free(response.data);
+    response.data = NULL;
+    response.len = 0;
+
+    curl_easy_perform(curl);
 
     /* full parse first time, cached parse everytime else */
     if (_response_root == NULL)
     {
-      _response_root = json_parse(response);
+      _response_root = json_parse(response.data);
     }
     else
     {
       size_t idx = 0;
-      json_parse_cached(response, &idx, _response_root);
+      json_parse_cached(response.data, &idx, _response_root);
     }
 
     /* extract data from the response */
@@ -369,7 +368,6 @@ exchanges_oanda_init(void *key)
 
       _prices = _prices->nxt;
     }
-
     num_messages += 1;
 
     /*
@@ -412,12 +410,17 @@ exchanges_oanda_init(void *key)
 
   pprint_info("%s", "cleaning up exchange oanda...");
 
-  free(response);
+
+  free(response.data);
+  response.data = NULL;
+  response.len = 0;
+
   if (_response_root)
   {
     json_free(_response_root);
   }
-  http11request_free(&request);
+
+  curl_easy_cleanup(curl);
   free(instrument_update_end);
   free(authtoken);
   free(id);

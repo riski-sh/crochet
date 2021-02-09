@@ -120,7 +120,7 @@ main(int argc, const char **argv)
     if (online)
     {
       __json_string key = json_get_string(hashmap_get("key", _oanda));
-      pprint_info("starting oanda feed with api key [REDACTED]", key);
+      pprint_info("starting oanda feed with api key %s", key);
 
       if (pthread_create(&oanda_mainloop, NULL, &exchanges_oanda_init, key))
       {

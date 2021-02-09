@@ -4,12 +4,12 @@
 #include <exchanges/exchanges.h>
 #include <ffjson/ffjson.h>
 #include <globals/globals.h>
-#include <httpws/httpws.h>
 #include <pprint/pprint.h>
 #include <security/chart.h>
 #include <security/security.h>
+#include <curl/curl.h>
 
-#define OANDA_API_ROOT "api-fxtrade.oanda.com"
+#define OANDA_API_ROOT "https://api-fxtrade.oanda.com"
 
 #define OANDA_PRINT_INTERVAL_SECONDS 1e9
 
