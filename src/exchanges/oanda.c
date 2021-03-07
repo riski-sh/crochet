@@ -311,64 +311,75 @@ exchanges_oanda_init(void *key)
 
     curl_easy_perform(curl);
 
-    /* full parse first time, cached parse everytime else */
-    if (_response_root == NULL)
+    long http_code = 0;
+    curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+    /* make sure we got a correct resposne */
+    if (http_code != 200)
     {
-      _response_root = json_parse(response.data);
+      pprint_info("error recieved %s", response.data);
     }
     else
     {
-      size_t idx = 0;
-      json_parse_cached(response.data, &idx, _response_root);
-    }
-
-    /* extract data from the response */
-    __json_object _response_data = json_get_object(_response_root);
-    __json_array _prices =
-        json_get_array(hashmap_get("prices", _response_data));
-
-    /* loop through each security */
-    while (_prices)
-    {
-      __json_object _price_object = json_get_object(_prices->val);
-
-      /* get the instrument */
-      __json_string _price_instrument =
-          json_get_string(hashmap_get("instrument", _price_object));
-
-      /* get the time of the price update */
-      __json_string price_update_time =
-          json_get_string(hashmap_get("time", _price_object));
-
-      uint64_t latest_timestamp = _oanda_timetots(price_update_time);
-
-      /* get the bid order book and the ask order book */
-      __json_array _bids = json_get_array(hashmap_get("bids", _price_object));
-      __json_array _asks = json_get_array(hashmap_get("asks", _price_object));
-
-      /* get the best bid and ask from the bucket */
-      __json_object _best_bid_bucket = json_get_object(_bids->val);
-      __json_object _best_ask_bucket = json_get_object(_asks->val);
-
-      __json_string best_bid =
-          json_get_string(hashmap_get("price", _best_bid_bucket));
-      __json_string best_ask =
-          json_get_string(hashmap_get("price", _best_ask_bucket));
-
-      /* query the security given by the instrument name in the response
-       */
-      struct security *working_sec = exchange_get(_price_instrument);
-
-      /* update the security and increment the valid updates for meta info
-       */
-      if (security_update(working_sec, latest_timestamp, best_bid, best_ask))
+      /* full parse first time, cached parse everytime else */
+      if (_response_root == NULL)
       {
-        num_valid_updates += 1;
+        _response_root = json_parse(response.data);
+      }
+      else
+      {
+        size_t idx = 0;
+        json_parse_cached(response.data, &idx, _response_root);
       }
 
-      _prices = _prices->nxt;
+      /* extract data from the response */
+      __json_object _response_data = json_get_object(_response_root);
+      __json_array _prices =
+          json_get_array(hashmap_get("prices", _response_data));
+
+      /* loop through each security */
+      while (_prices)
+      {
+        __json_object _price_object = json_get_object(_prices->val);
+
+        /* get the instrument */
+        __json_string _price_instrument =
+            json_get_string(hashmap_get("instrument", _price_object));
+
+        /* get the time of the price update */
+        __json_string price_update_time =
+            json_get_string(hashmap_get("time", _price_object));
+
+        uint64_t latest_timestamp = _oanda_timetots(price_update_time);
+
+        /* get the bid order book and the ask order book */
+        __json_array _bids = json_get_array(hashmap_get("bids", _price_object));
+        __json_array _asks = json_get_array(hashmap_get("asks", _price_object));
+
+        /* get the best bid and ask from the bucket */
+        __json_object _best_bid_bucket = json_get_object(_bids->val);
+        __json_object _best_ask_bucket = json_get_object(_asks->val);
+
+        __json_string best_bid =
+            json_get_string(hashmap_get("price", _best_bid_bucket));
+        __json_string best_ask =
+            json_get_string(hashmap_get("price", _best_ask_bucket));
+
+        /* query the security given by the instrument name in the response
+         */
+        struct security *working_sec = exchange_get(_price_instrument);
+
+        /* update the security and increment the valid updates for meta info
+         */
+        if (security_update(working_sec, latest_timestamp, best_bid, best_ask))
+        {
+          num_valid_updates += 1;
+        }
+
+        _prices = _prices->nxt;
+      }
+      num_messages += 1;
     }
-    num_messages += 1;
 
     /*
      * print out the number of requests that happened in the past second
